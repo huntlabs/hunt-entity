@@ -1,0 +1,22 @@
+*.[oa]
+*.so
+*.lib
+*.dll
+
+.dub
+dub.selections.json
+
+.DS_Store
+
+#unit test binaries
+tests/*/tests
+__test__*__
+*.user
+*.userprefs
+.directory
+.project
+*.txt
+*.cmake
+*.kdev4
+.kdev4
+/database

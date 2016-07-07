@@ -1,0 +1,15 @@
+{
+	"name": "database",
+	"authors": [
+		"putao D team"
+	],
+	"description": "a database librey base dstddb",
+	"copyright": "Copyright © 2016, dsby",
+	"license": "bsd",
+	"libs" : ["mysqlclient"],
+	"dependencies" : {
+            "dstddb" : {
+                "path" : "../dstddb/"
+            }
+	}
+}
