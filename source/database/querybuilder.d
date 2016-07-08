@@ -928,7 +928,7 @@ mixin template FromFunctions(T) {
 				formattedWrite(query, "%s AS %s",
 					fromQuery.build, fromAsName);
 			} else {
-				formattedWrite(query, "`%s`", fromTable);
+				formattedWrite(query, "%s", fromTable);
 			}
 			
 			return query.data;

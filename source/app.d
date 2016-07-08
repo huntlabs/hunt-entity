@@ -60,6 +60,11 @@ void main()
 
 	writeln("\n\nthe sql is :", up.build());
 
+	auto s = new SelectBuilder();
+	s.from("aaa");
+	writeln("\n\nthe sql is :", s.build());
+	s.where(WhereBuilder().compare("a", "=",10).and().isNotNull("b").and().openParen().isNotNull("c").or().isNotNull("d").closeParen());
+	writeln("\n\nthe sql is :", s.build());
 	/*
 	DataBase dt = new MyDataBase("mysql://127.0.0.1/test");
 	dt.connect();
