@@ -12,15 +12,15 @@ import database.query;
 @Table("name")
 class AAA
 {
-	int a;
-	int b;
+@Primarykey int a;
+	@Primarykey int b;
 	string c;
 	double d;
 
 	Object obj;
 
 	DateTime dt;
-
+	@NotInDB
 	ubyte[] aa;
 }
 
@@ -39,6 +39,8 @@ void main()
 	}
 	writeln("over!!!");
 
+	enum str = getSetValueFun!(AAA)();
+	writeln(str);
 	/*
 	DataBase dt = new MyDataBase("mysql://127.0.0.1/test");
 	dt.connect();

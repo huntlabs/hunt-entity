@@ -2,6 +2,7 @@
 
 import std.traits;
 import database.database;
+import database.querybuilder;
 
 struct Table
 {
@@ -11,117 +12,258 @@ struct Table
 enum Primarykey = 1;
 enum NotInDB = 2;
 
-class Query(T)
+class Query(T) if(is(T == class) || is(T == struct))
 {
-	this()
+	alias Iterator = QueryIterator!(T);
+
+	this(DataBase db)
 	{
-		_tableName = tableName!T;
+		_tableName = TtableName!T;
+		_db = db;
+	}
+
+	@property tableName(){return _tableName;}
+	@property tableName(string table){_tableName = table;}
+
+	Iterator Select(string table = "")()
+	{}
+
+	Iterator Select(string sql)
+	{}
+
+	static void Insert(string table = "")(ref T v)
+	{}
+
+	static void Update(string table = "")(ref T v, string where = null)
+	{}
+
+	static void Delete(string table = "")(ref T v, string where = null)
+	{}
+
+protected:
+	mixin(getSetValueFun!T());
+private:
+	string _tableName;
+	DataBase _db;
+}
+
+class QueryIterator(T) if(is(T == class) || is(T == struct))
+{
+	alias TQuery = Query!(T);
+
+	@property bool empty()
+	{
+		if(_set is null) return true;
+		else return _set.empty();
+	}
+
+	@property T front()
+	in{
+		assert(!empty());
+	}
+	body{
+		static if(is(T == class))
+		{
+			T tvalue = new T();
+		}
+		else
+		{
+			T tvalue;
+		}
+		auto row = _set.front();
+		int width = row.width();
+		foreach(i; 0..width)
+		{
+			TQuery.setTValue(tvalue,row[i]);
+		}
+	}
+
+	void popFront()
+	{
+		if(_set)
+			_set.popFront();
+	}
+
+	int opApply(int delegate(T) operations)
+	{
+		int result = 0;
+
+		while(!empty)
+		{
+			result = operations(front());
+			popFront();
+		}
+
+		return result;
+	}
+	
+	int opApply(int delegate(int, T) operations)
+	{
+		int result = 0;
+		int num = 0;
+		while(!empty)
+		{
+			result = operations(num,front());
+			popFront();
+			++ num;
+		}
+		return result;
 	}
 
 private:
-	string _tableName;
+	this(RowSet set)
+	{
+		_set = set;
+	}
+
+	RowSet _set;
 }
 
+
+
+package:
 string getSetValueFun(T)()
 {
-	enum tname  = tableName!T;
+	enum tname  = TtableName!T;
 	enum hasTable = hasUDA!(T,Table);
-	string str = "";
-	foreach(memberName; __traits(derivedMembers,typeof(aa)))
+	string keyW = "\nstatic string keyWhile(ref T tv){\n\tstring str;\n";
+	bool hasKey = false;
+	string str = "\nstatic bool setTValue(ref T tv, CellValue value) { \n";
+	str ~= "\tswitch(value.name()){\n";
+	foreach(memberName; __traits(derivedMembers,T))
 	{
-		static if (isSupport!(typeof(__traits(getMember,  AAA, memberName))) && isPublic!(__traits(getMember,  AAA, memberName)) && !hasUDA!(T,NotInDB))
+		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && !hasUDA!(__traits(getMember,T, memberName),NotInDB))
 		{
-			str ~= createrCase!(typeof(__traits(getMember,  AAA, memberName)).stringof,memberName,typeof(__traits(getMember,  AAA, memberName)),tname,hasTable);
+			str ~= TcreaterCase!(typeof(__traits(getMember,T, memberName)).stringof,memberName,typeof(__traits(getMember,T, memberName)),tname,hasTable);
+		}
+		static if(hasUDA!(__traits(getMember,T, memberName),Primarykey))
+		{
+			if(hasKey)
+				keyW ~= "\tstr ~= \"and\"; \n";
+			keyW = keyW ~ "\tstr = str ~ \"" ~ memberName ~ " = \" ~ toSqlString(tv." ~ memberName ~ ");\n";
+			hasKey = true;
 		}
 	}
+	str ~= "\tdefault : \n\t\treturn false;\n\t}\n}\n";
+	keyW ~= "\treturn str;\n}\n";
+	str ~= keyW;
 
 	return str;
 }
 
-template createrCase(string type,string memberName, T,string tname = "", bool hasTable = false)
+string toSqlString(T)(T v) if(TisSupport!T)
 {
-	enum str = "case \"" ~ memberName ~ "\" : \n {" ~ "Nullable!" ~ type ~ " v = value.get" ~ typeName!(T) ~ "();"
-		~ "if(!v.isNull()) tv." ~ memberName ~ " = v.get!" ~ type ~ "();" ~ "} \n break;\n";
+	import std.conv;
+	static if(is(T == int) || is(T == short)  || is(T == long)){
+		return  to!string(v) ;
+	}
+	else static if(is(T == float) || is(T == double))
+	{
+		string str;
+		if(v = T.nan)
+				str = "0.0";
+		else
+			str = to!string(v);
+		return str;
+	}
+	else static if(is(T == Date) || is(T == DateTime))
+	{
+		return "'" ~ v.toISOExtString() ~ "'";
+	}
+	else static if(is(T == Time))
+	{
+		return "'" ~ v.toString() ~ "'";
+	}
+	else static if(is(T== char))
+	{
+		char[1] tv;
+		tv[0] = v;
+		return "'" ~ tv.idup ~ "'";
+	}
+	else
+	{
+		return "'" ~ cast(string)v ~ "'";
+	}
+}
+
+template TcreaterCase(string type,string memberName, T,string tname = "", bool hasTable = false)
+{
+	enum str = "\tcase \"" ~ memberName ~ "\" : \n";
+	enum va = "\t\t{\n\t\t\t" ~ "Nullable!" ~ type ~ " v = value.get" ~ TtypeName!(T) ~ "();"
+		~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get!" ~ type ~ "();" ~ "\n\t\t} \n\t\treturn true;\n";
 	static if(hasTable)
 	{
 
-		enum createrCase = str ~ "case \"" ~ tname ~ "." ~memberName ~ "\" : \n {" ~ "Nullable!" ~ type ~ " v = value.get" ~ typeName!(T) ~ "();"
-			~ "if(!v.isNull()) tv." ~ memberName ~ " = v.get!" ~ type ~ "();" ~ "} \n break;\n";
+		enum TcreaterCase = str ~ "\tcase \"" ~ tname ~ "." ~memberName ~ "\" : \n " ~ va;
 	}
 	else
 	{
-		enum createrCase = str;
+		enum TcreaterCase = str ~ va;
 	}
 }
 
-template createrCaseHasTable(string type,string memberName,string tname, T)
-{
-	enum createrCase = "case \"" ~ tname ~ "." ~memberName ~ "\" : \n {" ~ "Nullable!" ~ type ~ " v = value.get" ~ typeName!(T) ~ "();"
-		~ "if(!v.isNull()) tv." ~ memberName ~ " = v.get!" ~ type ~ "();" ~ "} \n break;";
-}
-
-template tableName(T)
+template TtableName(T)
 {
 	static if(hasUDA!(T,Table))
 	{
-		enum tableName = getUDAs!(T, Table)[0].name;
+		enum TtableName = getUDAs!(T, Table)[0].name;
 	}
 	else
 	{
-		enum tableName = "";
+		enum TtableName = "";
 	}
 
 }
 
-template typeName(T)
+template TtypeName(T)
 {
-	static if(T == int)
-		enum typeName = "Int";
-	else static if(T == char)
-		enum typeName = "Char";
-	else static if(T == short)
-		enum typeName = "Short";
-	else static if(T == long)
-		enum typeName = "Long";
-	else static if(T == float)
-		enum typeName = "Float";
-	else static if(T == double)
-		enum typeName = "Double";
-	else static if(T == Time)
-		enum typeName = "Time";
-	else static if(T == Date)
-		enum typeName = "Date";
-	else static if(T == DateTime)
-		enum typeName = "DateTime";
-	else static if(T == string)
-		enum typeName = "String";
-	else static if(T == ubyte[])
-		enum typeName = "Raw";
+	static if(is(T == int))
+		enum TtypeName = "Int";
+	else static if(is(T == char))
+		enum TtypeName = "Char";
+	else static if(is(T == short))
+		enum TtypeName = "Short";
+	else static if(is(T == long))
+		enum TtypeName = "Long";
+	else static if(is(T == float))
+		enum TtypeName = "Float";
+	else static if(is(T == double))
+		enum TtypeName = "Double";
+	else static if(is(T == Time))
+		enum TtypeName = "Time";
+	else static if(is(T == Date))
+		enum TtypeName = "Date";
+	else static if(is(T == DateTime))
+		enum TtypeName = "DateTime";
+	else static if(is(T == string))
+		enum TtypeName = "String";
+	else static if(is(T == ubyte[]))
+		enum TtypeName = "Raw";
 	else
-		enum typeName = "";		
+		enum TtypeName = "";		
 }
 
-template isSupport(T)
+template TisSupport(T)
 {
-	enum isSupport = is(T == Date) || is(T == DateTime) || is(T == string) || is(T == ubyte[]) || is(T == char) || 
+	enum TisSupport = is(T == Date) || is(T == DateTime) || is(T == string) || is(T == ubyte[]) || is(T == char) || 
 		is(T == int) || is(T == short) || is(T == float) || is(T == double) || is(T == long)  || is(T == Time);
 }
 
-template toType(T)
+template TtoType(T)
 {
 	enum type  = "value.as!(" ~ T.stringof ~ ")()";//T.stringof;
 	static if(isArray!(T))
 	{
-		enum toType = type ~ ".dup";
+		enum TtoType = type ~ ".dup";
 	}
 	else
 	{
-		enum toType = type;
+		enum TtoType = type;
 	}
 }
 
-template isPublic(alias T)
+template TisPublic(alias T)
 {
 	enum protection =  __traits(getProtection,T);
-	enum isPublic = (protection == "public");
+	enum TisPublic = (protection == "public");
 }
