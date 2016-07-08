@@ -9,6 +9,8 @@ import database.dbdrive.mysql;
 import database.dbdrive.impl;
 import database.query;
 
+import database.querybuilder;
+
 @Table("name")
 class AAA
 {
@@ -39,8 +41,25 @@ void main()
 	}
 	writeln("over!!!");
 
-	enum str = getSetValueFun!(AAA)();
-	writeln(str);
+	//enum str = getSetValueFun!(AAA)();
+//	writeln(str);
+
+	string[] nm = ["a","b", "c", "d","h"];
+	string[] vv = ["0","1", "3", "5"];
+	InsertBuilder bu = new InsertBuilder;
+	bu.insert(nm);
+	bu.into("aaa");
+	bu.value("hh");
+	bu.values(vv);
+	writeln("\n\nthe sql is :", bu.build());
+
+	auto up = new UpdateBuilder();
+	up.update("aaaa");
+	up.set("a", 10);
+	up.set("hh", Clock.currTime.toISOExtString());
+
+	writeln("\n\nthe sql is :", up.build());
+
 	/*
 	DataBase dt = new MyDataBase("mysql://127.0.0.1/test");
 	dt.connect();

@@ -1,27 +1,3 @@
-/**
-The MIT License (MIT)
-
-Copyright (c) 2014 Mihail K
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-it from Dart: https://github.com/Mihail-K/Dart
-*/
 
 module database.querybuilder;
 
@@ -30,94 +6,31 @@ import std.conv;
 import std.format;
 import std.variant;
 
-interface QueryBuilder {
+import database.query;
 
-    /**
-     * Gets the list of query parameters.
-     **/
-    Variant[] getParameters();
-
-    /**
-     * Converts the current builder state into a query string.
-     **/
-    string build();
-
-}
-
-/**
- * Exception type produced by query operations.
- **/
-class QueryException : Exception {
-
-    /**
-     * Constructs a query exception with an error message.
-     **/
-    this(string message) {
-        super(message);
-    }
-
-}
-
-/**
- * Query builder, for generic and prebaked queries from strings.
- **/
-class GenericQuery : QueryBuilder {
-
-    private {
-
-        string query;
-        Variant[] params;
-
-    }
-
-    /**
-     * Constructs a generic query from a query string and parameters.
-     **/
-    this(string query, Variant[] params = null...)
-    in {
-        if(query is null) {
-            throw new QueryException("Query string cannot be null.");
-        }
-    } body {
-        this.query = query;
-        this.params = params;
-    }
-
-    Variant[] getParameters() {
-        return params;
-    }
-
-    string build() {
-        return query;
-    }
-
-}
 
 /**
  * Builder for query where-clauses.
  **/
-class WhereBuilder : QueryBuilder {
+struct WhereBuilder {
 
     private {
 
-        Appender!string query;
-
-        Variant[] params;
-
+		Appender!string query = appender!string;
     }
 
     /**
      * Constructs an empty where-clause builder.
      **/
-    this() {
-        query = appender!string;
-    }
+ //   this() {
+//        query = appender!string;
+ //   }
 
     /**
      * Constructs a where-clause builder from a query string
      * and optionally a set of parameters.
      **/
-    this(string query, Variant[] params = null...)
+    this(string query)
     in {
         if(query is null) {
             throw new QueryException("Query string cannot be null.");
@@ -125,7 +38,6 @@ class WhereBuilder : QueryBuilder {
     } body {
         this.query = appender!string;
         this.query.put(query);
-        this.params = params;
     }
 
     /**
@@ -172,21 +84,14 @@ class WhereBuilder : QueryBuilder {
      * Performs a comparison between the column and a value,
      * using the specified operator.
      **/
-    WhereBuilder compare(VT)(string column, string operator, VT value)
+    WhereBuilder compare(VT)(string column, string operator, VT value) if(TisSupport!VT)
     in {
         if(column is null || operator is null) {
             throw new QueryException("Column name and operator cannot be null.");
         }
     } body {
         // Append the query segment.
-        formattedWrite(query, "`%s` %s ?", column, operator);
-
-        // Convert value to variant.
-        static if(is(VT == Variant)) {
-            params ~= value;
-        } else {
-            params ~= Variant(value);
-        }
+		formattedWrite(query, "%s %s %s", column, operator,toSqlString(value));
 
         return this;
     }
@@ -201,7 +106,7 @@ class WhereBuilder : QueryBuilder {
         }
     } body {
         // Append the query segment.
-        formattedWrite(query, "`%s` IS NULL", column);
+        formattedWrite(query, "%s IS NULL", column);
 
         return this;
     }
@@ -216,7 +121,7 @@ class WhereBuilder : QueryBuilder {
         }
     } body {
         // Append the query segment.
-        formattedWrite(query, "`%s` IS NOT NULL", column);
+        formattedWrite(query, "%s IS NOT NULL", column);
 
         return this;
     }
@@ -279,25 +184,18 @@ class WhereBuilder : QueryBuilder {
     /**
      * Tests if the column appears in a set of values.
      **/
-    WhereBuilder whereIn(VT)(string column, VT[] values...)
+	WhereBuilder whereIn(VT)(string column, VT[] values)  if(TisSupport!VT)
     in {
         if(column is null || values is null) {
             throw new QueryException("Column name and values cannot be null.");
         }
     } body {
         // Build the where-in clause.
-        query.put("`" ~ column ~ "` IN (");
+        query.put(column ~ " IN (");
         foreach(int idx, value; values) {
-            query.put("?");
+			formattedWrite(query, " %s", toSqlString(value));
             if(idx < values.length - 1) {
                 query.put(", ");
-            }
-
-            // Convert value to variant.
-            static if(is(VT == Variant)) {
-                params ~= value;
-            } else {
-                params ~= Variant(value);
             }
         }
         query.put(")");
@@ -315,37 +213,28 @@ class WhereBuilder : QueryBuilder {
         }
     } body {
         // Build the where-in clause.
-        query.put("`" ~ column ~ "` IN (");
+        query.put(column ~ " IN (");
         query.put(select.build ~ ")");
-
-        params = join([params, select.getParameters]);
         return this;
     }
 
     /**
      * Tests if the column does not appear in a set of values.
      **/
-    WhereBuilder whereNotIn(VT)(string column, VT[] values...)
+	WhereBuilder whereNotIn(VT)(string column, VT[] values) if(TisSupport!VT)
     in {
         if(column is null || values is null) {
             throw new QueryException("Column name and values cannot be null.");
         }
     } body {
         // Build the where-in clause.
-        query.put("`" ~ column ~ "` NOT IN (");
-        foreach(int idx, value; values) {
-            query.put("?");
-            if(idx < values.length - 1) {
-                query.put(", ");
-            }
-
-            // Convert value to variant.
-            static if(is(VT == Variant)) {
-                params ~= value;
-            } else {
-                params ~= Variant(value);
-            }
-        }
+        query.put(column ~ " NOT IN (");
+		foreach(int idx, value; values) {
+			formattedWrite(query, " %s ", toSqlString(value));
+			if(idx < values.length - 1) {
+				query.put(", ");
+			}
+		}
         query.put(")");
 
         return this;
@@ -361,15 +250,10 @@ class WhereBuilder : QueryBuilder {
         }
     } body {
         // Build the where-in clause.
-        query.put("`" ~ column ~ "` NOT IN (");
+        query.put(column ~ " NOT IN (");
         query.put(select.build ~ ")");
 
-        params = join([params, select.getParameters]);
         return this;
-    }
-
-    Variant[] getParameters() {
-        return params;
     }
 
     string build() {
@@ -378,302 +262,7 @@ class WhereBuilder : QueryBuilder {
 
 }
 
-/**
- * Query builder component for from-clause.
- **/
-mixin template FromFunctions(T : QueryBuilder) {
-
-    private {
-
-        string fromTable;
-
-        SelectBuilder fromQuery;
-        string fromAsName;
-
-    }
-
-    /**
-     * Specifies a from value as a table name.
-     **/
-    T from(string table)
-    in {
-        if(table is null) {
-            throw new QueryException("Table cannot be null.");
-        }
-    } body {
-        fromTable = table;
-        return this;
-    }
-
-    /**
-     * Specifies a from value as a subquery and assignment.
-     **/
-    T from(SelectBuilder query, string asName)
-    in {
-        if(query is null || asName is null) {
-            throw new QueryException("Query and name cannot be null.");
-        }
-    } body {
-        fromQuery = query;
-        fromAsName = asName;
-        return this;
-    }
-
-    protected {
-
-        /**
-         * Checks if from information has been specified.
-         **/
-        bool hasFrom() {
-            return fromQuery !is null ||
-                    fromTable !is null;
-        }
-
-        /**
-         * Converts the from state into a query segment.
-         **/
-        string getFromSegment() {
-            auto query = appender!string;
-
-            // Check if we're using a query.
-            if(fromQuery !is null) {
-                formattedWrite(query, "%s AS %s",
-                        fromQuery.build, fromAsName);
-            } else {
-                formattedWrite(query, "`%s`", fromTable);
-            }
-
-            return query.data;
-        }
-
-    }
-
-}
-
-/**
- * Query builder component for where-clause.
- **/
-mixin template WhereFunctions(T : QueryBuilder) {
-
-    private {
-
-        string whereCondition;
-
-    }
-
-    /**
-     * Sets the select condition from a string.
-     **/
-    T where(VT)(string where, VT[] params...)
-    in {
-        if(where is null) {
-            throw new QueryException("Condition cannot be null.");
-        }
-    } body {
-        // Assign query.
-        whereCondition = where;
-
-        // Query parameters.
-        if(params !is null && params.length > 0) {
-            static if(is(VT == Variant)) {
-                this.params = join([this.params, params]);
-            } else {
-                // Convert params to variant array.
-                foreach(param; params) {
-                    this.params ~= Variant(param);
-                }
-            }
-        }
-
-        return this;
-    }
-
-    /**
-     * Sets the select condition from a where condition builder.
-     **/
-    T where(WhereBuilder where)
-    in {
-        if(where is null) {
-            throw new QueryException("Condition cannot be null.");
-        }
-    } body {
-        // Store query information.
-        whereCondition = where.build();
-        params = join([params, where.getParameters]);
-
-        return this;
-    }
-
-    protected {
-
-        /**
-         * Checks if a where condition has been specified.
-         **/
-        bool hasWhere() {
-            return whereCondition !is null;
-        }
-
-        /**
-         * Converts the where state into a query segment.
-         **/
-        string getWhereSegment() {
-            return whereCondition;
-        }
-
-    }
-
-}
-
-/**
- * Query builder component for order-by-clause.
- **/
-mixin template OrderByFunctions(T : QueryBuilder) {
-
-    /**
-     * A type spcifying an order-by column and direction.
-     **/
-    struct OrderByInfo {
-
-        string column;
-        string direction;
-
-        string toString() {
-            auto query = appender!string;
-            query.put(column);
-            if(direction !is null) {
-                query.put(" " ~ direction);
-            }
-
-            return query.data;
-        }
-
-    }
-
-    private {
-
-        OrderByInfo[] orderByColumns;
-
-    }
-
-    /**
-     * Adds an order-by clause from a column name or expression
-     * and optionally a direction (ASC, DESC, etc.)
-     **/
-    T orderBy(string column, string direction = null)
-    in {
-        if(column is null) {
-            throw new QueryException("Column name cannot be null.");
-        }
-    } body {
-        // Save the Order-By specifier.
-        orderByColumns ~= OrderByInfo(column, direction);
-
-        return this;
-    }
-
-    /**
-     * Adds a number of order-by clause from a list of
-     * column names or expressions.
-     **/
-    T orderBy(string[] columns...)
-    in {
-        if(columns is null) {
-            throw new QueryException("Columns list cannot be null.");
-        }
-    } body {
-        // Add the columns to the list.
-        foreach(column; columns) {
-            orderByColumns ~= OrderByInfo(column);
-        }
-
-        return this;
-    }
-
-    /**
-     * Adds a number of order-by clause from a list of
-     * Order-By info structs.
-     **/
-    T orderBy(OrderByInfo[] columns...)
-    in {
-        if(columns is null) {
-            throw new QueryException("Columns list cannot be null.");
-        }
-    } body {
-        // Append the list of specifiers.
-        orderByColumns = join([orderByColumns, columns]);
-
-        return this;
-    }
-
-    protected {
-
-        /**
-         * Checks if order-by information has been specified.
-         **/
-        bool hasOrderBy() {
-            return orderByColumns !is null &&
-                    !orderByColumns.empty;
-        }
-
-        /**
-         * Converts the order-by state into a query segment.
-         **/
-        string getOrderBySegment() {
-            auto query = appender!string;
-            formattedWrite(query, "%-(%s%|, %)",
-                    orderByColumns);
-            return query.data;
-        }
-
-    }
-
-}
-
-/**
- * Query builder component for limit-clause.
- **/
-mixin template LimitFunctions(T : QueryBuilder) {
-
-    private {
-
-        int count = -1;
-
-    }
-
-    /**
-     * Sets the operation limit for the query.
-     **/
-    T limit(int count)
-    in {
-        if(count < -1) {
-            throw new QueryException("Limit cannot be negative.");
-        }
-    } body {
-        this.count = count;
-        return this;
-    }
-
-    protected {
-
-        /**
-         * Checks if a limit has been specified.
-         **/
-        bool hasLimit() {
-            return count != -1;
-        }
-
-        /**
-         * Converts the limit state into a query segment.
-         **/
-        string getLimitSegment() {
-            return to!string(count);
-        }
-
-    }
-
-}
-
-class SelectBuilder : QueryBuilder {
+class SelectBuilder {
 
     /**
      * Represents a select function call.
@@ -753,7 +342,7 @@ class SelectBuilder : QueryBuilder {
      **/
     struct SelectUnion {
 
-        QueryBuilder subquery;
+		SelectBuilder subquery;
         bool distinct;
 
         /**
@@ -781,8 +370,6 @@ class SelectBuilder : QueryBuilder {
         SelectUnion selectUnion;
 
         bool selectForUpdate;
-
-        Variant[] params;
 
     }
 
@@ -886,22 +473,28 @@ class SelectBuilder : QueryBuilder {
         return this;
     }
 
+	SelectBuilder leftJoin(string[] tables)
+	in {
+		if(tables is null) {
+			throw new QueryException("Tables list cannot be null.");
+		}
+	} body {
+		selectJoin = SelectJoin(tables);
+		
+		return this;
+	}
+
     /**
      * Performs a left-join operation on a list of tables,
      * with an optional join condition.
      **/
-    SelectBuilder leftJoin(string[] tables, WhereBuilder condition = null)
+	SelectBuilder leftJoin(string[] tables, WhereBuilder condition)
     in {
         if(tables is null) {
             throw new QueryException("Tables list cannot be null.");
         }
     } body {
-        if(condition is null) {
-            selectJoin = SelectJoin(tables);
-        } else {
-            selectJoin = SelectJoin(tables, condition.build);
-            params = join([params, condition.getParameters]);
-        }
+        selectJoin = SelectJoin(tables, condition.build);
 
         return this;
     }
@@ -909,15 +502,13 @@ class SelectBuilder : QueryBuilder {
     /**
      * Performs a left-join operation on a list of tables.
      **/
-    SelectBuilder leftJoin(string[] tables, string condition,
-            Variant[] params = null...)
+    SelectBuilder leftJoin(string[] tables, string condition)
     in {
         if(tables is null) {
             throw new QueryException("Tables list cannot be null.");
         }
     } body {
         selectJoin = SelectJoin(tables, condition);
-        this.params = join([this.params, params]);
 
         return this;
     }
@@ -925,7 +516,7 @@ class SelectBuilder : QueryBuilder {
     /**
      * Attaches an addition query to this one, through a union.
      **/
-    SelectBuilder withUnion(QueryBuilder query, bool distinct = true)
+	SelectBuilder withUnion(SelectBuilder query, bool distinct = true)
     in {
         if(query is null) {
             throw new QueryException("Query cannot by null.");
@@ -938,10 +529,6 @@ class SelectBuilder : QueryBuilder {
     SelectBuilder forUpdate() {
         selectForUpdate = true;
         return this;
-    }
-
-    Variant[] getParameters() {
-        return params;
     }
 
     string build() {
@@ -1006,21 +593,21 @@ class SelectBuilder : QueryBuilder {
 
 }
 
-class InsertBuilder : QueryBuilder {
+class InsertBuilder {
 
     private {
 
         string table;
         string[] columns;
 
-        Variant[] params;
+        string[] params;
 
     }
 
     /**
      * Sets the column list for this insert query.
      **/
-    InsertBuilder insert(string[] columns...) {
+    InsertBuilder insert(string[] columns) {
         this.columns = columns;
         return this;
     }
@@ -1044,13 +631,9 @@ class InsertBuilder : QueryBuilder {
      * Parameters are passed through a prepared statement,
      * and never appear in the query string itself.
      **/
-    InsertBuilder value(VT)(VT value) {
-        static if(is(VT == Variant)) {
-            params ~= value;
-        } else {
-            // Convert value to variant array.
-            params ~= Variant(value);
-        }
+	InsertBuilder value(VT)(VT value) if(TisSupport!VT)
+	{
+		params ~= toSqlString(value);
 
         return this;
     }
@@ -1061,27 +644,18 @@ class InsertBuilder : QueryBuilder {
      * Parameters are passed through a prepared statement,
      * and never appear in the query string itself.
      **/
-    InsertBuilder values(VT)(VT[] values...)
+	InsertBuilder values(VT)(VT[] values) if(TisSupport!VT)
     in {
         if(values is null) {
             throw new QueryException("Values cannot be null.");
         }
     } body {
-        // Query parameters.
-        static if(is(VT == Variant)) {
-            params = join([params, values]);
-        } else {
             // Convert values to variant array.
-            foreach(param; params) {
-                params ~= Variant(values);
-            }
+		foreach(value; values) {
+			params ~= toSqlString(value);
         }
 
         return this;
-    }
-
-    Variant[] getParameters() {
-        return params;
     }
 
     string build() {
@@ -1094,31 +668,23 @@ class InsertBuilder : QueryBuilder {
         // (Columns).
         if(columns !is null) {
             // Insert into specific columns.
-            formattedWrite(query, "(%-(`%s`%|, %))", columns);
+            formattedWrite(query, " (%-(%s%|, %))", columns);
         }
 
         // Values.
-        query.put(" VALUES (");
-        foreach(index, param; params) {
-            query.put("?");
-            if(index < params.length - 1) {
-                query.put(", ");
-            }
-        }
+        query.put(" VALUES ");
+		formattedWrite(query, "(%-(%s%|, %))", params);
 
-        query.put(");");
         return query.data;
     }
 
 }
 
-class DeleteBuilder : QueryBuilder {
+class DeleteBuilder  {
 
     private {
 
         string table;
-
-        Variant[] params;
 
     }
 
@@ -1138,10 +704,6 @@ class DeleteBuilder : QueryBuilder {
      * Limit component.
      **/
     mixin LimitFunctions!(DeleteBuilder);
-
-    Variant[] getParameters() {
-        return params;
-    }
 
     string build() {
         auto query = appender!string;
@@ -1179,14 +741,14 @@ class DeleteBuilder : QueryBuilder {
 
 }
 
-class UpdateBuilder : QueryBuilder {
+class UpdateBuilder {
 
     private {
 
         string table;
         string[] columns;
 
-        Variant[] params;
+        string[] params;
 
     }
 
@@ -1219,21 +781,21 @@ class UpdateBuilder : QueryBuilder {
     /**
      * Adds a column value to the update query.
      **/
-    UpdateBuilder set(VT)(string name, VT value)
+	UpdateBuilder set(VT)(string name, VT value) if(TisSupport!VT)
     in {
         if(name is null) {
             throw new QueryException("Column name cannot be null.");
         }
     } body {
         columns ~= name;
-        params ~= value;
+		params ~= toSqlString(value);
         return this;
     }
 
     /**
      * Adds multiple column values to the update query.
      **/
-    UpdateBuilder set(VT)(VT[string] values...)
+	UpdateBuilder set(VT)(VT[string] values) if(TisSupport!VT)
     in {
         if(name is null) {
             throw new QueryException("Values cannot be null.");
@@ -1242,19 +804,10 @@ class UpdateBuilder : QueryBuilder {
         // Add the values.
         foreach(name, value; values) {
             columns ~= name;
-            // Convert value to variant.
-            static if(is(VT == Variant)) {
-                params ~= value;
-            } else {
-                params ~= Variant(value);
-            }
+			params ~= toSqlString(value);
         }
 
         return this;
-    }
-
-    Variant[] getParameters() {
-        return params;
     }
 
     string build() {
@@ -1265,7 +818,12 @@ class UpdateBuilder : QueryBuilder {
         query.put(table);
 
         query.put(" SET ");
-        formattedWrite(query, "%-(`%s`=?%|, %)", columns);
+		foreach(i, str;columns)
+		{
+			formattedWrite(query, "%s = %s", str,params[i]);
+			if(i < columns.length - 1)
+				query.put(" , ");
+		}
 
         // Where.
         if(hasWhere) {
@@ -1289,4 +847,298 @@ class UpdateBuilder : QueryBuilder {
         return query.data;
     }
 
+}
+
+
+/**
+ * Exception type produced by query operations.
+ **/
+class QueryException : Exception {
+	
+	/**
+     * Constructs a query exception with an error message.
+     **/
+	this(string message) {
+		super(message);
+	}
+	
+}
+
+
+private:
+/**
+ * Query builder component for from-clause.
+ **/
+mixin template FromFunctions(T) {
+	
+	private {
+		
+		string fromTable;
+		
+		SelectBuilder fromQuery;
+		string fromAsName;
+		
+	}
+	
+	/**
+     * Specifies a from value as a table name.
+     **/
+	T from(string table)
+	in {
+		if(table is null) {
+			throw new QueryException("Table cannot be null.");
+		}
+	} body {
+		fromTable = table;
+		return this;
+	}
+	
+	/**
+     * Specifies a from value as a subquery and assignment.
+     **/
+	T from(SelectBuilder query, string asName)
+	in {
+		if(query is null || asName is null) {
+			throw new QueryException("Query and name cannot be null.");
+		}
+	} body {
+		fromQuery = query;
+		fromAsName = asName;
+		return this;
+	}
+	
+	protected {
+		
+		/**
+         * Checks if from information has been specified.
+         **/
+		bool hasFrom() {
+			return fromQuery !is null ||
+				fromTable !is null;
+		}
+		
+		/**
+         * Converts the from state into a query segment.
+         **/
+		string getFromSegment() {
+			auto query = appender!string;
+			
+			// Check if we're using a query.
+			if(fromQuery !is null) {
+				formattedWrite(query, "%s AS %s",
+					fromQuery.build, fromAsName);
+			} else {
+				formattedWrite(query, "`%s`", fromTable);
+			}
+			
+			return query.data;
+		}
+		
+	}
+	
+}
+
+/**
+ * Query builder component for where-clause.
+ **/
+mixin template WhereFunctions(T ) {
+	
+	private {
+		
+		string whereCondition;
+		
+	}
+	
+	/**
+     * Sets the select condition from a string.
+     **/
+	T where(VT)(string where)
+	in {
+		if(where is null) {
+			throw new QueryException("Condition cannot be null.");
+		}
+	} body {
+		// Assign query.
+		whereCondition = where;
+		
+		return this;
+	}
+	
+	/**
+     * Sets the select condition from a where condition builder.
+     **/
+	T where(WhereBuilder where)
+	{
+		// Store query information.
+		whereCondition = where.build();
+		return this;
+	}
+	
+	protected {
+		
+		/**
+         * Checks if a where condition has been specified.
+         **/
+		bool hasWhere() {
+			return whereCondition !is null;
+		}
+		
+		/**
+         * Converts the where state into a query segment.
+         **/
+		string getWhereSegment() {
+			return whereCondition;
+		}
+		
+	}
+	
+}
+
+/**
+ * Query builder component for order-by-clause.
+ **/
+mixin template OrderByFunctions(T ) {
+	
+	/**
+     * A type spcifying an order-by column and direction.
+     **/
+	struct OrderByInfo {
+		
+		string column;
+		string direction;
+		
+		string toString() {
+			auto query = appender!string;
+			query.put(column);
+			if(direction !is null) {
+				query.put(" " ~ direction);
+			}
+			
+			return query.data;
+		}
+		
+	}
+	
+	private {
+		
+		OrderByInfo[] orderByColumns;
+		
+	}
+	
+	/**
+     * Adds an order-by clause from a column name or expression
+     * and optionally a direction (ASC, DESC, etc.)
+     **/
+	T orderBy(string column, string direction = null)
+	in {
+		if(column is null) {
+			throw new QueryException("Column name cannot be null.");
+		}
+	} body {
+		// Save the Order-By specifier.
+		orderByColumns ~= OrderByInfo(column, direction);
+		
+		return this;
+	}
+	
+	/**
+     * Adds a number of order-by clause from a list of
+     * column names or expressions.
+     **/
+	T orderBy(string[] columns)
+	in {
+		if(columns is null) {
+			throw new QueryException("Columns list cannot be null.");
+		}
+	} body {
+		// Add the columns to the list.
+		foreach(column; columns) {
+			orderByColumns ~= OrderByInfo(column);
+		}
+		
+		return this;
+	}
+	
+	/**
+     * Adds a number of order-by clause from a list of
+     * Order-By info structs.
+     **/
+	T orderBy(OrderByInfo[] columns)
+	in {
+		if(columns is null) {
+			throw new QueryException("Columns list cannot be null.");
+		}
+	} body {
+		// Append the list of specifiers.
+		orderByColumns = join([orderByColumns, columns]);
+		
+		return this;
+	}
+	
+	protected {
+		
+		/**
+         * Checks if order-by information has been specified.
+         **/
+		bool hasOrderBy() {
+			return orderByColumns !is null &&
+				!orderByColumns.empty;
+		}
+		
+		/**
+         * Converts the order-by state into a query segment.
+         **/
+		string getOrderBySegment() {
+			auto query = appender!string;
+			formattedWrite(query, "%-(%s%|, %)",
+				orderByColumns);
+			return query.data;
+		}
+		
+	}
+	
+}
+
+/**
+ * Query builder component for limit-clause.
+ **/
+mixin template LimitFunctions(T ) {
+	
+	private {
+		
+		int count = -1;
+		
+	}
+	
+	/**
+     * Sets the operation limit for the query.
+     **/
+	T limit(int count)
+	in {
+		if(count < -1) {
+			throw new QueryException("Limit cannot be negative.");
+		}
+	} body {
+		this.count = count;
+		return this;
+	}
+	
+	protected {
+		
+		/**
+         * Checks if a limit has been specified.
+         **/
+		bool hasLimit() {
+			return count != -1;
+		}
+		
+		/**
+         * Converts the limit state into a query segment.
+         **/
+		string getLimitSegment() {
+			return to!string(count);
+		}
+		
+	}
+	
 }
