@@ -1,5 +1,7 @@
 ﻿module database.dbdrive.mysql;
 
+version(USE_MYSQL) :
+
 import database.database;
 import database.dbdrive.impl;
 

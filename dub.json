@@ -6,7 +6,8 @@
 	"description": "a database librey base dstddb",
 	"copyright": "Copyright © 2016, dsby",
 	"license": "bsd",
-	"libs" : ["mysqlclient"],
+	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
+	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
             "dstddb" : {
                 "path" : "../dstddb/"

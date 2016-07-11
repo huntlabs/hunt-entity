@@ -34,7 +34,7 @@ void main()
 	writeln(ley);
 
 
-	DataBase dt = new MyDataBase("mysql://127.0.0.1/test");
+	DataBase dt = DataBase.create("mysql://127.0.0.1/test");
 	dt.connect();
 	dt.query("drop table if exists tuple");
 	dt.query("create table tuple (a int, b int, c int)");

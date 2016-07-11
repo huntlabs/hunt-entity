@@ -14,6 +14,45 @@ abstract class DataBase
 
 	Statement query(string sql);
 
+	static DataBase create(string url)
+	{
+		import std.database.uri;
+		auto ul = toURI(url);
+		DataBase db;
+		switch(ul.protocol)
+		{
+		version(USE_MYSQL)
+		{
+			case "mysql" :
+				{
+					import database.dbdrive.mysql;
+					db = new MyDataBase(url);
+				}
+				break;
+		}
+		version(USE_PGSQL)
+		{
+			case "postgres" :
+			{
+				import database.dbdrive.pgsql;
+				db = new PGDataBase(url);
+			}
+			break;
+		}
+		version(USE_SQLITE)
+		{
+			case "path" :
+			{
+				import database.dbdrive.sqlite;
+				db = new LiteDataBase(url);
+			}
+			break;
+		}
+		default:
+			throw new Exception("protocol is not support!");
+		}
+		return db;
+	}
 }
 
 abstract class Statement
