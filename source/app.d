@@ -10,75 +10,73 @@ import database.dbdrive.impl;
 import database.query;
 
 import database.querybuilder;
+import std.database.front;
 
-@Table("name")
-class AAA
+@table("tuple")
+struct AAA
 {
-@Primarykey int a;
-	@Primarykey int b;
-	string c;
-	double d;
+	@primarykey()
+	int a;
 
-	Object obj;
+	@primarykey()
+	int b;
 
-	DateTime dt;
-	@NotInDB
-	ubyte[] aa;
+	@column()
+	int c;
 }
-
-struct Time
-{
-	int tm;
-};
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+	enum str = getSetValueFun!(AAA)();
+	writeln(str);
 
-	static if(hasUDA!(AAA,Table))
-	{
-		writeln("name is  = ",getUDAs!(AAA, Table)[0].name);
-	}
-	writeln("over!!!");
+	enum ley = buildKeyValue!(AAA)();
+	writeln(ley);
 
-	//enum str = getSetValueFun!(AAA)();
-//	writeln(str);
 
-	string[] nm = ["a","b", "c", "d","h"];
-	string[] vv = ["0","1", "3", "5"];
-	InsertBuilder bu = new InsertBuilder;
-	bu.insert(nm);
-	bu.into("aaa");
-	bu.value("hh");
-	bu.values(vv);
-	writeln("\n\nthe sql is :", bu.build());
-
-	auto up = new UpdateBuilder();
-	up.update("aaaa");
-	up.set("a", 10);
-	up.set("hh", Clock.currTime.toISOExtString());
-
-	writeln("\n\nthe sql is :", up.build());
-
-	auto s = new SelectBuilder();
-	s.from("aaa");
-	writeln("\n\nthe sql is :", s.build());
-	s.where(WhereBuilder().compare("a", "=",10).and().isNotNull("b").and().openParen().isNotNull("c").or().isNotNull("d").closeParen());
-	writeln("\n\nthe sql is :", s.build());
-	/*
 	DataBase dt = new MyDataBase("mysql://127.0.0.1/test");
 	dt.connect();
 	dt.query("drop table if exists tuple");
 	dt.query("create table tuple (a int, b int, c int)");
 	string sql = "insert into tuple values(";
-
+	writeln("\ninsert\n\n\n");
+	Query!AAA quer = new Query!AAA(dt);
 	foreach(i; 0..100)
 	{
-		import std.conv;
-		string ts  = sql ~ to!string(i) ~ "," ~ to!string(i+1) ~ "," ~ to!string(i+2) ~ ")";
-		dt.query(ts);
+		AAA a = AAA();
+		a.a = i;
+		a.b = i + 1;
+		a.c = i + 2;
+		quer.Insert(a);
+	//	import std.conv;
+	//	string ts  = sql ~ to!string(i) ~ "," ~ to!string(i+1) ~ "," ~ to!string(i+2) ~ ")";
+	//	dt.query(ts);
 	}
+	writeln("select");
+	auto iter = quer.Select();
+	writeln("tuple data: \n a \t b \t c");
+	AAA a;
+	if(!iter.empty)
+	{
+		a = iter.front();
+		iter.popFront();
+		writeln(a.a,"\t",a.b,"\t",a.c);
+	}
+	while(!iter.empty)
+	{
+		auto ta = iter.front();
+		iter.popFront();
+		writeln(ta.a,"\t",ta.b,"\t",ta.c);
+	}
+	a.c = 1002;
 
+	dt.query("SET SQL_SAFE_UPDATES = 0");
+	quer.Update(a);
+	a.a = 20;
+	a.b = 21;
+	quer.Delete(a);
+
+	/*
 	auto st = dt.query("select * from tuple");
 	assert(st.hasRows());
 

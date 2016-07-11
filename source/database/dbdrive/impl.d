@@ -1,6 +1,7 @@
 ﻿module database.dbdrive.impl;
 
 import std.algorithm.mutation;
+import std.experimental.logger;
 
 import database.database;
 
@@ -36,11 +37,13 @@ class DataBaseImpl(DB) : DataBase
 
 	override Statement statement(string sql)
 	{
+		trace("statement sql : ",sql);
 		return new StatementImpl!(DB)(_con.statement(sql));
 	}
 	
 	override Statement query(string sql)
 	{
+		trace("query sql : ",sql);
 		return new StatementImpl!(DB)(_con.query(sql));
 	}
 

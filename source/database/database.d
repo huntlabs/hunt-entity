@@ -7,7 +7,6 @@ public import std.datetime;
 
 abstract class DataBase
 {
-
 	void connect(string url);
 	void connect();
 

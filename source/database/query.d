@@ -4,13 +4,21 @@ import std.traits;
 import database.database;
 import database.querybuilder;
 
-struct Table
+struct table
 {
 	string name;
 }
 
-enum Primarykey = 1;
-enum NotInDB = 2;
+
+struct primarykey 
+{
+	string name;
+}
+
+struct column
+{
+	string name;
+}
 
 class Query(T) if(is(T == class) || is(T == struct))
 {
@@ -26,19 +34,118 @@ class Query(T) if(is(T == class) || is(T == struct))
 	@property tableName(string table){_tableName = table;}
 
 	Iterator Select(string table = "")()
-	{}
+	{
+		string etable;
+		static if(table.length > 0)
+			etable = table;
+		else
+			etable = _tableName;
+		if(etable.length == 0)
+			throw new Exception("the table must not be empty;");
+		string sql = "Select * from " ~ etable;
+		return Select(sql);
+	}
 
 	Iterator Select(string sql)
-	{}
+	{
+		Statement rusel = _db.query(sql);
+		if(rusel.hasRows)
+			return new Iterator(rusel.rows());
+		else
+			return null;
+	}
 
-	static void Insert(string table = "")(ref T v)
-	{}
+	void Insert(string table = "")(ref T v)
+	{
+		string etable;
+		static if(table.length > 0)
+			etable = table;
+		else
+			etable = _tableName;
+		if(etable.length == 0)
+			throw new Exception("the table must not be empty;");
 
-	static void Update(string table = "")(ref T v, string where = null)
-	{}
+		InsertBuilder build = new InsertBuilder();//scoped!(InsertBuilder)();//
+		string[string] value;
+		mixin(buildKeyValue!T());
+		build.into(etable);
+		build.insert(value.keys);
+		build.values(value.values);
+		_db.query(build.build());
+		build.destroy;
+	}
 
-	static void Delete(string table = "")(ref T v, string where = null)
-	{}
+	void Update(string table = "")(ref T v)
+	{
+		string where = keyWhile(v);
+		if(where.length == 0)
+		{
+			throw new Exception("do not has Primarykey;");
+		}
+		Update!(table)(v,where);
+	}
+
+	void Update(string table = "")(ref T v, string where)
+	{
+		string etable;
+		static if(table.length > 0)
+			etable = table;
+		else
+			etable = _tableName;
+		if(etable.length == 0)
+			throw new Exception("the table must not be empty;");
+		
+		UpdateBuilder build = new UpdateBuilder();
+		string[string] value;
+		mixin(buildKeyValue!T());
+		build.update(etable).set(value);
+		if(where.length > 0)
+			build.where(where);
+	//	string sql = "SET SQL_SAFE_UPDATES = 0;";
+	//	sql ~= build.build();
+	//	_db.query(sql);
+		_db.query(build.build());
+		build.destroy;
+	}
+
+	void Update(string table = "")(ref T v, WhereBuilder where)
+	{
+		Update!(table)(v,where.build());
+	}
+
+	void Delete(string table = "")(ref T v)
+	{
+		string where = keyWhile(v);
+		if(where.length == 0)
+		{
+			throw new Exception(" do not has Primarykey;");
+		}
+		Delete!(table)(v,where);
+	}
+
+	void Delete(string table = "")(ref T v, string where)
+	{
+		string etable;
+		static if(table.length > 0)
+			etable = table;
+		else
+			etable = _tableName;
+		if(etable.length == 0)
+			throw new Exception("the table must not be empty;");
+		
+		DeleteBuilder build = new DeleteBuilder();
+
+		build.from(etable);
+		if(where.length > 0)
+			build.where(where);
+		_db.query(build.build());
+		build.destroy;
+	}
+	
+	void Delete(string table = "")(ref T v, WhereBuilder where)
+	{
+		Delete!(table)(v,where.build());
+	}
 
 protected:
 	mixin(getSetValueFun!T());
@@ -76,6 +183,7 @@ class QueryIterator(T) if(is(T == class) || is(T == struct))
 		{
 			TQuery.setTValue(tvalue,row[i]);
 		}
+		return tvalue;
 	}
 
 	void popFront()
@@ -121,26 +229,73 @@ private:
 
 
 
-package:
+//package:
+
+string buildKeyValue(T)()
+{
+	string sql;
+	foreach(memberName; __traits(derivedMembers,T))
+	{
+		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && 
+			(hasUDA!(__traits(getMember,T, memberName),primarykey) || hasUDA!(__traits(getMember,T, memberName),column) ))
+		{
+			sql ~= "\tvalue[\"" ~ columnName!(__traits(getMember,T, memberName),memberName) ~ "\"] = toSqlString(v." ~ memberName ~ ");\n";
+		}
+	}
+	return sql;
+}
+
 string getSetValueFun(T)()
 {
 	enum tname  = TtableName!T;
-	enum hasTable = hasUDA!(T,Table);
+	enum hasTable = hasUDA!(T,table);
 	string keyW = "\nstatic string keyWhile(ref T tv){\n\tstring str;\n";
 	bool hasKey = false;
 	string str = "\nstatic bool setTValue(ref T tv, CellValue value) { \n";
 	str ~= "\tswitch(value.name()){\n";
 	foreach(memberName; __traits(derivedMembers,T))
 	{
-		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && !hasUDA!(__traits(getMember,T, memberName),NotInDB))
+		//生成case 赋值函数
+		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && 
+			(hasUDA!(__traits(getMember,T, memberName),primarykey) || hasUDA!(__traits(getMember,T, memberName),column) ))
 		{
-			str ~= TcreaterCase!(typeof(__traits(getMember,T, memberName)).stringof,memberName,typeof(__traits(getMember,T, memberName)),tname,hasTable);
+			static if(hasUDA!(__traits(getMember,T, memberName),primarykey))
+			{
+				enum list = getUDAs!(__traits(getMember,T, memberName), primarykey);
+			}
+			else
+			{
+				enum list = getUDAs!(__traits(getMember,T, memberName), column);
+			}
+			string tstr ;//= "\tcase \"" ~ memberName ~ "\" : \n";
+			string va = "\t\t{\n\t\t\t" ~ "Nullable!" ~ typeof(__traits(getMember,T, memberName)).stringof ~ " v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
+				~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get();" ~ "\n\t\t} \n\t\treturn true;\n";
+		/*	if(list[0].name.length == 0)
+			{
+				tstr ~= "\tcase \"" ~ memberName ~ "\" : \n";
+				static if(hasTable)
+					tstr ~= "\tcase \"" ~ tname ~ "." ~memberName ~ "\" : \n ";
+			}
+			else*/
+			{
+				foreach(col; list)
+				{
+					string stname = tColumnName(col.name,memberName);
+					tstr ~= "\tcase \"" ~ stname ~ "\" : \n";
+					static if(hasTable)
+						tstr ~= "\tcase \"" ~ tname ~ "." ~ stname ~ "\" : \n ";
+				}
+			}
+			str ~= tstr;
+			str ~= va;
 		}
-		static if(hasUDA!(__traits(getMember,T, memberName),Primarykey))
+		// 生成主键的where函数
+		static if(hasUDA!(__traits(getMember,T, memberName),primarykey))
 		{
+			string name = columnName!(__traits(getMember,T, memberName),memberName);
 			if(hasKey)
-				keyW ~= "\tstr ~= \"and\"; \n";
-			keyW = keyW ~ "\tstr = str ~ \"" ~ memberName ~ " = \" ~ toSqlString(tv." ~ memberName ~ ");\n";
+				keyW ~= "\tstr ~= \" and \"; \n";
+			keyW = keyW ~ "\tstr = str ~ \"" ~ name ~ " = \" ~ toSqlString(tv." ~ memberName ~ ");\n";
 			hasKey = true;
 		}
 	}
@@ -186,33 +341,37 @@ string toSqlString(T)(T v) if(TisSupport!T)
 	}
 }
 
-template TcreaterCase(string type,string memberName, T,string tname = "", bool hasTable = false)
+template columnName(alias T,string mname)
 {
-	enum str = "\tcase \"" ~ memberName ~ "\" : \n";
-	enum va = "\t\t{\n\t\t\t" ~ "Nullable!" ~ type ~ " v = value.get" ~ TtypeName!(T) ~ "();"
-		~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get!" ~ type ~ "();" ~ "\n\t\t} \n\t\treturn true;\n";
-	static if(hasTable)
+	static if(hasUDA!(T,primarykey))
 	{
-
-		enum TcreaterCase = str ~ "\tcase \"" ~ tname ~ "." ~memberName ~ "\" : \n " ~ va;
+		enum columnName = tColumnName(getUDAs!(T, primarykey)[0].name,mname);
 	}
 	else
 	{
-		enum TcreaterCase = str ~ va;
+		enum columnName = tColumnName(getUDAs!(T, column)[0].name,mname);
 	}
 }
 
 template TtableName(T)
 {
-	static if(hasUDA!(T,Table))
+	static if(hasUDA!(T,table))
 	{
-		enum TtableName = getUDAs!(T, Table)[0].name;
+		enum TtableName = getUDAs!(T, table)[0].name;
 	}
 	else
 	{
 		enum TtableName = "";
 	}
 
+}
+
+string tColumnName(string column, string name)
+{
+	if(column.length == 0)
+		return name;
+	else
+		return column;
 }
 
 template TtypeName(T)
@@ -266,4 +425,37 @@ template TisPublic(alias T)
 {
 	enum protection =  __traits(getProtection,T);
 	enum TisPublic = (protection == "public");
+}
+
+
+version(unittest)
+{
+	@Table("name")
+	class AAA
+	{
+		@Primarykey int a;
+		@Primarykey int b;
+		string c;
+		double d;
+		
+		Object obj;
+		
+		DateTime dt;
+		ubyte[] aa;
+	}
+}
+
+unittest
+{
+	static if(hasUDA!(AAA,table))
+	{
+		writeln("name is  = ",getUDAs!(AAA, table)[0].name);
+	}
+	writeln("over!!!");
+	
+	enum str = getSetValueFun!(AAA)();
+	writeln(str);
+	
+	enum ley = buildKeyValue!(AAA)();
+	writeln(ley);
 }

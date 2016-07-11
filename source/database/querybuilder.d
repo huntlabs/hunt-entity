@@ -735,7 +735,7 @@ class DeleteBuilder  {
             query.put(getLimitSegment);
         }
 
-        query.put(";");
+     //   query.put(";");
         return query.data;
     }
 
@@ -796,11 +796,7 @@ class UpdateBuilder {
      * Adds multiple column values to the update query.
      **/
 	UpdateBuilder set(VT)(VT[string] values) if(TisSupport!VT)
-    in {
-        if(name is null) {
-            throw new QueryException("Values cannot be null.");
-        }
-    } body {
+    {
         // Add the values.
         foreach(name, value; values) {
             columns ~= name;
@@ -843,7 +839,7 @@ class UpdateBuilder {
             query.put(getLimitSegment);
         }
 
-        query.put(";");
+       // query.put(";");
         return query.data;
     }
 
@@ -952,7 +948,7 @@ mixin template WhereFunctions(T ) {
 	/**
      * Sets the select condition from a string.
      **/
-	T where(VT)(string where)
+	T where(string where)
 	in {
 		if(where is null) {
 			throw new QueryException("Condition cannot be null.");
@@ -1141,4 +1137,30 @@ mixin template LimitFunctions(T ) {
 		
 	}
 	
+}
+
+unittest
+{
+	import std.stdio;
+	string[] nm = ["a","b", "c", "d","h"];
+	string[] vv = ["0","1", "3", "5"];
+	InsertBuilder bu = new InsertBuilder;
+	bu.insert(nm);
+	bu.into("aaa");
+	bu.value("hh");
+	bu.values(vv);
+	writeln("\n\nthe sql is :", bu.build());
+	
+	auto up = new UpdateBuilder();
+	up.update("aaaa");
+	up.set("a", 10);
+	up.set("hh", Clock.currTime.toISOExtString());
+	
+	writeln("\n\nthe sql is :", up.build());
+	
+	auto s = new SelectBuilder();
+	s.from("aaa");
+	writeln("\n\nthe sql is :", s.build());
+	s.where(WhereBuilder().compare("a", "=",10).and().isNotNull("b").and().openParen().isNotNull("c").or().isNotNull("d").closeParen());
+	writeln("\n\nthe sql is :", s.build());
 }
