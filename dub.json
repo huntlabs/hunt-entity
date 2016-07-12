@@ -3,9 +3,9 @@
 	"authors": [
 		"putao D team"
 	],
-	"description": "a database librey base dstddb",
-	"copyright": "Copyright © 2016, dsby",
-	"license": "bsd",
+	"description": "ORM for dlang",
+	"copyright": "Copyright (C) 2015-2016 Shanghai Putao Technology Co., Ltd",
+	"license": "Apache-2.0",
 	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
 	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
