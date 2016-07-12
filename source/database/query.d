@@ -1,6 +1,8 @@
 ﻿module database.query;
 
 import std.traits;
+import std.experimental.logger;
+
 import database.database;
 import database.querybuilder;
 
@@ -254,6 +256,7 @@ string getSetValueFun(T)()
 	string keyW = "\nstatic string keyWhile(ref T tv){\n\tstring str;\n";
 	bool hasKey = false;
 	string str = "\nstatic bool setTValue(ref T tv, CellValue value) { \n";
+	str ~= "\t trace(\"value.name() is \", value.name(), \"  type is : \", value.type());";
 	str ~= "\tswitch(value.name()){\n";
 	foreach(memberName; __traits(derivedMembers,T))
 	{
@@ -272,14 +275,6 @@ string getSetValueFun(T)()
 			string tstr ;//= "\tcase \"" ~ memberName ~ "\" : \n";
 			string va = "\t\t{\n\t\t\t" ~ "Nullable!(" ~ typeof(__traits(getMember,T, memberName)).stringof ~ ") v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
 				~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get();" ~ "\n\t\t} \n\t\treturn true;\n";
-		/*	if(list[0].name.length == 0)
-			{
-				tstr ~= "\tcase \"" ~ memberName ~ "\" : \n";
-				static if(hasTable)
-					tstr ~= "\tcase \"" ~ tname ~ "." ~memberName ~ "\" : \n ";
-			}
-			else*/
-			{
 				foreach(col; list)
 				{
 					string stname = tColumnName(col.name,memberName);
@@ -287,7 +282,6 @@ string getSetValueFun(T)()
 					static if(hasTable)
 						tstr ~= "\tcase \"" ~ tname ~ "." ~ stname ~ "\" : \n ";
 				}
-			}
 			str ~= tstr;
 			str ~= va;
 		}
