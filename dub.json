@@ -9,6 +9,6 @@
 	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
 	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
-            "database": "~>0.1.0
+            "database": "~>0.1.0"
 	}
 }
