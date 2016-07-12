@@ -91,7 +91,7 @@ struct WhereBuilder {
         }
     } body {
         // Append the query segment.
-		formattedWrite(query, "%s %s %s", column, operator,toSqlString(value));
+		formattedWrite(query, "%s %s '%s'", column, operator,toSqlString(value));
 
         return this;
     }
@@ -193,7 +193,7 @@ struct WhereBuilder {
         // Build the where-in clause.
         query.put(column ~ " IN (");
         foreach(int idx, value; values) {
-			formattedWrite(query, " %s", toSqlString(value));
+			formattedWrite(query, " '%s'", toSqlString(value));
             if(idx < values.length - 1) {
                 query.put(", ");
             }
@@ -230,7 +230,7 @@ struct WhereBuilder {
         // Build the where-in clause.
         query.put(column ~ " NOT IN (");
 		foreach(int idx, value; values) {
-			formattedWrite(query, " %s ", toSqlString(value));
+			formattedWrite(query, " '%s' ", toSqlString(value));
 			if(idx < values.length - 1) {
 				query.put(", ");
 			}
@@ -305,7 +305,7 @@ class SelectBuilder {
 
         string toString() {
             auto query = appender!string;
-            formattedWrite(query, "%-(`%s`%|, %)", columns);
+            formattedWrite(query, "%-(%s%|, %)", columns);
             return query.data;
         }
 
@@ -329,7 +329,7 @@ class SelectBuilder {
 
         string toString() {
             auto query = appender!string;
-            formattedWrite(query, "(%-(`%s`%|, %))", joinTables);
+            formattedWrite(query, "(%-(%s%|, %))", joinTables);
             if(joinOn !is null)
                 formattedWrite(query, " ON %s", joinOn);
             return query.data;
@@ -638,6 +638,7 @@ class InsertBuilder {
         return this;
     }
 
+
     /**
      * Appends a number of values to the query.
      *
@@ -658,6 +659,7 @@ class InsertBuilder {
         return this;
     }
 
+
     string build() {
         auto query = appender!string;
 
@@ -673,7 +675,7 @@ class InsertBuilder {
 
         // Values.
         query.put(" VALUES ");
-		formattedWrite(query, "(%-(%s%|, %))", params);
+		formattedWrite(query, "(%-('%s'%|, %))", params);
 
         return query.data;
     }
@@ -816,7 +818,7 @@ class UpdateBuilder {
         query.put(" SET ");
 		foreach(i, str;columns)
 		{
-			formattedWrite(query, "%s = %s", str,params[i]);
+			formattedWrite(query, "%s = '%s'", str,params[i]);
 			if(i < columns.length - 1)
 				query.put(" , ");
 		}

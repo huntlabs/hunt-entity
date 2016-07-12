@@ -68,6 +68,8 @@ class Query(T) if(is(T == class) || is(T == struct))
 		InsertBuilder build = new InsertBuilder();//scoped!(InsertBuilder)();//
 		string[string] value;
 		mixin(buildKeyValue!T());
+		//import std.stdio;
+		//writeln(value);
 		build.into(etable);
 		build.insert(value.keys);
 		build.values(value.values);
@@ -268,7 +270,7 @@ string getSetValueFun(T)()
 				enum list = getUDAs!(__traits(getMember,T, memberName), column);
 			}
 			string tstr ;//= "\tcase \"" ~ memberName ~ "\" : \n";
-			string va = "\t\t{\n\t\t\t" ~ "Nullable!" ~ typeof(__traits(getMember,T, memberName)).stringof ~ " v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
+			string va = "\t\t{\n\t\t\t" ~ "Nullable!(" ~ typeof(__traits(getMember,T, memberName)).stringof ~ ") v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
 				~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get();" ~ "\n\t\t} \n\t\treturn true;\n";
 		/*	if(list[0].name.length == 0)
 			{
@@ -295,7 +297,7 @@ string getSetValueFun(T)()
 			string name = columnName!(__traits(getMember,T, memberName),memberName);
 			if(hasKey)
 				keyW ~= "\tstr ~= \" and \"; \n";
-			keyW = keyW ~ "\tstr = str ~ \"" ~ name ~ " = \" ~ toSqlString(tv." ~ memberName ~ ");\n";
+			keyW = keyW ~ "\tstr = str ~ \"" ~ name ~ " = '\" ~ toSqlString(tv." ~ memberName ~ ") ~ \"'\" ;\n";
 			hasKey = true;
 		}
 	}
@@ -315,7 +317,7 @@ string toSqlString(T)(T v) if(TisSupport!T)
 	else static if(is(T == float) || is(T == double))
 	{
 		string str;
-		if(v = T.nan)
+		if(v == T.nan)
 				str = "0.0";
 		else
 			str = to!string(v);
@@ -323,21 +325,21 @@ string toSqlString(T)(T v) if(TisSupport!T)
 	}
 	else static if(is(T == Date) || is(T == DateTime))
 	{
-		return "'" ~ v.toISOExtString() ~ "'";
+		return v.toISOExtString() ;
 	}
 	else static if(is(T == Time))
 	{
-		return "'" ~ v.toString() ~ "'";
+		return  v.toString() ;
 	}
 	else static if(is(T== char))
 	{
 		char[1] tv;
 		tv[0] = v;
-		return "'" ~ tv.idup ~ "'";
+		return tv.idup;
 	}
 	else
 	{
-		return "'" ~ cast(string)v ~ "'";
+		return  cast(string)v;
 	}
 }
 

@@ -12,92 +12,80 @@ import database.query;
 import database.querybuilder;
 import std.database.front;
 
-@table("tuple")
-struct AAA
+@table("test2")
+struct Test
 {
 	@primarykey()
-	int a;
+	int id;
 
-	@primarykey()
-	int b;
+	@column("floatcol")
+	float fcol;
+
+	@column("doublecol")
+	double dcol;
+
+	@column("datecol")
+	Date date;
+
+	@column("datetimecol")
+	DateTime dt;
+
+	@column("timecol")
+	Time time;
 
 	@column()
-	int c;
+	string stringcol;
+
+	@column()
+	ubyte[] ubytecol;
 }
 
 void main()
 {
-	enum str = getSetValueFun!(AAA)();
+	enum str = getSetValueFun!(Test)();
 	writeln(str);
 
-	enum ley = buildKeyValue!(AAA)();
+	enum ley = buildKeyValue!(Test)();
 	writeln(ley);
-
 
 	DataBase dt = DataBase.create("mysql://127.0.0.1/test");
 	dt.connect();
-	dt.query("drop table if exists tuple");
-	dt.query("create table tuple (a int, b int, c int)");
-	string sql = "insert into tuple values(";
-	writeln("\ninsert\n\n\n");
-	Query!AAA quer = new Query!AAA(dt);
-	foreach(i; 0..100)
-	{
-		AAA a = AAA();
-		a.a = i;
-		a.b = i + 1;
-		a.c = i + 2;
-		quer.Insert(a);
-	//	import std.conv;
-	//	string ts  = sql ~ to!string(i) ~ "," ~ to!string(i+1) ~ "," ~ to!string(i+2) ~ ")";
-	//	dt.query(ts);
-	}
-	writeln("select");
+
+	Query!Test quer = new Query!Test(dt);
+
+	Test tmp;
+	tmp.id = 16;
+	tmp.fcol = 3.5;
+	tmp.dcol = 526.58;
+	tmp.date = Date(2016,07,12);
+	tmp.dt = DateTime(2016,12,15,15,30,20);
+	tmp.time = Time(12,10,23,256);
+	tmp.stringcol = "hello world";
+	tmp.ubytecol = cast(ubyte[])"hellllo".dup;
+
+	//quer.Insert(tmp);
+
 	auto iter = quer.Select();
-	writeln("tuple data: \n a \t b \t c");
-	AAA a;
-	if(!iter.empty)
-	{
-		a = iter.front();
-		iter.popFront();
-		writeln(a.a,"\t",a.b,"\t",a.c);
-	}
+
 	while(!iter.empty)
 	{
-		auto ta = iter.front();
+		Test tp = iter.front();
 		iter.popFront();
-		writeln(ta.a,"\t",ta.b,"\t",ta.c);
+		writeln("the string is : ", tp.stringcol);
+		writeln("the ubyte is : ", cast(string)tmp.ubytecol);
 	}
-	a.c = 1002;
 
-	dt.query("SET SQL_SAFE_UPDATES = 0");
-	quer.Update(a);
-	a.a = 20;
-	a.b = 21;
-	quer.Delete(a);
+	/*tmp.stringcol = "hello hello";
+	quer.Update(tmp);
 
-	/*
-	auto st = dt.query("select * from tuple");
-	assert(st.hasRows());
-
-	auto rows = st.rows();
-	int i = 0;
-	while(!rows.empty())
+	iter = quer.Select();
+	
+	while(!iter.empty)
 	{
-		scope(exit){ ++i;rows.popFront();}
-		auto row = rows.front();
-		writeln("-----------new row : ", i, "----------");
-		int w = row.width();
-		foreach(t; 0..w)
-		{
-			//Nullable!
-			auto value = row[t];
-			writeln("type == ", value.type());
-			Nullable!int v = value.getInt();
-			if(v.isNull())
-				writeln("is null");
-			else
-				writeln("v = ", v);
-		}
+		Test tp = iter.front();
+		iter.popFront();
+		writeln("the string is : ", tp.stringcol);
 	}*/
+
+	quer.Delete(tmp);
 }

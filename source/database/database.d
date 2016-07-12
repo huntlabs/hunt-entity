@@ -232,3 +232,65 @@ abstract class CellValue
 	}
 
 }
+
+version(unittest)
+{
+	@table("tuple")
+	struct AAA
+	{
+		@primarykey()
+		int a;
+		
+		@primarykey()
+		int b;
+		
+		@column()
+		int c;
+	}
+}
+
+unittest
+{
+	DataBase dt = DataBase.create("mysql://127.0.0.1/test");
+	dt.connect();
+	dt.query("drop table if exists tuple");
+	dt.query("create table tuple (a int, b int, c int)");
+	string sql = "insert into tuple values(";
+	writeln("\ninsert\n\n\n");
+	Query!AAA quer = new Query!AAA(dt);
+	foreach(i; 0..100)
+	{
+		AAA a = AAA();
+		a.a = i;
+		a.b = i + 1;
+		a.c = i + 2;
+		quer.Insert(a);
+		//	import std.conv;
+		//	string ts  = sql ~ to!string(i) ~ "," ~ to!string(i+1) ~ "," ~ to!string(i+2) ~ ")";
+		//	dt.query(ts);
+	}
+	writeln("select");
+	auto iter = quer.Select();
+	writeln("tuple data: \n a \t b \t c");
+	AAA a;
+	if(!iter.empty)
+	{
+		a = iter.front();
+		iter.popFront();
+		writeln(a.a,"\t",a.b,"\t",a.c);
+	}
+	while(!iter.empty)
+	{
+		auto ta = iter.front();
+		iter.popFront();
+		writeln(ta.a,"\t",ta.b,"\t",ta.c);
+	}
+	a.c = 1002;
+	
+	dt.query("SET SQL_SAFE_UPDATES = 0");
+	quer.Update(a);
+	a.a = 20;
+	a.b = 21;
+	quer.Delete(a);
+
+}
