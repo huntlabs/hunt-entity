@@ -1,10 +1,10 @@
-﻿module database.muitlquery;
+﻿module entity.muitlquery;
 
 import std.typetuple;
 import std.typecons;
 
-import database.database;
-import database.query;
+import entity.database;
+import entity.query;
 
 class MuitlQuery(T,V) if(is(T == class) || is(T == struct) || is(V == class) || is(V == struct))
 {

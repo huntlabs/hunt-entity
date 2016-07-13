@@ -1,4 +1,4 @@
-﻿module database.database;
+﻿module entity.database;
 
 public import std.database.front;
 
@@ -25,7 +25,7 @@ abstract class DataBase
 		{
 			case "mysql" :
 				{
-					import database.dbdrive.mysql;
+					import entity.dbdrive.mysql;
 					db = new MyDataBase(url);
 				}
 				break;
@@ -34,7 +34,7 @@ abstract class DataBase
 		{
 			case "postgres" :
 			{
-				import database.dbdrive.pgsql;
+				import entity.dbdrive.pgsql;
 				db = new PGDataBase(url);
 			}
 			break;
@@ -43,7 +43,7 @@ abstract class DataBase
 		{
 			case "path" :
 			{
-				import database.dbdrive.sqlite;
+				import entity.dbdrive.sqlite;
 				db = new LiteDataBase(url);
 			}
 			break;

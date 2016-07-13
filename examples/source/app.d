@@ -4,12 +4,11 @@ import std.traits;
 import std.datetime;
 import std.typecons;
 
-import database.database;
-import database.dbdrive.mysql;
-import database.dbdrive.impl;
-import database.query;
+import entity.database;
+import entity.dbdrive.mysql;
+import entity.query;
 
-import database.querybuilder;
+import entity.querybuilder;
 import std.database.front;
 
 /*

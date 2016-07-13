@@ -1,9 +1,9 @@
-﻿module database.dbdrive.impl;
+﻿module entity.dbdrive.impl;
 
 import std.algorithm.mutation;
 import std.experimental.logger;
 
-import database.database;
+import entity.database;
 
 import std.database.front;
 

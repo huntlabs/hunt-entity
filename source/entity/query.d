@@ -1,10 +1,10 @@
-﻿module database.query;
+﻿module entity.query;
 
 import std.traits;
 import std.experimental.logger;
 
-import database.database;
-import database.querybuilder;
+import entity.database;
+import entity.querybuilder;
 
 struct table
 {

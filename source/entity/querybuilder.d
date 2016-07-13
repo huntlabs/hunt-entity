@@ -1,12 +1,12 @@
 
-module database.querybuilder;
+module entity.querybuilder;
 
 import std.array;
 import std.conv;
 import std.format;
 import std.variant;
 
-import database.query;
+import entity.query;
 
 
 /**

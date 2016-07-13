@@ -1,9 +1,9 @@
-﻿module database.dbdrive.mysql;
+﻿module entity.dbdrive.mysql;
 
 version(USE_MYSQL) :
 
-import database.database;
-import database.dbdrive.impl;
+import entity.database;
+import entity.dbdrive.impl;
 
 import std.database.front;
 import std.database.mysql.database;
