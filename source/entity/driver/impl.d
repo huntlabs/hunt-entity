@@ -1,4 +1,4 @@
-﻿module entity.dbdrive.impl;
+﻿module entity.driver.impl;
 
 import std.algorithm.mutation;
 import std.experimental.logger;

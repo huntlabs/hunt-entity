@@ -1,9 +1,9 @@
-﻿module entity.dbdrive.pgsql;
+﻿module entity.driver.pgsql;
 
 version(USE_PGSQL) :
 
 import entity.database;
-import entity.dbdrive.impl;
+import entity.driver.impl;
 
 import std.database.front;
 import std.database.postgres.database;

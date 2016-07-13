@@ -25,7 +25,7 @@ abstract class DataBase
 		{
 			case "mysql" :
 				{
-					import entity.dbdrive.mysql;
+					import entity.driver.mysql;
 					db = new MyDataBase(url);
 				}
 				break;
@@ -34,7 +34,7 @@ abstract class DataBase
 		{
 			case "postgres" :
 			{
-				import entity.dbdrive.pgsql;
+				import entity.driver.pgsql;
 				db = new PGDataBase(url);
 			}
 			break;
@@ -43,7 +43,7 @@ abstract class DataBase
 		{
 			case "path" :
 			{
-				import entity.dbdrive.sqlite;
+				import entity.driver.sqlite;
 				db = new LiteDataBase(url);
 			}
 			break;

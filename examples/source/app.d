@@ -4,12 +4,9 @@ import std.traits;
 import std.datetime;
 import std.typecons;
 
-import entity.database;
-import entity.dbdrive.mysql;
-import entity.query;
 
-import entity.querybuilder;
-import std.database.front;
+//import std.database.front;
+import entity;
 
 /*
 //pgsql
@@ -88,7 +85,7 @@ void main()
 	tmp.stringcol = "hello world33";
 	tmp.ubytecol = cast(ubyte[])"hellllo33".dup;
 
-	//quer.Insert(tmp);
+	quer.Insert(tmp);
 
 	auto iter = quer.Select();
 	if(iter !is null)

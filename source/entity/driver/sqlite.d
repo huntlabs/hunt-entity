@@ -1,9 +1,9 @@
-﻿module entity.dbdrive.sqlite;
+﻿module entity.driver.sqlite;
 
 version(USE_SQLITE) :
 
 import entity.database;
-import entity.dbdrive.impl;
+import entity.driver.impl;
 
 import std.database.front;
 import std.database.sqlite.database;
