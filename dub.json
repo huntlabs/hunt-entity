@@ -1,5 +1,5 @@
 {
-	"name": "database",
+	"name": "entity",
 	"authors": [
 		"putao D team"
 	],
@@ -9,8 +9,8 @@
 	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
 	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
-            "dstddb" : {
-                "path" : "../dstddb/"
+            "database" : {
+                "version" : "~>0.0.1"
             }
 	}
 }

@@ -12,6 +12,31 @@ import database.query;
 import database.querybuilder;
 import std.database.front;
 
+/*
+//pgsql
+CREATE TABLE test2
+(
+  id integer NOT NULL,
+  floatcol double precision,
+  doublecol real,
+  datecol date,
+  datetimecol timestamp without time zone,
+  timecol time without time zone,
+  stringcol text,
+  ubytecol text,
+  CONSTRAINT kry PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE test2
+  OWNER TO postgres;
+*/
+
+/*
+
+*/
+
 @table("test2")
 struct Test
 {
@@ -77,9 +102,10 @@ void main()
 			writeln("the ubyte is : ", cast(string)tp.ubytecol);
 		}
 
-	/*tmp.stringcol = "hello hello";
+	tmp.stringcol = "hello hello";
 	quer.Update(tmp);
 
+	/*
 	iter = quer.Select();
 	
 	while(!iter.empty)
