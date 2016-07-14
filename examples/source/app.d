@@ -33,41 +33,36 @@ ALTER TABLE test2
 
 */
 
-@table("test2")
+@TABLE("test2")
 struct Test
 {
-	@primarykey()
+	@PRIMARYKEY()
 	int id;
 
-	@column("floatcol")
+	@COLUMN("floatcol")
 	float fcol;
 
-	@column("doublecol")
+	@COLUMN("doublecol")
 	double dcol;
 
-	@column("datecol")
+	@COLUMN("datecol")
 	Date date;
 
-	@column("datetimecol")
+	@COLUMN("datetimecol")
 	DateTime dt;
 
-	@column("timecol")
+	@COLUMN("timecol")
 	Time time;
 
-	@column()
+	@COLUMN()
 	string stringcol;
 
-	@column()
+	@COLUMN()
 	ubyte[] ubytecol;
-}
+} 
 
 void main()
 {
-	enum str = getSetValueFun!(Test)();
-	writeln(str);
-
-	enum ley = buildKeyValue!(Test)();
-	writeln(ley);
 
 	//DataBase dt = DataBase.create("mysql://127.0.0.1/test");
 	DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
