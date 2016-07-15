@@ -6,8 +6,6 @@
 	"description": "ORM for dlang, suport PostgreSQL / MySQL / SQLite.",
 	"copyright": "Copyright (C) 2015-2016 Shanghai Putao Technology Co., Ltd",
 	"license": "Apache-2.0",
-	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
-	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
             "database" : {
                 "version" : "~>0.0.2"

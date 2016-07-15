@@ -73,3 +73,5 @@ void main()
 		}
 }
 ```
+	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
+	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
