@@ -6,18 +6,18 @@ import std.experimental.logger;
 import entity.database;
 import entity.querybuilder;
 
-struct TABLE
+struct Table
 {
 	string name;
 }
 
 
-struct PRIMARYKEY
+struct Primarykey 
 {
 	string name;
 }
 
-struct COLUMN 
+struct Field 
 {
 	string name;
 }
@@ -241,7 +241,7 @@ string buildKeyValue(T)()
 	foreach(memberName; __traits(derivedMembers,T))
 	{
 		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && 
-			(hasUDA!(__traits(getMember,T, memberName),PRIMARYKEY) || hasUDA!(__traits(getMember,T, memberName),COLUMN) ))
+			(hasUDA!(__traits(getMember,T, memberName),Primarykey) || hasUDA!(__traits(getMember,T, memberName),Field) ))
 		{
 			sql ~= "\tvalue[\"" ~ columnName!(__traits(getMember,T, memberName),memberName) ~ "\"] = toSqlString(v." ~ memberName ~ ");\n";
 		}
@@ -252,7 +252,7 @@ string buildKeyValue(T)()
 string getSetValueFun(T)()
 {
 	enum tname  = TtableName!T;
-	enum hasTable = hasUDA!(T,TABLE);
+	enum hasTable = hasUDA!(T,Table);
 	string keyW = "\nstatic string keyWhile(ref T tv){\n\tstring str;\n";
 	bool hasKey = false;
 	string str = "\nstatic bool setTValue(ref T tv, CellValue value) { \n";
@@ -262,15 +262,15 @@ string getSetValueFun(T)()
 	{
 		//生成case 赋值函数
 		static if (TisSupport!(typeof(__traits(getMember,T, memberName))) && TisPublic!(__traits(getMember,T, memberName)) && 
-			(hasUDA!(__traits(getMember,T, memberName),PRIMARYKEY) || hasUDA!(__traits(getMember,T, memberName),COLUMN) ))
+			(hasUDA!(__traits(getMember,T, memberName),Primarykey) || hasUDA!(__traits(getMember,T, memberName),Field) ))
 		{
-			static if(hasUDA!(__traits(getMember,T, memberName),PRIMARYKEY))
+			static if(hasUDA!(__traits(getMember,T, memberName),Primarykey))
 			{
-				enum list = getUDAs!(__traits(getMember,T, memberName), PRIMARYKEY);
+				enum list = getUDAs!(__traits(getMember,T, memberName), Primarykey);
 			}
 			else
 			{
-				enum list = getUDAs!(__traits(getMember,T, memberName), COLUMN);
+				enum list = getUDAs!(__traits(getMember,T, memberName), Field);
 			}
 			string tstr ;//= "\tcase \"" ~ memberName ~ "\" : \n";
 			string va = "\t\t{\n\t\t\t" ~ "Nullable!(" ~ typeof(__traits(getMember,T, memberName)).stringof ~ ") v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
@@ -286,7 +286,7 @@ string getSetValueFun(T)()
 			str ~= va;
 		}
 		// 生成主键的where函数
-		static if(hasUDA!(__traits(getMember,T, memberName),PRIMARYKEY))
+		static if(hasUDA!(__traits(getMember,T, memberName),Primarykey))
 		{
 			string name = columnName!(__traits(getMember,T, memberName),memberName);
 			if(hasKey)
@@ -339,21 +339,21 @@ string toSqlString(T)(T v) if(TisSupport!T)
 
 template columnName(alias T,string mname)
 {
-	static if(hasUDA!(T,PRIMARYKEY))
+	static if(hasUDA!(T,Primarykey))
 	{
-		enum columnName = tColumnName(getUDAs!(T, PRIMARYKEY)[0].name,mname);
+		enum columnName = tColumnName(getUDAs!(T, Primarykey)[0].name,mname);
 	}
 	else
 	{
-		enum columnName = tColumnName(getUDAs!(T, COLUMN)[0].name,mname);
+		enum columnName = tColumnName(getUDAs!(T, Field)[0].name,mname);
 	}
 }
 
 template TtableName(T)
 {
-	static if(hasUDA!(T,TABLE))
+	static if(hasUDA!(T,Table))
 	{
-		enum TtableName = getUDAs!(T, TABLE)[0].name;
+		enum TtableName = getUDAs!(T, Table)[0].name;
 	}
 	else
 	{
@@ -426,11 +426,11 @@ template TisPublic(alias T)
 
 version(unittest)
 {
-	@TABLE("name")
+	@Table("name")
 	class AAA
 	{
-		@PRIMARYKEY int a;
-		@PRIMARYKEY int b;
+		@Primarykey int a;
+		@Primarykey int b;
 		string c;
 		double d;
 		
