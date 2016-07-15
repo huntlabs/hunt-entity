@@ -10,7 +10,7 @@
 	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
             "database" : {
-                "version" : "~>0.0.1"
+                "version" : "~>0.0.2"
             }
 	}
 }
