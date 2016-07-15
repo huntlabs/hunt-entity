@@ -64,8 +64,8 @@ struct Test
 void main()
 {
 
-	//DataBase dt = DataBase.create("mysql://127.0.0.1/test");
-	DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
+	DataBase dt = DataBase.create("mysql://127.0.0.1:3306/test?username=root");
+	//DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
 	dt.connect();
 
 	Query!Test quer = new Query!Test(dt);
@@ -80,7 +80,7 @@ void main()
 	tmp.stringcol = "hello world33";
 	tmp.ubytecol = cast(ubyte[])"hellllo33".dup;
 
-	quer.Insert(tmp);
+	//quer.Insert(tmp);
 
 	auto iter = quer.Select();
 	if(iter !is null)
@@ -94,7 +94,7 @@ void main()
 		}
 
 	tmp.stringcol = "hello hello";
-	quer.Update(tmp);
+	//quer.Update(tmp);
 
 	/*
 	iter = quer.Select();

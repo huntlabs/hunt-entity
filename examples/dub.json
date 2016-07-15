@@ -6,6 +6,8 @@
 	"description": "A minimal D application.",
 	"copyright": "Copyright © 2016, dsby",
 	"license": "proprietary",
+	"libs" : ["mysqlclient","pq","pgtypes","sqlite3"],
+	"versions" : ["USE_MYSQL", "USE_PGSQL", "USE_SQLITE"],
 	"dependencies" : {
             "entity" : {
                 "path" : "../"
