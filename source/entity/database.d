@@ -18,7 +18,6 @@ abstract class DataBase
 	{
 		import std.database.uri;
 		auto ul = toURI(url);
-		DataBase db;
 		switch(ul.protocol)
 		{
 		version(USE_MYSQL)
@@ -26,32 +25,28 @@ abstract class DataBase
 			case "mysql" :
 				{
 					import entity.driver.mysql;
-					db = new MyDataBase(url);
+					return new MyDataBase(url);
 				}
-				break;
 		}
 		version(USE_PGSQL)
 		{
 			case "postgres" :
 			{
 				import entity.driver.pgsql;
-				db = new PGDataBase(url);
+				return new PGDataBase(url);
 			}
-			break;
 		}
 		version(USE_SQLITE)
 		{
 			case "path" :
 			{
 				import entity.driver.sqlite;
-				db = new LiteDataBase(url);
+				return  new LiteDataBase(url);
 			}
-			break;
 		}
 		default:
 			throw new Exception("protocol is not support!");
 		}
-		return db;
 	}
 }
 

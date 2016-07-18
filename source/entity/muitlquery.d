@@ -21,9 +21,9 @@ class MuitlQuery(T,V) if(is(T == class) || is(T == struct) || is(V == class) || 
 
 	Iterator Select(string sql)
 	{
-		Statement rusel = _db.query(sql);
-		if(rusel.hasRows)
-			return new Iterator(rusel.rows());
+		Statement result = _db.query(sql);
+		if(result.hasRows)
+			return new Iterator(result.rows());
 		else
 			return null;
 	}
