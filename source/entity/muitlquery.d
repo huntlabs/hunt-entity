@@ -173,6 +173,14 @@ class MuitlQueryIterator(T,V) if(is(T == class) || is(T == struct) || is(V == cl
 		}
 		return result;
 	}
+
+	void clear()
+	{
+		while(!empty)
+		{
+			_set.popFront();
+		}
+	}
 	
 private:
 	this(RowSet set)

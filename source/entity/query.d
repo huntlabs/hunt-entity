@@ -222,6 +222,14 @@ class QueryIterator(T) if(is(T == class) || is(T == struct))
 		return result;
 	}
 
+	void clear()
+	{
+		while(!empty)
+		{
+			_set.popFront();
+		}
+	}
+
 private:
 	this(RowSet set)
 	{
