@@ -51,10 +51,12 @@ class Query(T) if(is(T == class) || is(T == struct))
 	Iterator Select(string sql)
 	{
 		Statement rusel = _db.query(sql);
-		if(rusel.hasRows)
+		if(rusel.hasRows) {
 			return new Iterator(rusel.rows());
-		else
+		}else{
+			rusel.columns();
 			return null;
+		}
 	}
 
 	void Insert(string table = "")(ref T v)
@@ -75,7 +77,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 		build.into(etable);
 		build.insert(value.keys);
 		build.values(value.values);
-		_db.query(build.build());
+		_db.query(build.build()).columns();
 		build.destroy;
 	}
 
@@ -108,7 +110,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 	//	string sql = "SET SQL_SAFE_UPDATES = 0;";
 	//	sql ~= build.build();
 	//	_db.query(sql);
-		_db.query(build.build());
+		_db.query(build.build()).columns();
 		build.destroy;
 	}
 
@@ -142,7 +144,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 		build.from(etable);
 		if(where.length > 0)
 			build.where(where);
-		_db.query(build.build());
+		_db.query(build.build()).columns();
 		build.destroy;
 	}
 	
