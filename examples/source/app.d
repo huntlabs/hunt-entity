@@ -64,14 +64,14 @@ struct Test
 void main()
 {
 
-	//DataBase dt = DataBase.create("mysql://127.0.0.1:3306/test?username=root");
-	DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
+	DataBase dt = DataBase.create("mysql://127.0.0.1:3306/test?username=root");
+	//DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
 	dt.connect();
 
 	Query!Test quer = new Query!Test(dt);
 
 	Test tmp;
-	tmp.id = 3;
+	tmp.id = 26;
 	tmp.fcol = 3.5;
 	tmp.dcol = 526.58;
 	tmp.date = Date(2016,07,12);

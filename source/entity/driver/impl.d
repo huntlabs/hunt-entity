@@ -91,6 +91,11 @@ class StatementImpl(DB) : Statement
 		return new ColumnSetImpl!(DB)(_statement.columns());
 	}
 
+	override void results()
+	{
+		_statement.results();
+	}
+
 private:
 	TStatement _statement = void;
 }

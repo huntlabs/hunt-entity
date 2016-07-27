@@ -60,6 +60,7 @@ abstract class Statement
 	RowSet rows();
 	ColumnSet columns();
 
+	void results();
 }
 
 

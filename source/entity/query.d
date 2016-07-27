@@ -54,7 +54,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 		if(rusel.hasRows) {
 			return new Iterator(rusel.rows());
 		}else{
-			rusel.columns();
+			rusel.results();
 			return null;
 		}
 	}
@@ -77,7 +77,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 		build.into(etable);
 		build.insert(value.keys);
 		build.values(value.values);
-		_db.query(build.build()).columns();
+		_db.query(build.build()).results();
 		build.destroy;
 	}
 
@@ -110,7 +110,7 @@ class Query(T) if(is(T == class) || is(T == struct))
 	//	string sql = "SET SQL_SAFE_UPDATES = 0;";
 	//	sql ~= build.build();
 	//	_db.query(sql);
-		_db.query(build.build()).columns();
+		_db.query(build.build()).results();
 		build.destroy;
 	}
 
