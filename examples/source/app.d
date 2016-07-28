@@ -64,6 +64,13 @@ struct Test
 void main()
 {
 
+
+//         enum str = getSetValueFun!(Test)();
+//         writeln(str);
+//         
+//         enum str2 = buildKeyValue!(Test)();
+//         writeln(str2);
+
 	DataBase dt = DataBase.create("mysql://127.0.0.1:3306/test?username=root");
 	//DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
 	dt.connect();

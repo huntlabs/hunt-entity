@@ -284,7 +284,7 @@ string getSetValueFun(T)()
 			}
 			string tstr ;//= "\tcase \"" ~ memberName ~ "\" : \n";
 			string va = "\t\t{\n\t\t\t" ~ "Nullable!(" ~ typeof(__traits(getMember,T, memberName)).stringof ~ ") v = value.get" ~ TtypeName!(typeof(__traits(getMember,T, memberName))) ~ "();"
-				~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = v.get();" ~ "\n\t\t} \n\t\treturn true;\n";
+				~ "\n\t\t\tif(!v.isNull()) tv." ~ memberName ~ " = " ~ TtoType!(typeof(__traits(getMember,T, memberName))) ~ "\n\t\t} \n\t\treturn true;\n";
 				foreach(col; list)
 				{
 					string stname = tColumnName(col.name,memberName);
@@ -416,14 +416,14 @@ template TisSupport(T)
 
 template TtoType(T)
 {
-	enum type  = "value.as!(" ~ T.stringof ~ ")()";//T.stringof;
+	enum type  = "v.get()";//T.stringof;
 	static if(isArray!(T))
 	{
-		enum TtoType = type ~ ".dup";
+		enum TtoType = type ~ ".dup;";
 	}
 	else
 	{
-		enum TtoType = type;
+		enum TtoType = type ~ ";";
 	}
 }
 
