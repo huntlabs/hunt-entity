@@ -232,22 +232,24 @@ abstract class CellValue
 
 version(unittest)
 {
-	@table("tuple")
+	import entity.query;
+	@Table("tuple")
 	struct AAA
 	{
-		@primarykey()
+		@Primarykey()
 		int a;
 		
-		@primarykey()
+		@Primarykey()
 		int b;
 		
-		@column()
+		@Field()
 		int c;
 	}
 }
 
 unittest
 {
+	import std.stdio;
 	DataBase dt = DataBase.create("mysql://127.0.0.1/test");
 	dt.connect();
 	dt.query("drop table if exists tuple");

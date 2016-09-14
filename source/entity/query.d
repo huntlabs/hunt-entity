@@ -433,35 +433,3 @@ template TisPublic(alias T)
 	enum TisPublic = (protection == "public");
 }
 
-
-version(unittest)
-{
-	@Table("name")
-	class AAA
-	{
-		@Primarykey int a;
-		@Primarykey int b;
-		string c;
-		double d;
-		
-		Object obj;
-		
-		DateTime dt;
-		ubyte[] aa;
-	}
-}
-
-unittest
-{
-	static if(hasUDA!(AAA,table))
-	{
-		writeln("name is  = ",getUDAs!(AAA, table)[0].name);
-	}
-	writeln("over!!!");
-	
-	enum str = getSetValueFun!(AAA)();
-	writeln(str);
-	
-	enum ley = buildKeyValue!(AAA)();
-	writeln(ley);
-}

@@ -1144,6 +1144,7 @@ mixin template LimitFunctions(T ) {
 unittest
 {
 	import std.stdio;
+	import std.datetime;
 	string[] nm = ["a","b", "c", "d","h"];
 	string[] vv = ["0","1", "3", "5"];
 	InsertBuilder bu = new InsertBuilder;
