@@ -6,6 +6,7 @@ import std.typecons;
 
 
 //import std.database.front;
+import ddbc;
 import entity;
 
 /*
@@ -33,85 +34,46 @@ ALTER TABLE test2
 
 */
 
-@Table("test2")
-struct Test
+@Entity
+@Table("f_image_info")
+struct FImageInfo
 {
-	@Primarykey()
-	int id;
+	@Primarykey(1)
+	string hash;
 
-	@Field ("floatcol")
-	float fcol;
+	@Field("w",2)
+	int widght;
 
-	@Field("doublecol")
-	double dcol;
+	@Field("h",3)
+	int hight;
 
-	@Field("datecol")
-	Date date;
-
-	@Field("datetimecol")
-	DateTime dt;
-
-	@Field("timecol")
-	Time time;
-
-	@Field()
-	string stringcol;
-
-	@Field()
-	ubyte[] ubytecol;
+	@Field("ext",4)
+	string ext;
 } 
 
 void main()
 {
+	string conUrl = "mysql://10.1.11.31:3306/file_images?user=dev,password=111111";
+	writeln("con url is  : ", conUrl);
+	DateBase conn = createConnection(conUrl);
+	scope(exit) conn.close();
 
+	auto query =  conn.getQuery!FImageInfo();
+	auto iter = query.Select("select * from f_image_info LIMIT 10");
+	foreach(int i,FImageInfo info; iter){
+		writeln("index : ", i, "   hash is : ", info.hash, " w = ", info.widght, "  h = ", info.hight, "  ext = ", info.ext);
+	}
 
-//         enum str = getSetValueFun!(Test)();
-//         writeln(str);
-//         
-//         enum str2 = buildKeyValue!(Test)();
-//         writeln(str2);
-
-	DataBase dt = DataBase.create("mysql://127.0.0.1:3306/test?username=root");
-	//DataBase dt = DataBase.create("postgres://127.0.0.1/test?username=postgres&password=");
-	dt.connect();
-
-	Query!Test quer = new Query!Test(dt);
-
-	Test tmp;
-	tmp.id = 26;
-	tmp.fcol = 3.5;
-	tmp.dcol = 526.58;
-	tmp.date = Date(2016,07,12);
-	tmp.dt = DateTime(2016,12,15,15,30,20);
-	tmp.time = Time(12,10,23,256);
-	tmp.stringcol = "hello world355553";
-	tmp.ubytecol = cast(ubyte[])"hellllo33".dup;
-
-	quer.Insert(tmp);
-
-	auto iter = quer.Select();
-	if(iter !is null)
-		while(!iter.empty)
-		{
-			Test tp = iter.front();
-			iter.popFront();
-			writeln("float is  : ", tp.fcol);
-			writeln("the string is : ", tp.stringcol);
-			writeln("the ubyte is : ", cast(string)tp.ubytecol);
-		}
-
-	tmp.stringcol = "hello hello";
-	//quer.Update(tmp);
-
-	/*
-	iter = quer.Select();
-	
-	while(!iter.empty)
-	{
-		Test tp = iter.front();
-		iter.popFront();
-		writeln("the string is : ", tp.stringcol);
-	}*/
-
-	//quer.Delete(tmp);
+	FImageInfo tmp;
+	tmp.hash = "tmp112asdawsrwaerewrewr222";
+	tmp.widght = 1000;
+	tmp.hight = 2005;
+	tmp.ext = ".tmp";
+	query.Insert(tmp);
+	writeln("new select !!!!");
+	iter = query.Select("select * from f_image_info where hash = 'tmp112asdawsrwaerewrewr222';");
+	foreach(int i,FImageInfo info; iter){
+		writeln("index : ", i, "   hash is : ", info.hash, " w = ", info.widght, "  h = ", info.hight, "  ext = ", info.ext);
+	}
+	query.Delete(tmp);
 }

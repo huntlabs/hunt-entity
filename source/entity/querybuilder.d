@@ -84,7 +84,7 @@ struct WhereBuilder {
      * Performs a comparison between the column and a value,
      * using the specified operator.
      **/
-    WhereBuilder compare(VT)(string column, string operator, VT value) if(TisSupport!VT)
+    WhereBuilder compare(VT)(string column, string operator, VT value) 
     in {
         if(column is null || operator is null) {
             throw new QueryException("Column name and operator cannot be null.");
@@ -184,7 +184,7 @@ struct WhereBuilder {
     /**
      * Tests if the column appears in a set of values.
      **/
-	WhereBuilder whereIn(VT)(string column, VT[] values)  if(TisSupport!VT)
+	WhereBuilder whereIn(VT)(string column, VT[] values)
     in {
         if(column is null || values is null) {
             throw new QueryException("Column name and values cannot be null.");
@@ -221,7 +221,7 @@ struct WhereBuilder {
     /**
      * Tests if the column does not appear in a set of values.
      **/
-	WhereBuilder whereNotIn(VT)(string column, VT[] values) if(TisSupport!VT)
+	WhereBuilder whereNotIn(VT)(string column, VT[] values)
     in {
         if(column is null || values is null) {
             throw new QueryException("Column name and values cannot be null.");
@@ -631,7 +631,7 @@ class InsertBuilder {
      * Parameters are passed through a prepared statement,
      * and never appear in the query string itself.
      **/
-	InsertBuilder value(VT)(VT value) if(TisSupport!VT)
+	InsertBuilder value(VT)(VT value)
 	{
 		params ~= toSqlString(value);
 
@@ -645,7 +645,7 @@ class InsertBuilder {
      * Parameters are passed through a prepared statement,
      * and never appear in the query string itself.
      **/
-	InsertBuilder values(VT)(VT[] values) if(TisSupport!VT)
+	InsertBuilder values(VT)(VT[] values)
     in {
         if(values is null) {
             throw new QueryException("Values cannot be null.");
@@ -783,7 +783,7 @@ class UpdateBuilder {
     /**
      * Adds a column value to the update query.
      **/
-	UpdateBuilder set(VT)(string name, VT value) if(TisSupport!VT)
+	UpdateBuilder set(VT)(string name, VT value) 
     in {
         if(name is null) {
             throw new QueryException("Column name cannot be null.");
@@ -797,7 +797,7 @@ class UpdateBuilder {
     /**
      * Adds multiple column values to the update query.
      **/
-	UpdateBuilder set(VT)(VT[string] values) if(TisSupport!VT)
+	UpdateBuilder set(VT)(VT[string] values) 
     {
         // Add the values.
         foreach(name, value; values) {
