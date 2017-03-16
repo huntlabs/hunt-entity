@@ -10,6 +10,7 @@ Available as DUB package
 Use SQLite 3.7.11 or later. In older versions syntax INSERT INTO (col1, col2) VALUES (1, 2), (3, 4) is not supported.
 
 Database config url:
+--------------------
 ```conf
 postgresql://username:password@localhost:port/database?charset=utf-8
 ```
