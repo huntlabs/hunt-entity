@@ -1,5 +1,5 @@
 
-module entity.core;
+module entity;
 
 //public import std.ascii;
 //public import std.conv;
@@ -18,7 +18,6 @@ public import ddbc;
 public import entity.annotations;
 public import entity.manager;
 public import entity.metadata;
-public import entity.core;
 public import entity.type;
 public import entity.dialect;
 

@@ -5,7 +5,7 @@ import std.stdio;
 import std.traits;
 import std.typecons;
 
-import ddbc.core;
+import ddbc;
 
 
 // convenient aliases for Nullable types

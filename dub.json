@@ -1,6 +1,6 @@
 {
     "name": "entity",
-    "description": "ORM for D language, fork from Hibernated",
+    "description": "ORM for D programming language, fork from Hibernated.",
     "authors": ["donglei"],
     "license": "Boost Software License (BSL 1.0)",
     "dependencies": {
@@ -11,7 +11,7 @@
     "configurations": [
         {
             "name": "full",
-            "versions": ["USE_MYSQL", "USE_SQLITE", "USE_PGSQL"],
+            "versions": ["USE_SQLITE", "USE_PGSQL", "USE_MYSQL"],
             "subConfigurations": {
                 "ddbc": "full"
             }

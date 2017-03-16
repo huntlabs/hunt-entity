@@ -6,19 +6,17 @@ import std.stdio;
 import std.exception;
 import std.variant;
 
-import ddbc.core;
-import ddbc.common;
+import ddbc;
 
 import entity.type;
 import entity.dialect;
-import entity.core;
 import entity.metadata;
 import entity.query;
 
 const TRACE_REFS = false;
 
 /// Factory to create HibernateD EntityManagers - similar to org.hibernate.EntityManagerFactory
-interface EntityManagerFactory {
+interface IEntityManagerFactory {
     /// close all active sessions
 	void close();
     /// check if session factory is closed
@@ -30,7 +28,7 @@ interface EntityManagerFactory {
 }
 
 /// EntityManager - main interface to load and persist entities -- similar to org.hibernate.EntityManager
-abstract class EntityManager
+abstract class BaseEntityManager
 {
     /// returns metadata
     EntityMetaData getMetaData();
@@ -54,7 +52,7 @@ abstract class EntityManager
     /// Check if this instance is associated with this EntityManager.
     bool contains(Object object);
     /// Retrieve session factory used to create this session
-	EntityManagerFactory getEntityManagerFactory();
+	IEntityManagerFactory getEntityManagerFactory();
     /// Lookup metadata to find entity name for object.
 	string getEntityName(Object object);
     /// Lookup metadata to find entity name for class type info.
@@ -158,9 +156,9 @@ abstract class Query
 /// Allows reaction to basic EntityManagerFactory occurrences
 interface EntityManagerFactoryObserver {
     ///Callback to indicate that the given factory has been closed.
-    void sessionFactoryClosed(EntityManagerFactory factory);
+    void managerFactoryClosed(IEntityManagerFactory factory);
     ///Callback to indicate that the given factory has been created and is now ready for use.
-    void sessionFactoryCreated(EntityManagerFactory factory);
+    void managerFactoryCreated(IEntityManagerFactory factory);
 }
 
 interface EventListeners {
@@ -227,27 +225,27 @@ class EntityCache {
 
 /// helper class to disconnect Lazy loaders from closed session.
 class EntityManagerAccessor {
-    private EntityManagerImpl _session;
+    private EntityManager _manager;
 
-    this(EntityManagerImpl session) {
-        _session = session;
+    this(EntityManager manager) {
+        _manager = manager;
     }
     /// returns session, with session state check - throws LazyInitializationException if attempting to get unfetched lazy data while session is closed
-    EntityManagerImpl get() {
-        enforceEx!LazyInitializationException(_session !is null, "Cannot read from closed session");
-        return _session;
+    EntityManager get() {
+        enforceEx!LazyInitializationException(_manager !is null, "Cannot read from closed session");
+        return _manager;
     }
     /// nulls session reference
     void onEntityManagerClosed() {
-        _session = null;
+        _manager = null;
     }
 }
 
 /// Implementation of HibernateD session
-class EntityManagerImpl : EntityManager {
+class EntityManager : BaseEntityManager {
 
     private bool closed;
-    EntityManagerFactoryImpl sessionFactory;
+    IEntityManagerFactory managerFactory;
     private EntityMetaData metaData;
     Dialect dialect;
     DataSource connectionPool;
@@ -299,9 +297,9 @@ class EntityManagerImpl : EntityManager {
         enforceEx!EntityManagerException(!closed, "EntityManager is closed");
     }
 
-    this(EntityManagerFactoryImpl sessionFactory, EntityMetaData metaData, Dialect dialect, DataSource connectionPool) {
+    this(IEntityManagerFactory managerFactory, EntityMetaData metaData, Dialect dialect, DataSource connectionPool) {
         //writeln("Creating session");
-        this.sessionFactory = sessionFactory;
+        this.managerFactory = managerFactory;
         this.metaData = metaData;
         this.dialect = dialect;
         this.connectionPool = connectionPool;
@@ -335,7 +333,7 @@ class EntityManagerImpl : EntityManager {
         checkClosed();
         _accessor.onEntityManagerClosed();
         closed = true;
-        sessionFactory.sessionClosed(this);
+        managerFactory.sessionClosed(this);
         //writeln("closing connection");
         assert(conn !is null);
         conn.close();
@@ -345,9 +343,9 @@ class EntityManagerImpl : EntityManager {
     override bool contains(Object object) {
         throw new HibernatedException("Method not implemented");
     }
-    override EntityManagerFactory getEntityManagerFactory() {
+    override IEntityManagerFactory getEntityManagerFactory() {
         checkClosed();
-        return sessionFactory;
+        return managerFactory;
     }
 
     override string getEntityName(Object object) {
@@ -610,7 +608,7 @@ class EntityManagerImpl : EntityManager {
 }
 
 /// Implementation of HibernateD EntityManagerFactory
-class EntityManagerFactoryImpl : EntityManagerFactory {
+class EntityManagerFactory : IEntityManagerFactory {
 //    Configuration cfg;
 //    Mapping mapping;
 //    Settings settings;
@@ -621,7 +619,7 @@ class EntityManagerFactoryImpl : EntityManagerFactory {
     Dialect dialect;
     DataSource connectionPool;
 
-    EntityManagerImpl[] activeEntityManagers;
+    EntityManager[] activeEntityManagers;
 
 
     DBInfo _dbInfo;
@@ -632,9 +630,9 @@ class EntityManagerFactoryImpl : EntityManagerFactory {
     }
     
 
-    void sessionClosed(EntityManagerImpl session) {
+    void managerClosed(EntityManager manager) {
         foreach(i, item; activeEntityManagers) {
-            if (item == session) {
+            if (item == manager) {
                 remove(activeEntityManagers, i);
             }
         }
@@ -654,7 +652,7 @@ class EntityManagerFactoryImpl : EntityManagerFactory {
 //        this.listeners = listeners;
 //        this.observer = observer;
 //        if (observer !is null)
-//            observer.sessionFactoryCreated(this);
+//            observer.managerFactoryCreated(this);
 //    }
     private void checkClosed() {
         enforceEx!EntityManagerException(!closed, "EntityManager factory is closed");
@@ -665,7 +663,7 @@ class EntityManagerFactoryImpl : EntityManagerFactory {
         checkClosed();
         closed = true;
 //        if (observer !is null)
-//            observer.sessionFactoryClosed(this);
+//            observer.managerFactoryClosed(this);
         // TODO:
     }
 
@@ -675,9 +673,9 @@ class EntityManagerFactoryImpl : EntityManagerFactory {
 
 	EntityManager createEntityManager() {
         checkClosed();
-        EntityManagerImpl session = new EntityManagerImpl(this, metaData, dialect, connectionPool);
-        activeEntityManagers ~= session;
-        return session;
+        EntityManager manager = new EntityManager(this, metaData, dialect, connectionPool);
+        activeEntityManagers ~= manager;
+        return manager;
     }
 }
 
@@ -810,15 +808,15 @@ class PropertyLoadMap {
 /// Implementation of HibernateD Query
 class QueryImpl : Query
 {
-	EntityManagerImpl sess;
+	EntityManager manager;
 	ParsedQuery query;
 	ParameterValues params;
-	this(EntityManagerImpl sess, string queryString) {
-		this.sess = sess;
+	this(EntityManager manager, string queryString) {
+		this.manager = manager;
         //writeln("QueryImpl(): HQL: " ~ queryString);
-        QueryParser parser = new QueryParser(sess.metaData, queryString);
+        QueryParser parser = new QueryParser(manager.metaData, queryString);
         //writeln("parsing");
-		this.query = parser.makeSQL(sess.dialect);
+		this.query = parser.makeSQL(manager.dialect);
         //writeln("SQL: " ~ this.query.sql);
         params = query.createParams();
         //writeln("exiting QueryImpl()");
@@ -1084,12 +1082,12 @@ class QueryImpl : Query
     /// Return the query results as a List which each row as Variant array
 	override Variant[][] listRows() {
 		params.checkAllParametersSet();
-		sess.checkClosed();
+		manager.checkClosed();
 		
 		Variant[][] res;
 		
 		//writeln("SQL: " ~ query.sql);
-		PreparedStatement stmt = sess.conn.prepareStatement(query.sql);
+		PreparedStatement stmt = manager.conn.prepareStatement(query.sql);
 		scope(exit) stmt.close();
 		params.applyParams(stmt);
 		ResultSet rs = stmt.executeQuery();
@@ -1113,35 +1111,35 @@ class QueryImpl : Query
 class LazyObjectLoader {
     const PropertyInfo pi;
     Variant id;
-    EntityManagerAccessor sess;
-    this(EntityManagerAccessor sess, const PropertyInfo pi, Variant id) {
+    EntityManagerAccessor accessor;
+    this(EntityManagerAccessor accessor, const PropertyInfo pi, Variant id) {
         static if (TRACE_REFS) writeln("Created lazy loader for " ~ pi.referencedEntityName ~ " with id " ~ id.toString);
         this.pi = pi;
         this.id = id;
-        this.sess = sess;
+        this.accessor = accessor;
     }
     Object load() {
         static if (TRACE_REFS) writeln("LazyObjectLoader.load()");
         static if (TRACE_REFS) writeln("lazy loading of " ~ pi.referencedEntityName ~ " with id " ~ id.toString);
-        return sess.get().loadObject(pi.referencedEntityName, id);
+        return accessor.get().loadObject(pi.referencedEntityName, id);
     }
 }
 
 class LazyCollectionLoader {
     const PropertyInfo pi;
     Variant fk;
-    EntityManagerAccessor sess;
-    this(EntityManagerAccessor sess, const PropertyInfo pi, Variant fk) {
+    EntityManagerAccessor accessor;
+    this(EntityManagerAccessor accessor, const PropertyInfo pi, Variant fk) {
         assert(!pi.oneToMany || (pi.referencedEntity !is null && pi.referencedProperty !is null), "LazyCollectionLoader: No referenced property specified for OneToMany foreign key column");
         static if (TRACE_REFS) writeln("Created lazy loader for collection for references " ~ pi.entity.name ~ "." ~ pi.propertyName ~ " by id " ~ fk.toString);
         this.pi = pi;
         this.fk = fk;
-        this.sess = sess;
+        this.accessor = accessor;
     }
     Object[] load() {
         static if (TRACE_REFS) writeln("LazyObjectLoader.load()");
         static if (TRACE_REFS) writeln("lazy loading of references " ~ pi.entity.name ~ "." ~ pi.propertyName ~ " by id " ~ fk.toString);
-        Object[] res = sess.get().loadReferencedObjects(pi.entity, pi.propertyName, fk);
+        Object[] res = accessor.get().loadReferencedObjects(pi.entity, pi.propertyName, fk);
         return res;
     }
 }
