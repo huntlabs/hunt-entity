@@ -20,7 +20,6 @@ obj/
 [Rr]elease*/
 _ReSharper*/
 code.visualdproj
-HibernatedTest/*
 main.d
 Unittest/*
 
@@ -30,6 +29,7 @@ __test__library__
 *.sqlite
 *.db
 .dub/
+dub.selections.json
 
 
 # Ignore code coverage:
