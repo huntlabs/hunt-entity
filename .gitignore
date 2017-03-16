@@ -1,22 +1,43 @@
-*.[oa]
-*.so
-*.lib
-*.dll
-
-.dub
-dub.selections.json
-
-.DS_Store
-
-#unit test binaries
-tests/*/tests
-__test__*__
+#ignore thumbnails created by windows
+Thumbs.db
+#Ignore files build by Visual Studio
 *.user
-*.userprefs
-.directory
-.project
-*.txt
-*.cmake
-*.kdev4
-.kdev4
-/database
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.bak
+*.cache
+*.ilk
+*.log
+[Bb]in
+[Dd]ebug*/
+*.sbr
+obj/
+[Rr]elease*/
+_ReSharper*/
+code.visualdproj
+HibernatedTest/*
+main.d
+Unittest/*
+
+# Ignore generated files
+lib/
+__test__library__
+*.sqlite
+*.db
+.dub/
+
+
+# Ignore code coverage:
+*.lst
+.*.lst
+
+# Ignore Intellij IDEA folder:
+.idea
+
+# Ignore Sublime Text workspace (project file is ok):
+*.sublime-workspace
