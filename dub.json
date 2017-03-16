@@ -1,17 +1,45 @@
 {
-	"name": "entity",
-	"authors": [
-		"dlang team of putao labs."
-	],
-	"description": "ORM for dlang, suport PostgreSQL / MySQL / SQLite.",
-	"copyright": "Copyright (C) 2015-2016 Shanghai Putao Technology Co., Ltd",
-	"license": "Apache-2.0",
-	"dependencies" : {
-            "ddbc" : {
-               "path" : "../ddbc"
+    "name": "entity",
+    "description": "ORM for D language, fork from Hibernated",
+    "authors": ["donglei"],
+    "license": "Boost Software License (BSL 1.0)",
+    "dependencies": {
+        "ddbc": "0.3.2"
+    },
+    "targetType": "staticLibrary",
+    "targetPath": "lib",
+    "configurations": [
+        {
+            "name": "full",
+            "versions": ["USE_MYSQL", "USE_SQLITE", "USE_PGSQL"],
+            "subConfigurations": {
+                "ddbc": "full"
             }
-	},
-	"subConfigurations" : {
-		"ddbc":"full"
-	}
+        },
+        {
+            "name": "MySQL",
+            "versions": ["USE_MYSQL"],
+            "subConfigurations": {
+                "ddbc": "MySQL"
+            }
+        },
+        {
+            "name": "SQLite",
+            "versions": ["USE_SQLITE"],
+            "libs-posix": ["sqlite3"],
+            "libs-windows": ["sqlite3"],
+            "subConfigurations": {
+                "ddbc": "SQLite"
+            }
+        },
+        {
+            "name": "PGSQL",
+            "versions": ["USE_PGSQL"],
+            "libs-posix": ["pq"],
+            "libs-windows": ["libpq"],
+            "subConfigurations": {
+                "ddbc": "PGSQL"
+            }
+        }
+    ]
 }
