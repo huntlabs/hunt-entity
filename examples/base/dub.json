@@ -1,6 +1,6 @@
 {
-    "name": "ddbctest",
-    "description": " Hibernated",
+    "name": "entitytest",
+    "description": "test for Entity",
     "authors": ["donglei"],
     "license": "Boost Software License (BSL 1.0)",
     "buildRequirements": ["allowWarnings"],
