@@ -27,7 +27,6 @@ __test__library__
 *.sqlite
 *.db
 .dub/
-dub.selections.json
 
 
 # Ignore code coverage:
