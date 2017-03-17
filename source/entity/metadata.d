@@ -3083,7 +3083,10 @@ string entityListDef(T ...)() {
         "    }\n" ~
         "    entityMap = map;\n" ~
         "    classMap = typemap;\n" ~
-        "    //writeln(\"updating referenced entities\");\n" ~
+			"    writeln(typemap);\n" ~
+			"    writeln(entityMap);\n" ~
+			"    writeln(classMap);\n" ~
+        "    writeln(\"updating referenced entities\");\n" ~
         "    foreach(e; entities) {\n" ~
 		"        //writefln( \"Entity:%s table:%s type:%s\", e.name, e.tableName, e.classInfo.name );\n" ~
         "        foreach(p; e._properties) {\n" ~
@@ -3334,12 +3337,12 @@ abstract class SchemaInfo : EntityMetaData {
 }
 
 class SchemaInfoImpl(T...) : SchemaInfo {
-    static EntityInfo [string] entityMap;
-    static EntityInfo [] entities;
-    static EntityInfo [TypeInfo_Class] classMap;
+	__gshared static EntityInfo [string] entityMap;
+	__gshared static EntityInfo [] entities;
+   __gshared static EntityInfo [TypeInfo_Class] classMap;
 
     //import htestmain;
-    //pragma(msg, entityListDef!(T)());
+   // pragma(msg, entityListDef!(T)());
     mixin(entityListDef!(T)());
 
     override public int getEntityCount() const { return cast(int)entities.length; }
@@ -3378,6 +3381,8 @@ class SchemaInfoImpl(T...) : SchemaInfo {
     }
 
     override public const(EntityInfo) findEntityForObject(Object obj) const {
+		import std.stdio;
+		writeln("classMap", classMap);
         enforceEx!MappingException((obj.classinfo in classMap) !is null, "Cannot find entity by class " ~ obj.classinfo.toString());
         return classMap[obj.classinfo];
     }

@@ -21,7 +21,6 @@ obj/
 _ReSharper*/
 code.visualdproj
 HibernatedTest/*
-main.d
 Unittest/*
 
 # Ignore generated files
