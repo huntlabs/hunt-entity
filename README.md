@@ -1,10 +1,7 @@
 Entity
 ==========
 
-Entity is ORM for D language (similar to Hibernate,fork from hibernated)
-
-Project home page: https://github.com/buggins/hibernated
-Documentation: https://github.com/buggins/hibernated/wiki
+Entity is ORM for D language (similar to JPA, fork from hibernated)
 
 Uses DDBC as DB abstraction layer: https://github.com/buggins/ddbc
 
@@ -12,12 +9,19 @@ Available as DUB package
 
 Use SQLite 3.7.11 or later. In older versions syntax INSERT INTO (col1, col2) VALUES (1, 2), (3, 4) is not supported.
 
+Database config url:
+--------------------
+```conf
+postgresql://username:password@localhost:port/database?charset=utf-8
+```
+
 Sample code:
 --------------------
-
-        import hibernated.core;
-    import std.algorithm;
-    import std.stdio;
+```D
+import entity;
+    
+import std.algorithm;
+import std.stdio;
 
 
 // Annotations of entity classes
@@ -64,14 +68,11 @@ class Role {
     LazyCollection!User users;
 }
 
-int main() {
-    
+int main()
+{
     // create metadata from annotations
     EntityMetaData schema = new SchemaInfoImpl!(User, Customer, AccountType, 
         Address, Role);
-    
-    
-    
     
     // setup DB connection factory
     version (USE_MYSQL) {
@@ -143,21 +144,22 @@ int main() {
                                    setParameter("Name", "Alex").uniqueResult!User();
 
         writeln("u11.customer.users.length=", u11.customer.users.length);
-    writeln("u11.name,", u11.name);
-    writeln("u11.id,", u11.id);
+        writeln("u11.name,", u11.name);
+        writeln("u11.id,", u11.id);
 
         //sess.update(u11);
 
         // remove entity
        // sess.remove(u11);
 
-    User u112 = sess.createQuery("FROM User WHERE name=:Name").
+        User u112 = sess.createQuery("FROM User WHERE name=:Name").
         setParameter("Name", "Alex").uniqueResult!User();
     
-    writeln("u11.customer.users.length=", u112.customer.users.length);
-    writeln("u11.name,", u112.name);
-    writeln("u11.id,", u112.id);
+        writeln("u11.customer.users.length=", u112.customer.users.length);
+        writeln("u11.name,", u112.name);
+        writeln("u11.id,", u112.id);
 
         
         return 0;
     }
+```

@@ -8,7 +8,7 @@ import std.typecons;
 import std.exception;
 import std.variant;
 
-import entity.core;
+import entity;
 
 version(unittest) {
     

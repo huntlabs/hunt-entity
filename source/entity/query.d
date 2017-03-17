@@ -9,12 +9,11 @@ import std.conv;
 import std.stdio;
 import std.variant;
 
-import ddbc.core;
+import ddbc;
 
 import entity.annotations;
 import entity.metadata;
 import entity.type;
-import entity.core;
 import entity.dialect;
 import entity.dialects.mysqldialect;
 

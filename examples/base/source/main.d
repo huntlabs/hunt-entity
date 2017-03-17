@@ -1,4 +1,4 @@
-import entity.core;
+import entity;
 import std.algorithm;
 import std.stdio;
 import ddbc.all;
@@ -77,7 +77,7 @@ int main() {
         
 
         // create session factory
-        EntityManagerFactory factory = new EntityManagerFactoryImpl(schema, dialect, ds);
+        EntityManagerFactory factory = new EntityManagerFactory(schema, dialect, ds);
         scope(exit) factory.close();
 
         // Create schema if necessary
