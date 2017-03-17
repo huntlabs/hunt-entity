@@ -19,8 +19,6 @@ Thumbs.db
 obj/
 [Rr]elease*/
 _ReSharper*/
-code.visualdproj
-HibernatedTest/*
 Unittest/*
 
 # Ignore generated files
@@ -29,6 +27,7 @@ __test__library__
 *.sqlite
 *.db
 .dub/
+dub.selections.json
 
 
 # Ignore code coverage:
