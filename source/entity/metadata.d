@@ -3081,9 +3081,9 @@ string entityListDef(T ...)() {
         "    }\n" ~
         "    entityMap = map;\n" ~
         "    classMap = typemap;\n" ~
-			"    writeln(typemap);\n" ~
-			"    writeln(entityMap);\n" ~
-			"    writeln(classMap);\n" ~
+			"   // writeln(typemap);\n" ~
+			"    //writeln(entityMap);\n" ~
+			"    //writeln(classMap);\n" ~
         "    writeln(\"updating referenced entities\");\n" ~
         "    foreach(e; entities) {\n" ~
 		"        //writefln( \"Entity:%s table:%s type:%s\", e.name, e.tableName, e.classInfo.name );\n" ~
@@ -3379,8 +3379,6 @@ class SchemaInfoImpl(T...) : SchemaInfo {
     }
 
     override public const(EntityInfo) findEntityForObject(Object obj) const {
-		import std.stdio;
-		writeln("classMap", classMap);
         enforceEx!MappingException((obj.classinfo in classMap) !is null, "Cannot find entity by class " ~ obj.classinfo.toString());
         return classMap[obj.classinfo];
     }
