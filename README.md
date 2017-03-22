@@ -12,7 +12,7 @@ Use SQLite 3.7.11 or later. In older versions syntax INSERT INTO (col1, col2) VA
 Database config url:
 --------------------
 ```conf
-postgresql://username:password@localhost:port/database?charset=utf-8
+postgresql://username:password@localhost:port/database?prefix=tableprefix&charset=utf-8
 ```
 
 Sample code:
@@ -92,7 +92,7 @@ int main()
         DataSource ds = new ConnectionPoolDataSourceImpl(driver, url, params);
         
 
-        // create session factory
+        // create managerion factory
         EntityManagerFactory factory = new EntityManagerFactoryImpl(schema, dialect, ds);
         scope(exit) factory.close();
 
@@ -107,14 +107,14 @@ int main()
 
         // Now you can use HibernateD
 
-        // create session
-        EntityManager sess = factory.createEntityManager();
-        scope(exit) sess.close();
+        // create managerion
+        EntityManager manager = factory.createEntityManager();
+        scope(exit) manager.close();
 
-        // use session to access DB
+        // use managerion to access DB
 
         // read all users using query
-        Query q = sess.createQuery("FROM User ORDER BY name");
+        Query q = manager.createQuery("FROM User ORDER BY name");
         User[] list = q.list!User();
 
         // create sample data
@@ -132,27 +132,27 @@ int main()
         u10.name = "Alex";
         u10.customer = c10;
         u10.roles = [r10, r11];
-        sess.save(r10);
-        sess.save(r11);
-        sess.save(c10);
-        sess.save(u10);
-        sess.close();
-        sess = factory.createEntityManager();
+        manager.persist(r10);
+        manager.persist(r11);
+        manager.persist(c10);
+        manager.persist(u10);
+        manager.close();
+        manager = factory.createEntityManager();
 
         // load and check data
-        User u11 = sess.createQuery("FROM User WHERE name=:Name").
+        User u11 = manager.createQuery("FROM User WHERE name=:Name").
                                    setParameter("Name", "Alex").uniqueResult!User();
 
         writeln("u11.customer.users.length=", u11.customer.users.length);
         writeln("u11.name,", u11.name);
         writeln("u11.id,", u11.id);
 
-        //sess.update(u11);
+        //manager.merge(u11);
 
         // remove entity
-       // sess.remove(u11);
+       // manager.remove(u11);
 
-        User u112 = sess.createQuery("FROM User WHERE name=:Name").
+        User u112 = manager.createQuery("FROM User WHERE name=:Name").
         setParameter("Name", "Alex").uniqueResult!User();
     
         writeln("u11.customer.users.length=", u112.customer.users.length);

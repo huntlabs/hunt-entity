@@ -1,18 +1,6 @@
 
 module entity;
 
-//public import std.ascii;
-//public import std.conv;
-//public import std.datetime;
-//public import std.exception;
-//public import std.stdio;
-
-//public import std.string;
-//public import std.traits;
-//public import std.typecons;
-//public import std.typetuple;
-//public import std.variant;
-
 public import ddbc;
 
 public import entity.annotations;

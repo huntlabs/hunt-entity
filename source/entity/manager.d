@@ -15,33 +15,34 @@ import entity.query;
 
 const TRACE_REFS = false;
 
-/// Factory to create HibernateD EntityManagers - similar to org.hibernate.EntityManagerFactory
-interface IEntityManagerFactory {
+/// Factory to create EntityManagers - similar to org.apache.openjpa.persistence.EntityManagerFactory
+interface IEntityManagerFactory
+{
     /// close all active sessions
-	void close();
+    void close();
     /// check if session factory is closed
-	bool isClosed();
+    bool isClosed();
     /// creates new session
-	EntityManager createEntityManager();
+    EntityManager createEntityManager();
     /// retrieve information about tables and indexes for schema
     DBInfo getDBMetaData();
 }
 
-/// EntityManager - main interface to load and persist entities -- similar to org.hibernate.EntityManager
-abstract class BaseEntityManager
+/// EntityManager - main interface to load and persist entities -- similar to org.apache.openjpa.persistence.EntityManager
+abstract class AbstactEntityManager
 {
     /// returns metadata
     EntityMetaData getMetaData();
 
-	/// not supported in current implementation
-	Transaction beginTransaction();
-	/// not supported in current implementation
-	void cancelQuery();
-	/// not supported in current implementation
-	void clear();
+    /// not supported in current implementation
+    Transaction beginTransaction();
+    /// not supported in current implementation
+    void cancelQuery();
+    /// not supported in current implementation
+    void clear();
 
-	/// closes session
-	Connection close();
+    /// closes session
+    Connection close();
 
     ///Does this session contain any changes which must be synchronized with the database? In other words, would any DML operations be executed if we flushed this session?
     bool isDirty();
@@ -52,9 +53,9 @@ abstract class BaseEntityManager
     /// Check if this instance is associated with this EntityManager.
     bool contains(Object object);
     /// Retrieve session factory used to create this session
-	IEntityManagerFactory getEntityManagerFactory();
+    IEntityManagerFactory getEntityManagerFactory();
     /// Lookup metadata to find entity name for object.
-	string getEntityName(Object object);
+    string getEntityName(Object object);
     /// Lookup metadata to find entity name for class type info.
     string getEntityName(TypeInfo_Class type);
 
@@ -77,7 +78,7 @@ abstract class BaseEntityManager
     }
     
     /// Return the persistent instance of the given named entity with the given identifier, or null if there is no such persistent instance.
-	Object getObject(string entityName, Variant id);
+    Object getObject(string entityName, Variant id);
 
     /// Read the persistent state associated with the given identifier into the given transient instance.
     Object loadObject(string entityName, Variant id);
@@ -86,24 +87,24 @@ abstract class BaseEntityManager
     void loadObject(Object obj, Variant id);
 
     /// Re-read the state of the given instance from the underlying database.
-	void refresh(Object obj);
+    void refresh(Object obj);
 
     /// Persist the given transient instance, first assigning a generated identifier.
-	Variant save(Object obj);
+    Variant persist(Object obj);
 
-	/// Persist the given transient instance.
-	void persist(Object obj);
+    /// Persist the given transient instance.
+    void persist(Object obj);
 
-	/// Update the persistent instance with the identifier of the given detached instance.
-	void update(Object object);
-	/// Update the persistent instance changed columns with the identifier of the given detached instance.
-	void updateChanges(Object obj);
+    /// Update the persistent instance with the identifier of the given detached instance.
+    void update(Object object);
+    /// Update the persistent instance changed columns with the identifier of the given detached instance.
+    void updateChanges(Object obj);
 
     /// remove object from DB (renamed from original EntityManager.delete - it's keyword in D)
     void remove(Object object);
 
-	/// Create a new instance of Query for the given HQL query string
-	Query createQuery(string queryString);
+    /// Create a new instance of Query for the given HQL query string
+    Query createQuery(string queryString);
 }
 
 /// Transaction interface: TODO
@@ -113,10 +114,10 @@ interface Transaction {
 /// Interface for usage of HQL queries.
 abstract class Query
 {
-	///Get the query string.
-	string 	getQueryString();
-	/// Convenience method to return a single instance that matches the query, or null if the query returns no results.
-	Object 	uniqueObject();
+    ///Get the query string.
+    string     getQueryString();
+    /// Convenience method to return a single instance that matches the query, or null if the query returns no results.
+    Object     uniqueObject();
     /// Convenience method to return a single instance that matches the query, or null if the query returns no results. Reusing existing buffer.
     Object  uniqueObject(Object obj);
     /// Convenience method to return a single instance that matches the query, or null if the query returns no results.
@@ -129,18 +130,18 @@ abstract class Query
     }
 
     /// Convenience method to return a single instance that matches the query, or null if the query returns no results.
-	Variant[] uniqueRow();
-	/// Return the query results as a List of entity objects
-	Object[] listObjects();
+    Variant[] uniqueRow();
+    /// Return the query results as a List of entity objects
+    Object[] listObjects();
     /// Return the query results as a List of entity objects
     T[] list(T : Object)() {
         return cast(T[])listObjects();
     }
     /// Return the query results as a List which each row as Variant array
-	Variant[][] listRows();
-	
-	/// Bind a value to a named query parameter (all :parameters used in query should be bound before executing query).
-	protected Query setParameterVariant(string name, Variant val);
+    Variant[][] listRows();
+    
+    /// Bind a value to a named query parameter (all :parameters used in query should be bound before executing query).
+    protected Query setParameterVariant(string name, Variant val);
 
     /// Bind a value to a named query parameter (all :parameters used in query should be bound before executing query).
     Query setParameter(T)(string name, T val) {
@@ -152,9 +153,9 @@ abstract class Query
     }
 }
 
-
 /// Allows reaction to basic EntityManagerFactory occurrences
-interface EntityManagerFactoryObserver {
+interface EntityManagerFactoryObserver
+{
     ///Callback to indicate that the given factory has been closed.
     void managerFactoryClosed(IEntityManagerFactory factory);
     ///Callback to indicate that the given factory has been created and is now ready for use.
@@ -242,7 +243,7 @@ class EntityManagerAccessor {
 }
 
 /// Implementation of HibernateD session
-class EntityManager : BaseEntityManager {
+class EntityManager : AbstactEntityManager {
 
     private bool closed;
     EntityManagerFactory managerFactory;
@@ -333,7 +334,7 @@ class EntityManager : BaseEntityManager {
         checkClosed();
         _accessor.onEntityManagerClosed();
         closed = true;
-		managerFactory.managerClosed(this);
+        managerFactory.managerClosed(this);
         //writeln("closing connection");
         assert(conn !is null);
         conn.close();
@@ -518,18 +519,18 @@ class EntityManager : BaseEntityManager {
     
 
     /// Persist the given transient instance, first assigning a generated identifier if not assigned; returns generated value
-    override Variant save(Object obj) {
+    override Variant persist(Object obj) {
         auto info = metaData.findEntityForObject(obj);
         if (!info.isKeySet(obj)) {
             if (info.getKeyProperty().generated) {
                 // autogenerated on DB side
                 string query = dialect.appendInsertToFetchGeneratedKey(metaData.generateInsertNoKeyForEntity(info), info);
-				PreparedStatement stmt = conn.prepareStatement(query);
-				scope(exit) stmt.close();
-				metaData.writeAllColumns(obj, stmt, 1, true);
-				Variant generatedKey;
-				stmt.executeUpdate(generatedKey);
-			    info.setKey(obj, generatedKey);
+                PreparedStatement stmt = conn.prepareStatement(query);
+                scope(exit) stmt.close();
+                metaData.writeAllColumns(obj, stmt, 1, true);
+                Variant generatedKey;
+                stmt.executeUpdate(generatedKey);
+                info.setKey(obj, generatedKey);
             } else if (info.getKeyProperty().generatorFunc !is null) {
                 // has generator function
                 Variant generatedKey = info.getKeyProperty().generatorFunc(conn, info.getKeyProperty());
@@ -543,11 +544,11 @@ class EntityManager : BaseEntityManager {
                 throw new PropertyValueException("Key is not set and no generator is specified");
             }
         } else {
-			string query = metaData.generateInsertAllFieldsForEntity(info);
-			PreparedStatement stmt = conn.prepareStatement(query);
-			scope(exit) stmt.close();
-			metaData.writeAllColumns(obj, stmt, 1);
-			stmt.executeUpdate();
+            string query = metaData.generateInsertAllFieldsForEntity(info);
+            PreparedStatement stmt = conn.prepareStatement(query);
+            scope(exit) stmt.close();
+            metaData.writeAllColumns(obj, stmt, 1);
+            stmt.executeUpdate();
         }
         Variant key = info.getKey(obj);
         putToCache(info.name, key, obj);
@@ -555,15 +556,15 @@ class EntityManager : BaseEntityManager {
         return key;
     }
 
-	/// Persist the given transient instance.
-	override void persist(Object obj) {
+    /// Persist the given transient instance.
+    override void persist(Object obj) {
         auto info = metaData.findEntityForObject(obj);
         enforceEx!TransientObjectException(info.isKeySet(obj), "Cannot persist entity w/o key assigned");
-		string query = metaData.generateInsertAllFieldsForEntity(info);
-		PreparedStatement stmt = conn.prepareStatement(query);
-		scope(exit) stmt.close();
-		metaData.writeAllColumns(obj, stmt, 1);
-		stmt.executeUpdate();
+        string query = metaData.generateInsertAllFieldsForEntity(info);
+        PreparedStatement stmt = conn.prepareStatement(query);
+        scope(exit) stmt.close();
+        metaData.writeAllColumns(obj, stmt, 1);
+        stmt.executeUpdate();
         Variant key = info.getKey(obj);
         putToCache(info.name, key, obj);
         saveRelations(info, obj);
@@ -572,39 +573,39 @@ class EntityManager : BaseEntityManager {
     override void update(Object obj) {
         auto info = metaData.findEntityForObject(obj);
         enforceEx!TransientObjectException(info.isKeySet(obj), "Cannot persist entity w/o key assigned");
-		string query = metaData.generateUpdateForEntity(info);
-		writeln("Query: "~ query);
+        string query = metaData.generateUpdateForEntity(info);
+        writeln("Query: "~ query);
         {
-    		PreparedStatement stmt = conn.prepareStatement(query);
-    		scope(exit) stmt.close();
-    		int columnCount = metaData.writeAllColumns(obj, stmt, 1, true);
-    		info.keyProperty.writeFunc(obj, stmt, columnCount + 1);
-    		stmt.executeUpdate();
+            PreparedStatement stmt = conn.prepareStatement(query);
+            scope(exit) stmt.close();
+            int columnCount = metaData.writeAllColumns(obj, stmt, 1, true);
+            info.keyProperty.writeFunc(obj, stmt, columnCount + 1);
+            stmt.executeUpdate();
         }
         updateRelations(info, obj);
-	}
+    }
 
-	override void updateChanges(Object obj)
-	{
-		auto info = metaData.findEntityForObject(obj);
-		enforceEx!TransientObjectException(info.isKeySet(obj), "Cannot persist entity w/o key assigned");
-		///TODO changed save
-	}
+    override void updateChanges(Object obj)
+    {
+        auto info = metaData.findEntityForObject(obj);
+        enforceEx!TransientObjectException(info.isKeySet(obj), "Cannot persist entity w/o key assigned");
+        ///TODO changed save
+    }
 
     // renamed from EntityManager.delete since delete is D keyword
     override void remove(Object obj) {
         auto info = metaData.findEntityForObject(obj);
         deleteRelations(info, obj);
         string query = "DELETE FROM " ~ info.tableName ~ " WHERE " ~ info.getKeyProperty().columnName ~ "=?";
-		PreparedStatement stmt = conn.prepareStatement(query);
-		info.getKeyProperty().writeFunc(obj, stmt, 1);
-		stmt.executeUpdate();
-	}
+        PreparedStatement stmt = conn.prepareStatement(query);
+        info.getKeyProperty().writeFunc(obj, stmt, 1);
+        stmt.executeUpdate();
+    }
 
-	/// Create a new instance of Query for the given HQL query string
-	override Query createQuery(string queryString) {
-		return new QueryImpl(this, queryString);
-	}
+    /// Create a new instance of Query for the given HQL query string
+    override Query createQuery(string queryString) {
+        return new QueryImpl(this, queryString);
+    }
 }
 
 /// Implementation of HibernateD EntityManagerFactory
@@ -658,7 +659,7 @@ class EntityManagerFactory : IEntityManagerFactory {
         enforceEx!EntityManagerException(!closed, "EntityManager factory is closed");
     }
 
-	override void close() {
+    override void close() {
         //writeln("Closing session factory");
         checkClosed();
         closed = true;
@@ -667,11 +668,11 @@ class EntityManagerFactory : IEntityManagerFactory {
         // TODO:
     }
 
-	bool isClosed() {
+    bool isClosed() {
         return closed;
     }
 
-	EntityManager createEntityManager() {
+    EntityManager createEntityManager() {
         checkClosed();
         EntityManager manager = new EntityManager(this, metaData, dialect, connectionPool);
         activeEntityManagers ~= manager;
@@ -808,29 +809,29 @@ class PropertyLoadMap {
 /// Implementation of HibernateD Query
 class QueryImpl : Query
 {
-	EntityManager manager;
-	ParsedQuery query;
-	ParameterValues params;
-	this(EntityManager manager, string queryString) {
-		this.manager = manager;
+    EntityManager manager;
+    ParsedQuery query;
+    ParameterValues params;
+    this(EntityManager manager, string queryString) {
+        this.manager = manager;
         //writeln("QueryImpl(): HQL: " ~ queryString);
         QueryParser parser = new QueryParser(manager.metaData, queryString);
         //writeln("parsing");
-		this.query = parser.makeSQL(manager.dialect);
+        this.query = parser.makeSQL(manager.dialect);
         //writeln("SQL: " ~ this.query.sql);
         params = query.createParams();
         //writeln("exiting QueryImpl()");
     }
 
-	///Get the query string.
-	override string getQueryString() {
-		return query.hql;
-	}
+    ///Get the query string.
+    override string getQueryString() {
+        return query.hql;
+    }
 
-	/// Convenience method to return a single instance that matches the query, or null if the query returns no results.
-	override Object uniqueObject() {
+    /// Convenience method to return a single instance that matches the query, or null if the query returns no results.
+    override Object uniqueObject() {
         return uniqueResult(cast(Object)null);
-	}
+    }
 
     /// Convenience method to return a single instance that matches the query, or null if the query returns no results. Reusing existing buffer.
     override Object uniqueObject(Object obj) {
@@ -841,14 +842,14 @@ class QueryImpl : Query
         return rows[0];
     }
 
-	/// Convenience method to return a single instance that matches the query, or null if the query returns no results.
-	override Variant[] uniqueRow() {
-		Variant[][] rows = listRows();
-		if (rows == null)
-			return null;
+    /// Convenience method to return a single instance that matches the query, or null if the query returns no results.
+    override Variant[] uniqueRow() {
+        Variant[][] rows = listRows();
+        if (rows == null)
+            return null;
         enforceEx!NonUniqueResultException(rows.length == 1, "Query returned more than one row: " ~ getQueryString());
-		return rows[0];
-	}
+        return rows[0];
+    }
 
     private FromClauseItem findRelation(FromClauseItem from, const PropertyInfo prop) {
         for (int i=0; i<query.from.length; i++) {
@@ -952,10 +953,10 @@ class QueryImpl : Query
         return relations[0];
     }
 
-	/// Return the query results as a List of entity objects
-	override Object[] listObjects() {
+    /// Return the query results as a List of entity objects
+    override Object[] listObjects() {
         return listObjects(null);
-	}
+    }
 
     private void delayedLoadRelations(PropertyLoadMap loadMap) {
         auto types = loadMap.keys;
@@ -1080,32 +1081,32 @@ class QueryImpl : Query
     }
     
     /// Return the query results as a List which each row as Variant array
-	override Variant[][] listRows() {
-		params.checkAllParametersSet();
-		manager.checkClosed();
-		
-		Variant[][] res;
-		
-		//writeln("SQL: " ~ query.sql);
-		PreparedStatement stmt = manager.conn.prepareStatement(query.sql);
-		scope(exit) stmt.close();
-		params.applyParams(stmt);
-		ResultSet rs = stmt.executeQuery();
-		scope(exit) rs.close();
-		while(rs.next()) {
-			Variant[] row = new Variant[query.colCount];
-			for (int i = 1; i<=query.colCount; i++)
-				row[i - 1] = rs.getVariant(i);
-			res ~= row;
-		}
-		return res.length > 0 ? res : null;
-	}
-	
-	/// Bind a value to a named query parameter.
-	override protected Query setParameterVariant(string name, Variant val) {
-		params.setParameter(name, val);
-		return this;
-	}
+    override Variant[][] listRows() {
+        params.checkAllParametersSet();
+        manager.checkClosed();
+        
+        Variant[][] res;
+        
+        //writeln("SQL: " ~ query.sql);
+        PreparedStatement stmt = manager.conn.prepareStatement(query.sql);
+        scope(exit) stmt.close();
+        params.applyParams(stmt);
+        ResultSet rs = stmt.executeQuery();
+        scope(exit) rs.close();
+        while(rs.next()) {
+            Variant[] row = new Variant[query.colCount];
+            for (int i = 1; i<=query.colCount; i++)
+                row[i - 1] = rs.getVariant(i);
+            res ~= row;
+        }
+        return res.length > 0 ? res : null;
+    }
+    
+    /// Bind a value to a named query parameter.
+    override protected Query setParameterVariant(string name, Variant val) {
+        params.setParameter(name, val);
+        return this;
+    }
 }
 
 class LazyObjectLoader {

@@ -1,7 +1,7 @@
 {
-    "name": "entitytest",
-    "description": "test for Entity",
-    "authors": ["donglei"],
+    "name": "entity-example",
+    "description": "example for Entity",
+    "authors": ["huntlabs"],
     "license": "Boost Software License (BSL 1.0)",
     "buildRequirements": ["allowWarnings"],
     "dependencies": {

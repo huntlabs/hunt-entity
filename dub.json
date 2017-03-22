@@ -1,7 +1,7 @@
 {
     "name": "entity",
-    "description": "ORM for D programming language, fork from Hibernated.",
-    "authors": ["donglei"],
+    "description": "ORM for D programming language, like JPA and Doctine2.",
+    "authors": ["huntlabs"],
     "license": "Boost Software License (BSL 1.0)",
     "dependencies": {
         "ddbc": "0.3.2"
