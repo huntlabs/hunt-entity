@@ -28,6 +28,7 @@ abstract class EntityMetaData {
     const(EntityInfo) opIndex(string entityName) const;
     const(PropertyInfo) opIndex(string entityName, string propertyName) const;
 
+    public string tablePrefix;
     public string getEntityName(TypeInfo_Class type) const {
         return getClassMap()[type].name;
     }
@@ -250,7 +251,9 @@ class EntityInfo {
     @property const(EntityMetaData) metadata() const { return _metadata; }
 
     immutable string name;
-    immutable string tableName;
+    private immutable string _tableName;
+	//const @property void tableName(string tn){_tableName = tn;}
+	const @property string tableName(){return _metadata.tablePrefix ~_tableName;}
     private PropertyInfo[] _properties;
     @property const(PropertyInfo[]) properties() const { return _properties; }
     package PropertyInfo [string] _propertyMap;
@@ -274,7 +277,7 @@ class EntityInfo {
 
     public this(string name, string tableName, bool embeddable, PropertyInfo [] properties, TypeInfo_Class classInfo) {
         this.name = name;
-        this.tableName = tableName;
+        this._tableName = tableName;
         this.embeddable = embeddable;
         this._properties = properties;
         this.classInfo = cast(immutable TypeInfo_Class)classInfo;
