@@ -23,56 +23,28 @@ import entity;
 import std.algorithm;
 import std.stdio;
 
-
 // Annotations of entity classes
 
 class User {
     long id;
     string name;
-    Customer customer;
-    @ManyToMany // cannot be inferred, requires annotation
+    
+    @ManyToMany
     LazyCollection!Role roles;
-}
-
-class Customer {
-    int id;
-    string name;
-    // Embedded is inferred from type of Address
-    Address address;
-    
-    Lazy!AccountType accountType; // ManyToOne inferred
-    
-    User[] users; // OneToMany inferred
-    
-    this() {
-        address = new Address();
-    }
-}
-
-@Embeddable
-class Address {
-    string zip;
-    string city;
-    string streetAddress;
-}
-
-class AccountType {
-    int id;
-    string name;
 }
 
 class Role {
     int id;
     string name;
-    @ManyToMany // w/o this annotation will be OneToMany by convention
+    
+    @ManyToMany
     LazyCollection!User users;
 }
 
 int main()
 {
     // create metadata from annotations
-    EntityMetaData schema = new SchemaInfoImpl!(User, Customer, AccountType, 
-        Address, Role);
+    EntityMetaData schema = new SchemaInfoImpl!(User, Role);
     
     // setup DB connection factory
     version (USE_MYSQL) {
@@ -89,75 +61,45 @@ int main()
             string[string] params;
             Dialect dialect = new SQLiteDialect();
         }
+        
         DataSource ds = new ConnectionPoolDataSourceImpl(driver, url, params);
         
-
         // create managerion factory
         EntityManagerFactory factory = new EntityManagerFactoryImpl(schema, dialect, ds);
-        scope(exit) factory.close();
 
         // Create schema if necessary
         {
-        // get connection
-        Connection conn = ds.getConnection();
-        scope(exit) conn.close();
-        // create tables if not exist
-        factory.getDBMetaData().updateDBSchema(conn, false, true);
-        }
+            // get connection
+            Connection conn = ds.getConnection();
 
-        // Now you can use HibernateD
+            factory.getDBMetaData().updateDBSchema(conn, false, true);
+        }
 
         // create managerion
         EntityManager manager = factory.createEntityManager();
-        scope(exit) manager.close();
 
-        // use managerion to access DB
-
-        // read all users using query
-        Query q = manager.createQuery("FROM User ORDER BY name");
-        User[] list = q.list!User();
-
-        // create sample data
-        Role r10 = new Role();
-        r10.name = "role10";
-        Role r11 = new Role();
-        r11.name = "role11";
-        Customer c10 = new Customer();
-        c10.name = "Customer 10";
-        c10.address = new Address();
-        c10.address.zip = "12345";
-        c10.address.city = "New York";
-        c10.address.streetAddress = "Baker st., 12";
-        User u10 = new User();
-        u10.name = "Alex";
-        u10.customer = c10;
-        u10.roles = [r10, r11];
-        manager.persist(r10);
-        manager.persist(r11);
-        manager.persist(c10);
-        manager.persist(u10);
+        Role myrole = new Role();
+        myrole.name = "Admin";
+        
+        User user = new User();
+        user.name = "Brian";
+        user.roles = myrole;
+        
+        manager.persist(myrole);
+        manager.persist(user);
+        
         manager.close();
+        
         manager = factory.createEntityManager();
 
-        // load and check data
-        User u11 = manager.createQuery("FROM User WHERE name=:Name").
-                                   setParameter("Name", "Alex").uniqueResult!User();
+        writeln("user.name,", user.name);
+        writeln("user.id,", user.id);
 
-        writeln("u11.customer.users.length=", u11.customer.users.length);
-        writeln("u11.name,", u11.name);
-        writeln("u11.id,", u11.id);
-
-        //manager.merge(u11);
-
-        // remove entity
-       // manager.remove(u11);
-
-        User u112 = manager.createQuery("FROM User WHERE name=:Name").
-        setParameter("Name", "Alex").uniqueResult!User();
+        User myuser = manager.createQuery("FROM User WHERE name=:username").
+        setParameter("username", "Brian").uniqueResult!User();
     
-        writeln("u11.customer.users.length=", u112.customer.users.length);
-        writeln("u11.name,", u112.name);
-        writeln("u11.id,", u112.id);
+        writeln("myuser.name,", myuser.name);
+        writeln("myuser.id,", myuser.id);
 
         
         return 0;
