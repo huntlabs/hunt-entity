@@ -90,7 +90,7 @@ abstract class AbstactEntityManager
     void refresh(Object obj);
 
     /// Persist the given transient instance, first assigning a generated identifier.
-    Variant persist(Object obj);
+    Variant save(Object obj);
 
     /// Persist the given transient instance.
     void persist(Object obj);
@@ -519,7 +519,7 @@ class EntityManager : AbstactEntityManager {
     
 
     /// Persist the given transient instance, first assigning a generated identifier if not assigned; returns generated value
-    override Variant persist(Object obj) {
+    override Variant save(Object obj) {
         auto info = metaData.findEntityForObject(obj);
         if (!info.isKeySet(obj)) {
             if (info.getKeyProperty().generated) {
