@@ -181,9 +181,9 @@ interface Mapping {
     Type getReferencedPropertyType(string className, string propertyName);
 }
 
-class Configuration {
-    bool dummy;
-}
+//class Configuration {
+//    bool dummy;
+//}
 
 class EntityCache {
     const string name;
