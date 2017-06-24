@@ -4,7 +4,7 @@
     "authors": ["huntlabs"],
     "license": "Boost Software License (BSL 1.0)",
     "dependencies": {
-        "ddbc": "0.3.2"
+        "ddbc": "0.3.4"
     },
     "targetType": "staticLibrary",
     "targetPath": "lib",
