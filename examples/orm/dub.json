@@ -1,0 +1,19 @@
+{
+	"name": "example",
+	"authors": ["root"],
+	"dependencies": {
+		"orm": {"path":"../../"}
+	},
+	"targetType": "executable",
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2017, root",
+	"license": "proprietary",
+	"configurations": [
+		{
+			"name": "default",
+			"subConfigurations": {
+				"orm": "mysql"
+			}
+		}
+	]
+}
