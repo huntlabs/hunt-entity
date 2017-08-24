@@ -19,6 +19,8 @@ class MysqlDialect : Dialect
 			return Variant(safeConvert!(string,double)(*info.fieldValue.peek!string));
 		else if(typeid(info.fieldType) == typeid(dIntType))
 			return Variant(safeConvert!(string,int)(*info.fieldValue.peek!string));
+		else if(typeid(info.fieldType) == typeid(dLongType))
+			return Variant(safeConvert!(string,long)(*info.fieldValue.peek!string));
 		else 
 			return info.fieldValue;	
 	}
@@ -26,24 +28,6 @@ class MysqlDialect : Dialect
 	{
 		if(typeid(type) == typeid(dBoolType))
 				return value.get!(bool) ? "1" : "0";
-		/*
-		else if(typeid(type) == typeid(dCrealType) ||
-			typeid(type) == typeid(dCdoubleType) ||
-			typeid(type) == typeid(dCfloatType) ||  
-			typeid(type) == typeid(dIrealType) || 
-			typeid(type) == typeid(dIdoubleType) || 
-			typeid(type) == typeid(dIfloatType) || 
-			typeid(type) == typeid(dRealType) || 
-			typeid(type) == typeid(dDoubleType) || 
-			typeid(type) == typeid(dFloatType) || 
-			typeid(type) == typeid(dUlongType) || 
-			typeid(type) == typeid(dLongType) || 
-			typeid(type) == typeid(dUintType) || 
-			typeid(type) == typeid(dIntType) || 
-			typeid(type) == typeid(dShortType) || 
-			typeid(type) == typeid(dUshortType)) 
-				//return value.toString;
-		*/
 		else if(typeid(type) == typeid(dFloatType))
 				return isNaN(*value.peek!float) ? "0" : *value.peek!string;
 		else if(typeid(type) == typeid(dDoubleType))
@@ -51,12 +35,6 @@ class MysqlDialect : Dialect
 		else if(typeid(type) == typeid(dIntType))
 				return value.toString;
 		else
-			//typeid(type) ==typeid(dDharType)  
-			//typeid(type) ==typeid(dWcharType) 
-			//typeid(type) ==typeid(dCharType)  
-			//typeid(type) ==typeid(dByteType)  
-			//typeid(type) ==typeid(dUbyteType) 
-			//default || 
 			return openQuote ~ value.toString ~ closeQuote;
 	}
 }

@@ -8,12 +8,34 @@ class PostgresqlDialect : Dialect
 	string openQuote()  { return "\""; }
     Variant fromSqlValue(FieldInfo info)
 	{
-		return Variant(null);	
+		if(typeid(info.fieldType) == typeid(dBoolType)){
+			if(*info.fieldValue.peek!string == "1")
+				return Variant(true);
+			else
+				return Variant(false);
+		}else if(typeid(info.fieldType) == typeid(dFloatType))
+			return Variant(safeConvert!(string,float)(*info.fieldValue.peek!string));
+		else if(typeid(info.fieldType) == typeid(dDoubleType))
+			return Variant(safeConvert!(string,double)(*info.fieldValue.peek!string));
+		else if(typeid(info.fieldType) == typeid(dIntType))
+			return Variant(safeConvert!(string,int)(*info.fieldValue.peek!string));
+		else if(typeid(info.fieldType) == typeid(dLongType))
+			return Variant(safeConvert!(string,long)(*info.fieldValue.peek!string));
+		else 
+			return info.fieldValue;	
 	}
     string toSqlValueImpl(DlangDataType type,Variant value)
 	{
-		writeln(type);
-		return null;
+		if(typeid(type) == typeid(dBoolType))
+				return value.get!(bool) ? "1" : "0";
+		else if(typeid(type) == typeid(dFloatType))
+				return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+		else if(typeid(type) == typeid(dDoubleType))
+				return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+		else if(typeid(type) == typeid(dIntType))
+				return value.toString;
+		else
+			return openQuote ~ value.toString ~ closeQuote;
 	}
 
 }
