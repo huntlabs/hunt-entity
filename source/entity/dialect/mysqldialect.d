@@ -14,11 +14,11 @@ class MysqlDialect : Dialect
 			else
 				return Variant(false);
 		}else if(typeid(info.fieldType) == typeid(dFloatType))
-			return Variant(to!float(*info.fieldValue.peek!string));
+			return Variant(safeConvert!(string,float)(*info.fieldValue.peek!string));
 		else if(typeid(info.fieldType) == typeid(dDoubleType))
-			return Variant(to!double(*info.fieldValue.peek!string));
+			return Variant(safeConvert!(string,double)(*info.fieldValue.peek!string));
 		else if(typeid(info.fieldType) == typeid(dIntType))
-			return Variant(to!int(*info.fieldValue.peek!string));
+			return Variant(safeConvert!(string,int)(*info.fieldValue.peek!string));
 		else 
 			return info.fieldValue;	
 	}
@@ -26,6 +26,7 @@ class MysqlDialect : Dialect
 	{
 		if(typeid(type) == typeid(dBoolType))
 				return value.get!(bool) ? "1" : "0";
+		/*
 		else if(typeid(type) == typeid(dCrealType) ||
 			typeid(type) == typeid(dCdoubleType) ||
 			typeid(type) == typeid(dCfloatType) ||  
@@ -41,6 +42,13 @@ class MysqlDialect : Dialect
 			typeid(type) == typeid(dIntType) || 
 			typeid(type) == typeid(dShortType) || 
 			typeid(type) == typeid(dUshortType)) 
+				//return value.toString;
+		*/
+		else if(typeid(type) == typeid(dFloatType))
+				return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+		else if(typeid(type) == typeid(dDoubleType))
+				return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+		else if(typeid(type) == typeid(dIntType))
 				return value.toString;
 		else
 			//typeid(type) ==typeid(dDharType)  
