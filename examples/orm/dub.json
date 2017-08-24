@@ -2,7 +2,7 @@
 	"name": "example",
 	"authors": ["root"],
 	"dependencies": {
-		"orm": {"path":"../../"}
+		"entity": {"path":"../../"}
 	},
 	"targetType": "executable",
 	"description": "A minimal D application.",

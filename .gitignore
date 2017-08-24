@@ -20,6 +20,7 @@ obj/
 [Rr]elease*/
 _ReSharper*/
 Unittest/*
+libentity.a
 
 # Ignore generated files
 lib/

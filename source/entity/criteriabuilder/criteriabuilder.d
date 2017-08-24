@@ -15,7 +15,9 @@ class CriteriaBuilder
 
     EntityManager _entitymanager;
 
-    QueryBuilder querybuilder;
+    SqlBuilder sqlbuilder;
+
+	string _tableName;
     
 	this(DatabaseConfig config,Database db,Dialect dialect,EntityManager entitymanager,string name,
         EntityInfo[string] models,
@@ -28,70 +30,71 @@ class CriteriaBuilder
         _models = models;
         _classMap = classMap;
         _entitymanager = entitymanager;
-        querybuilder = new QueryBuilder(_config,_db,_dialect);
-        querybuilder.from(_models[name].tableName);
+        sqlbuilder = _entitymanager.createSqlBuilder;
+        _tableName = _models[name].tableName;
+        sqlbuilder.select("*").from(_tableName);
 	}
 
     CriteriaBuilder createCriteriaQuery()
     {
-        querybuilder._method = Method.Select;
+        sqlbuilder.select("*").from(_tableName);
         return this;
     }
     CriteriaBuilder createCriteriaDelete()
     {
-        querybuilder._method = Method.Delete;
+        sqlbuilder.remove(_tableName);
         return this;
     }
     CriteriaBuilder createCriteriaUpdate()
     {
-        querybuilder._method = Method.Update;
+        sqlbuilder.update(_tableName);
         return this;
     }
     CriteriaBuilder createCriteriaInsert()
     {
-        querybuilder._method = Method.Insert;
+        sqlbuilder.insert(_tableName);
         return this;
     }
 
     CriteriaBuilder where(CriteriaBuilderMultiWhereExpression expr)
 	{
-		querybuilder._mutliWhereStr = expr.toString;
+		sqlbuilder.where(expr.toString);
 		return this;
 	}
 
     CriteriaBuilder where(CriteriaBuilderWhereExpression expr)
     {
-        querybuilder.where(expr.toString);
+        sqlbuilder.where(expr.toString);
         return this;
     }
     CriteriaBuilder having(FieldInfo info)
     {
-        //querybuilder.having();
+        //sqlbuilder.having();
         return this;
     }
     CriteriaBuilder asc(FieldInfo info)
     {
-        querybuilder.groupBy(info.fieldName ~ " ASC ");
+        sqlbuilder.groupBy(info.fieldName ~ " ASC ");
         return this;
     }
     CriteriaBuilder desc(FieldInfo info)
     {
-        querybuilder.groupBy(info.fieldName ~ " DESC ");
+        sqlbuilder.groupBy(info.fieldName ~ " DESC ");
         return this;
     }
     CriteriaBuilder offset(int offset)
     {
-        querybuilder.setFirstResult(offset);
+        sqlbuilder.offset(offset);
         return this;
     }
     CriteriaBuilder limit(int limit)
     {
-        querybuilder.setMaxResults(limit);
+        sqlbuilder.limit(limit);
         return this;
     }
     CriteriaBuilder set(T)(FieldInfo info,T val)
     {
-		querybuilder.setValue(info.fieldName,_dialect.toSqlValue(val));
+		sqlbuilder.set(info.fieldName,_dialect.toSqlValue(val));
         return this;
     }
     
@@ -126,12 +129,12 @@ class CriteriaBuilder
 
     override string toString()
     {
-        return querybuilder.toString();
+        return sqlbuilder.build().toString();
     }
 
     int execute()
     {
-        return _db.execute(querybuilder.toString()); 
+        return _db.execute(this.toString()); 
     }
 
 	auto getResultList()

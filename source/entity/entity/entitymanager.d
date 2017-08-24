@@ -10,6 +10,7 @@ class EntityManager
 	Dialect dialect;
 	EntityInfo[string] entityList;
 	EntityInfo[TypeInfo_Class] classMap;
+    SqlFactory sqlFactory;
 
 	this(string name,DatabaseConfig config,Database db,Dialect dialect,
 			EntityInfo[string] entityList,
@@ -21,11 +22,12 @@ class EntityManager
 		this.db = db;
 		this.entityList = entityList;
 		this.classMap = classMap;
+        sqlFactory = new SqlFactory();
 	}
     
-	QueryBuilder createQueryBuilder()
+	SqlBuilder createSqlBuilder()
     {
-        return new QueryBuilder(config,db,dialect);
+        return sqlFactory.createMySqlBuilder();
     }
 	
 	CriteriaBuilder createCriteriaBuilder(T)()
@@ -57,9 +59,17 @@ class EntityManager
 		info.mergeFunc(obj,info,this);
 	}
 
-	int execute(QueryBuilder builder)
+    int execute(SqlSyntax syntax)
+    {
+		return execute(syntax.toString);	
+    }
+	int execute(SqlBuilder builder)
 	{
-		return db.execute(builder.toString);	
+		return execute(builder.build().toString);	
+	}
+	int execute(CriteriaBuilder builder)
+	{
+		return execute(builder.toString);	
 	}
 	int execute(string sql)
 	{
@@ -83,7 +93,39 @@ class EntityManager
 		return result;
 	}
 
-	T[] getResultList(T)(QueryBuilder builder)
+	T[] getResultList(T)(SqlBuilder builder)
+	{
+		T[] result;
+		auto stmt = db.prepare(builder.build.toString);
+		auto res = stmt.query();
+		foreach(r;res){
+			auto t = new T();
+			auto entity = findEntityForObject(t);
+			foreach(field;entity.fields){
+				field.fieldValue = Variant(r[field.fieldName]);
+				field.write(t);
+			}
+			result ~= t;
+		}
+		return result;
+	}
+	T[] getResultList(T)(SqlSyntax syntax)
+	{
+		T[] result;
+		auto stmt = db.prepare(syntax.toString);
+		auto res = stmt.query();
+		foreach(r;res){
+			auto t = new T();
+			auto entity = findEntityForObject(t);
+			foreach(field;entity.fields){
+				field.fieldValue = Variant(r[field.fieldName]);
+				field.write(t);
+			}
+			result ~= t;
+		}
+		return result;
+	}
+	T[] getResultList(T)(CriteriaBuilder builder)
 	{
 		T[] result;
 		auto stmt = db.prepare(builder.toString);

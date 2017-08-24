@@ -75,13 +75,12 @@ void main()
     writeln(user.name,"-",user.money,"-",user.email,"-",user.status);
 
     //get multi record
-    auto builder = entityManagerFactory.createQueryBuilder();
+    auto builder = entitymanager.createSqlBuilder();
     builder.select("*")
         .from("user")
         .where("id > 1");
     User[] users = entitymanager.getResultList!User(builder);
 
-    writeln(users[0].id);
     foreach(u;users){
         writeln(u.name,"-",u.money,"-",u.email,"-",u.status);
     }

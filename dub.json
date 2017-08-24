@@ -1,52 +1,53 @@
 {
-	"name": "entity",
-	"authors": ["putao"],
-	"dependencies": {
-        "database": "0.0.4"
-	},
-	"description": "A minimal D application.",
-	"copyright": "Copyright © 2017, root",
-	"license": "proprietary",
-	"configurations": [
-		{
-			"name": "default",
-			"targetType": "library",
-			"versions": [
-				"USE_MYSQL"
-			],
-			"subConfigurations": {
-				"database": "mysql"
-			}
-		},
-		{
-			"name": "mysql",
-			"targetType": "library",
-			"versions": [
-				"USE_MYSQL"
-			],
-			"subConfigurations": {
-				"database": "mysql"
-			}
-		},
-		{
-			"name": "postgresql",
-			"targetType": "library",
-			"versions": [
-				"USE_POSTGRESQL"
-			],
-			"subConfigurations": {
-				"database": "postgresql"
-			}
-		},
-		{
-			"name": "sqlite",
-			"targetType": "library",
-			"versions": [
-				"USE_SQLITE"
-			],
-			"subConfigurations": {
-				"database": "sqlite"
-			}
-		}
-	]
+    "name": "entity",
+    "authors": ["putao"],
+    "dependencies": {
+        "database": "0.0.4",
+        "dbal": "0.0.2"
+    },
+    "description": "A minimal D application.",
+    "copyright": "Copyright © 2017, root",
+    "license": "proprietary",
+    "configurations": [
+        {
+            "name": "default",
+            "targetType": "library",
+            "versions": [
+                "USE_MYSQL"
+            ],
+            "subConfigurations": {
+                "database": "mysql"
+            }
+        },
+        {
+            "name": "mysql",
+            "targetType": "library",
+            "versions": [
+                "USE_MYSQL"
+            ],
+            "subConfigurations": {
+                "database": "mysql"
+            }
+        },
+        {
+            "name": "postgresql",
+            "targetType": "library",
+            "versions": [
+                "USE_POSTGRESQL"
+            ],
+            "subConfigurations": {
+                "database": "postgresql"
+            }
+        },
+        {
+            "name": "sqlite",
+            "targetType": "library",
+            "versions": [
+                "USE_SQLITE"
+            ],
+            "subConfigurations": {
+                "database": "sqlite"
+            }
+        }
+    ]
 }

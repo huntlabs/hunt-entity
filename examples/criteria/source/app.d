@@ -48,7 +48,9 @@ void main()
             );
     }
     User[] users = entitymanager.getResultList!User(criteria.toString);
-    writeln(users);
+    foreach(user;users){
+        writeln(user.id);
+    }
 
     CriteriaBuilder cb = entitymanager.createCriteriaBuilder!User;
     cb.createCriteriaDelete().where(cb.eq(cb.User.id,26802)).execute();
