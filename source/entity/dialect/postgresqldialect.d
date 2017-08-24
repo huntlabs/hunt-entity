@@ -4,8 +4,8 @@ import entity;
 
 class PostgresqlDialect : Dialect
 {
-	string closeQuote() { return "\""; }
-	string openQuote()  { return "\""; }
+	string closeQuote() { return "'"; }
+	string openQuote()  { return "'"; }
     Variant fromSqlValue(FieldInfo info)
 	{
 		if(typeid(info.fieldType) == typeid(dBoolType)){
