@@ -9,7 +9,7 @@ class PostgresqlDialect : Dialect
     Variant fromSqlValue(FieldInfo info)
 	{
 		if(typeid(info.fieldType) == typeid(dBoolType)){
-			if(*info.fieldValue.peek!string == "1")
+			if(*info.fieldValue.peek!string == "true")
 				return Variant(true);
 			else
 				return Variant(false);
@@ -27,11 +27,13 @@ class PostgresqlDialect : Dialect
     string toSqlValueImpl(DlangDataType type,Variant value)
 	{
 		if(typeid(type) == typeid(dBoolType))
-				return value.get!(bool) ? "1" : "0";
+				return value.get!(bool) ? "TRUE" : "FALSE";
 		else if(typeid(type) == typeid(dFloatType))
-				return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+				//return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+				return value.toString;
 		else if(typeid(type) == typeid(dDoubleType))
-				return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+				//return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+				return value.toString;
 		else if(typeid(type) == typeid(dIntType))
 				return value.toString;
 		else
