@@ -2,7 +2,7 @@
     "name": "entity",
     "authors": ["putao"],
     "dependencies": {
-        "database": "0.0.4",
+        "database": "0.0.5",
         "dbal": "0.0.2"
     },
     "description": "A minimal D application.",

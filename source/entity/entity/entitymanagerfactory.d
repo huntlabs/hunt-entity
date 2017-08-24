@@ -152,12 +152,12 @@ string makeEntityList(T...)(){
             builder.select(\"*\")
 				.from(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
-				//writeln(builder);
+				//writeln(builder.build().toString);
 				auto stmt = manager.db.prepare(builder.build().toString);
 				auto rs = stmt.query();
 				if(!rs.rows)return obj;
 				auto row = rs.front();
-                //writeln(row);
+                //import std.stdio;writeln(row);
 				";
             foreach(key;keys)
                 if(key != primaryKey)str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);info.fields[\""~key~"\"].write(entity);";
