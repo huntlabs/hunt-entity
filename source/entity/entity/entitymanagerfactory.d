@@ -13,14 +13,16 @@ class EntityManagerFactory
     {
         this.name = name;
         this.config = config;
-        if(config.isMysql){
+        version(USE_MYSQL){
             this.dialect = new MysqlDialect();
-        }else if(config.isPgsql){
+        }
+        version(USE_POSTGRESQL)
+        {
             this.dialect = new PostgresqlDialect(); 
-        }else if(config.isSqlite){
+        }
+        version(USE_SQLITE)
+        {
             this.dialect = new SqliteDialect(); 
-        }else{
-            throw new EntityException("unkonw sql type");
         }
         this.db = new Database(config);
     }
@@ -29,14 +31,9 @@ class EntityManagerFactory
     {
         //pragma(msg,makeEntityList!(T)());
         mixin(makeEntityList!(T)());
-        assert(models);
-        assert(classMap);
+        assert(models,"Register Entity Error,models is null");
+        assert(classMap,"Register Entity Error,class map is null");
         return new EntityManager(name,config,db,dialect,models,classMap);	
-    }
-
-    public QueryBuilder createQueryBuilder()
-    {
-        return new QueryBuilder(config,db,dialect);
     }
 }
 
@@ -112,13 +109,13 @@ string makeEntityList(T...)(){
         function(Object obj,EntityInfo info,EntityManager manager){
             //PersistFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-            auto builder = manager.createQueryBuilder();
+            auto builder = manager.createSqlBuilder();
             builder.insert(\""~tableName~"\").values([";
             foreach(kkk;keys)
                 if(kkk != incrementKey)str ~= "\""~ kkk ~ "\":info.fields[\""~kkk~"\"].read(entity) ," ;
             str ~= "]);
             //writeln(builder);
-            auto stmt = manager.db.prepare(builder.toString);
+            auto stmt = manager.db.prepare(builder.build().toString);
             stmt.execute();
             ";
             if(incrementKey.length)str ~= "entity."~incrementKey~" = stmt.lastInsertId;";
@@ -127,36 +124,36 @@ string makeEntityList(T...)(){
         function(Object obj,EntityInfo info,EntityManager manager){
             //RemoveFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-            auto builder = manager.createQueryBuilder();
+            auto builder = manager.createSqlBuilder();
             builder.remove(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
             //writeln(builder);
-            auto stmt = manager.db.prepare(builder.toString);
+            auto stmt = manager.db.prepare(builder.build().toString);
             return stmt.execute();
         },
         function(Object obj,EntityInfo info,EntityManager manager){
             //MergeFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-            auto builder = manager.createQueryBuilder();
+            auto builder = manager.createSqlBuilder();
             builder.update(\""~tableName~"\")";
             foreach(kkk;keys)
                 if(kkk != incrementKey)str ~= ".set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity))" ;
             str ~= "
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
             //writeln(builder);
-            auto stmt = manager.db.prepare(builder.toString);
+            auto stmt = manager.db.prepare(builder.build().toString);
             stmt.execute();
             return obj;
         },
         function(Object obj,EntityInfo info,EntityManager manager){
             //FindFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-            auto builder = manager.createQueryBuilder();
+            auto builder = manager.createSqlBuilder();
             builder.select(\"*\")
 				.from(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 				//writeln(builder);
-				auto stmt = manager.db.prepare(builder.toString);
+				auto stmt = manager.db.prepare(builder.build().toString);
 				auto rs = stmt.query();
 				if(!rs.rows)return obj;
 				auto row = rs.front();
