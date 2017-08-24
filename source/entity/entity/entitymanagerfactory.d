@@ -70,7 +70,8 @@ string makeEntityList(T...)(){
         string[] keys = null;
         string[string] keyType = null;
         string[] notNullKeys = null;
-		string tableName = __traits(getAttributes,t)[0];
+		string tableName = __traits(getAttributes,t).length ? __traits(getAttributes,t)[0]
+                            : t.stringof;
         foreach(tt; __traits(derivedMembers, t)) 
         {
             //pragma(msg,"\tField Name:",tt.stringof);
