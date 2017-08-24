@@ -9,9 +9,9 @@ class EntityInfo
 	FieldInfo[string] fields;
 	string[] fieldsColumn;
 
-    alias Object function(Object,EntityInfo,EntityManager) PersistFunc;
+    alias int function(Object,EntityInfo,EntityManager) PersistFunc;
     alias int function(Object,EntityInfo,EntityManager) RemoveFunc;
-    alias Object function(Object,EntityInfo,EntityManager) MergeFunc;
+    alias int function(Object,EntityInfo,EntityManager) MergeFunc;
     alias Object function(Object,EntityInfo,EntityManager) FindFunc;
 
     PersistFunc persistFunc;

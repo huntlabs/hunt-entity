@@ -116,10 +116,10 @@ string makeEntityList(T...)(){
             str ~= "]);
             //writeln(builder);
             auto stmt = manager.db.prepare(builder.build().toString);
-            stmt.execute();
+            int r = stmt.execute();
             ";
             if(incrementKey.length)str ~= "entity."~incrementKey~" = stmt.lastInsertId;";
-            str ~= "return obj;
+            str ~= "return r;
         },
         function(Object obj,EntityInfo info,EntityManager manager){
             //RemoveFunc
@@ -142,8 +142,8 @@ string makeEntityList(T...)(){
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
             //writeln(builder);
             auto stmt = manager.db.prepare(builder.build().toString);
-            stmt.execute();
-            return obj;
+            int r = stmt.execute();
+            return r;
         },
         function(Object obj,EntityInfo info,EntityManager manager){
             //FindFunc
@@ -155,7 +155,7 @@ string makeEntityList(T...)(){
 				//writeln(builder.build().toString);
 				auto stmt = manager.db.prepare(builder.build().toString);
 				auto rs = stmt.query();
-				if(!rs.rows)return obj;
+				if(!rs.rows)return null;
 				auto row = rs.front();
                 //import std.stdio;writeln(row);
 				";
