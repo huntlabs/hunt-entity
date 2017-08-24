@@ -35,16 +35,16 @@ class EntityManager
 		return new CriteriaBuilder(config,db,dialect,this,T.stringof,entityList,classMap);
 	}
 
-	void persist(Object obj)
+	int persist(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		info.persistFunc(obj,info,this);
+		return info.persistFunc(obj,info,this);
 	}
 
-	void find(Object obj)
+	Object find(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		info.findFunc(obj,info,this);
+		return info.findFunc(obj,info,this);
 	}
 
 	int remove(Object obj)
@@ -53,10 +53,10 @@ class EntityManager
 		return info.removeFunc(obj,info,this);
 	}
 
-	void merge(Object obj)
+	int merge(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		info.mergeFunc(obj,info,this);
+		return info.mergeFunc(obj,info,this);
 	}
 
     int execute(SqlSyntax syntax)
