@@ -114,7 +114,9 @@ string makeEntityList(T...)(){
             builder.insert(\""~tableName~"\").values([";
             foreach(kkk;keys)
                 if(kkk != incrementKey)str ~= "\""~ kkk ~ "\":info.fields[\""~kkk~"\"].read(entity) ," ;
-            str ~= "]);
+            str ~= "]);";
+            if(incrementKey.length)str~="builder.setAutoIncrease(\""~incrementKey~"\");";
+            str ~= "
             //writeln(builder);
             auto stmt = manager.db.prepare(builder.build().toString);
             int r = stmt.execute();
