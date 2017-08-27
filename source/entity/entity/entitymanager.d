@@ -84,6 +84,22 @@ class EntityManager
 		return db.execute(sql);	
 	}
     
+	T getResult(T)(string sql)
+	{
+		auto stmt = db.prepare(sql);
+		auto res = stmt.query();
+        if(!res.empty()){
+            auto r = res.front();
+            auto result = new T();
+            auto entity = findEntityForObject(t);
+            foreach(field;entity.fields){
+                field.fieldValue = Variant(r[field.fieldName]);
+                field.write(t);
+            }
+        }
+		return null;
+	}
+
 	T[] getResultList(T)(string sql)
 	{
 		T[] result;
