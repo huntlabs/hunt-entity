@@ -91,11 +91,12 @@ class EntityManager
         if(!res.empty()){
             auto r = res.front();
             auto result = new T();
-            auto entity = findEntityForObject(t);
+            auto entity = findEntityForObject(result);
             foreach(field;entity.fields){
                 field.fieldValue = Variant(r[field.fieldName]);
-                field.write(t);
+                field.write(result);
             }
+            return result;
         }
 		return null;
 	}
