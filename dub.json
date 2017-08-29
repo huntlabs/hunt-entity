@@ -2,8 +2,8 @@
     "name": "entity",
     "authors": ["HuntLabs.cn"],
     "dependencies": {
-        "database": "0.0.5",
-        "dbal": "0.0.4"
+        "database": "0.0.7",
+        "dbal": "0.0.6"
     },
     "description": "Entity managerment and bindings, similar to JPA.",
     "copyright": "Copyright (C) 2015-2017 Shanghai Putao Technology Co., Ltd",

@@ -21,6 +21,7 @@ obj/
 _ReSharper*/
 Unittest/*
 libentity.a
+example
 
 # Ignore generated files
 lib/
