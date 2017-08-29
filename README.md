@@ -25,7 +25,7 @@ void main()
 {
     DatabaseConfig config = new DatabaseConfig("postgresql://postgres:postgres@127.0.0.1:5432/test?charset=utf-8");
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
-    EntityManager entitymanager = entityManagerFactory.createEntityManager!(User,Blog);
+    EntityManager entitymanager = entityManagerFactory.createEntityManager!(User);
 
     //insert
     {
