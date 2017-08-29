@@ -59,5 +59,32 @@ void main()
       user.email = "viile@foxmail.com";
       entitymanager.merge(user);
      }
+     
+     //Get a row data from the query condition
+     {
+        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
+        criteria.where(criteria.gt(criteria.User.id,26762));
+        User user = entitymanager.getResult!User(criteria.toString);
+     }
+     
+     //Get multi row data from the query condition
+     {
+        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
+        criteria.where(criteria.gt(criteria.User.id,26762));
+        User[] users = entitymanager.getResultList!User(criteria.toString);
+     }
+     
+     //update multi record by condition
+     {
+        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
+        criteria.createCriteriaUpdate().set(criteria.User.email,"dakgzhu@foxmail.com")
+            .where(criteria.gt(criteria.User.id,26761)).execute();
+     }
+     
+     //remove multi record by condition
+     {
+        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
+        criteria.createCriteriaDelete().where(criteria.gt(criteria.User.id,26761)).execute();
+     }
 }
 ```
