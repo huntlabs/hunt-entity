@@ -5,7 +5,7 @@
         "database": "0.0.7",
         "dbal": "0.0.6"
     },
-    "description": "Entity managerment and bindings, similar to JPA.",
+    "description": "An object-relational mapping (ORM) framework for dlang's database,  support PostgreSQL / MySQL / SQLite.",
     "copyright": "Copyright (C) 2015-2017 Shanghai Putao Technology Co., Ltd",
     "license": "Apache-2.0",
     "configurations": [
