@@ -29,7 +29,7 @@ class EntityManagerFactory
 
     public EntityManager createEntityManager(T...)()
     {
-        //pragma(msg,makeEntityList!(T)());
+        pragma(msg,makeEntityList!(T)());
         mixin(makeEntityList!(T)());
         assert(models,"Register Entity Error,models is null");
         assert(classMap,"Register Entity Error,class map is null");
@@ -67,6 +67,7 @@ string makeEntityList(T...)(){
         //import process end
         string incrementKey = null;
         string primaryKey = null;
+		string primaryKeyType = null;
         string[] keys = null;
         string[string] keyType = null;
         string[] notNullKeys = null;
@@ -84,7 +85,10 @@ string makeEntityList(T...)(){
             foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
 				str~="fieldAttrs~=cast(int)"~to!string(k)~";";
                 if(k == Auto || k == AutoIncrement)incrementKey = key;
-                if(k == PrimaryKey)primaryKey = key;
+                if(k == PrimaryKey){
+					primaryKey = key;
+					primaryKeyType = getDlangTypeStr!Type;
+				}
                 if(k == NotNull)notNullKeys ~= key;
 			}
             str ~= "fieldInfo = new FieldInfo("~tt.stringof~","~tt.stringof~",
@@ -105,7 +109,7 @@ string makeEntityList(T...)(){
             ";
             str ~= "fieldInfo=null;fieldType = null;fieldAttrs = null;";
         }
-        str ~= "info = new EntityInfo(\""~t.stringof~"\",\""~__traits(getAttributes,t)[0]~"\",fields,";
+        str ~= "info = new EntityInfo(\""~t.stringof~"\",\""~__traits(getAttributes,t)[0]~"\",\""~primaryKey~"\",fields,";
         str ~= "
         function(Object obj,EntityInfo info,EntityManager manager){
             //PersistFunc
@@ -130,7 +134,7 @@ string makeEntityList(T...)(){
             auto builder = manager.createSqlBuilder();
             builder.remove(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
-            //writeln(builder);
+            //writeln(builder.build().toString);
             auto stmt = manager.db.prepare(builder.build().toString);
             return stmt.execute();
         },
@@ -166,8 +170,14 @@ string makeEntityList(T...)(){
                 if(key != primaryKey)str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);info.fields[\""~key~"\"].write(entity);";
         str ~= "
             return obj;
-        }
-        );";
+        },
+		function(Object obj,Variant value){
+			//SetPriKeyFunc
+            "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
+			entity."~primaryKey~" = cast("~primaryKeyType~")*value.peek!"~primaryKeyType~";
+			return entity;
+		}
+		);";
         str ~= "models[\""~t.stringof~"\"] = info;";
         str ~= "classMap[cast(TypeInfo_Class)"~t.stringof~".classinfo] = info;";
         str ~= "info = null;fields = null;";

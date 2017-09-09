@@ -29,24 +29,12 @@ class Blog
     string context;
 }
 
-string display(User user)
-{
-    with(user) {
-        JSONValue json;
-        json["id"] = id;
-        json["name"] = name;
-        json["money"] = money;
-        json["status"] = status;
-        return json.toString;
-    }
-}
-
 void main()
 {
     writeln("Edit source/app.d to start your project.");
-    DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
+    DatabaseConfig config = new DatabaseConfig("postgresql://postgres:123456@10.1.11.44:5432/test?charset=utf-8");
     config.setMaximumConnection = 1;
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",config);
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
     EntityManager entitymanager = entityManagerFactory.createEntityManager!(User,Blog);
 
     Dialect dialect = new MysqlDialect();
@@ -58,6 +46,15 @@ void main()
     user.status = true;
     entitymanager.persist(user);
 
+    writeln(user.id);
+
+    auto t = cast(User)entitymanager.find!(User,int)(25);
+    writeln(t.name);
+    
+    int r = entitymanager.remove!(User,int)(28);
+    writeln(r);
+    
+    /*
     //remove
     //entitymanager.remove(user);
 
@@ -84,5 +81,6 @@ void main()
     foreach(u;users){
         writeln(u.name,"-",u.money,"-",u.email,"-",u.status);
     }
+    */
 }
 
