@@ -52,6 +52,11 @@ class EntityInfo
 		return primaryKey;
 	}
 
+	void setPrimaryKey(Object obj,T value)
+	{
+		setPriKeyFunc(obj,Variant(value));
+	}
+
     FieldInfo opDispatch(string name)() 
     {
         return fields.get(name,null);
