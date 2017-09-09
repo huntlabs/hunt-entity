@@ -98,6 +98,28 @@ class CriteriaBuilder
         return this;
     }
     
+    CriteriaBuilder leftJoin(T)(FieldInfo infoa,FieldInfo infob)
+    {
+        string joinTable = _models[T.stringof].tableName;
+		sqlbuilder.leftJoin(joinTable,_tableName ~"."~infoa.fieldName 
+                      ~ " = " ~ joinTable~"."~infob.fieldName);
+        return this;
+    }
+    CriteriaBuilder rightJoin(T)(FieldInfo infoa,FieldInfo infob)
+    {
+        string joinTable = _models[T.stringof].tableName;
+		sqlbuilder.rightJoin(joinTable,_tableName ~"."~infoa.fieldName 
+                      ~ " = " ~ joinTable~"."~infob.fieldName);
+        return this;
+    }
+    CriteriaBuilder innerJoin(T)(FieldInfo infoa,FieldInfo infob)
+    {
+        string joinTable = _models[T.stringof].tableName;
+		sqlbuilder.innerJoin(joinTable,_tableName ~"."~infoa.fieldName 
+                      ~ " = " ~ joinTable~"."~infob.fieldName);
+        return this;
+    }
+    
     CriteriaBuilderWhereExpression eq(T)(FieldInfo info,T val)
     {
 		return new CriteriaBuilderWhereExpression(info.fieldName,"=",_dialect.toSqlValue(val));

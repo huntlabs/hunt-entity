@@ -55,10 +55,28 @@ class EntityManager
 		return info.findFunc(obj,info,this);
 	}
 
+	Object find(T,F)(F value)
+	{
+		auto t = new T();
+		auto info = findEntityForObject(t);
+		info.setPriKeyFunc(t,Variant(value));
+		if(find(t) is null)
+			return null;
+		return cast(T)t;
+	}
+
 	int remove(Object obj)
 	{
 		auto info = findEntityForObject(obj);
 		return info.removeFunc(obj,info,this);
+	}
+	
+	int remove(T,F)(F value)
+	{
+		auto t = new T();
+		auto info = findEntityForObject(t);
+		info.setPriKeyFunc(t,Variant(value));
+		return remove(t);
 	}
 
 	int merge(Object obj)
