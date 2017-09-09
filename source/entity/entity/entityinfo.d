@@ -52,7 +52,7 @@ class EntityInfo
 		return primaryKey;
 	}
 
-	void setPrimaryKey(Object obj,T value)
+	void setPrimaryKey(T)(Object obj,T value)
 	{
 		setPriKeyFunc(obj,Variant(value));
 	}
