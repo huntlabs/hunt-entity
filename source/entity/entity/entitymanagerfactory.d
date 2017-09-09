@@ -29,7 +29,7 @@ class EntityManagerFactory
 
     public EntityManager createEntityManager(T...)()
     {
-        pragma(msg,makeEntityList!(T)());
+        //pragma(msg,makeEntityList!(T)());
         mixin(makeEntityList!(T)());
         assert(models,"Register Entity Error,models is null");
         assert(classMap,"Register Entity Error,class map is null");
