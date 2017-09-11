@@ -42,8 +42,7 @@ class CriteriaBuilder
     }
     CriteriaBuilder createCriteriaCount()
     {
-        sqlbuilder.from(_tableName);
-        //sqlbuilder.count();
+        sqlbuilder.from(_tableName).count();
         return this;
     }
     CriteriaBuilder createCriteriaDelete()
