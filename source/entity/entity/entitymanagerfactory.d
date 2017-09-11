@@ -176,6 +176,11 @@ string makeEntityList(T...)(){
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
 			entity."~primaryKey~" = cast("~primaryKeyType~")*value.peek!"~primaryKeyType~";
 			return entity;
+		},
+		function(Object obj){
+			//ReadPriKeyValueFunc
+            "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
+			return Variant(entity."~primaryKey~");
 		}
 		);";
         str ~= "models[\""~t.stringof~"\"] = info;";
