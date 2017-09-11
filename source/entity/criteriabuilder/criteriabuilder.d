@@ -40,6 +40,12 @@ class CriteriaBuilder
         sqlbuilder.select("*").from(_tableName);
         return this;
     }
+    CriteriaBuilder createCriteriaCount()
+    {
+        sqlbuilder.from(_tableName);
+        //sqlbuilder.count();
+        return this;
+    }
     CriteriaBuilder createCriteriaDelete()
     {
         sqlbuilder.remove(_tableName);

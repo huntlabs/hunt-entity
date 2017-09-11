@@ -15,15 +15,18 @@ class EntityInfo
     alias int function(Object,EntityInfo,EntityManager) MergeFunc;
     alias Object function(Object,EntityInfo,EntityManager) FindFunc;
     alias Object function(Object,Variant) SetPriKeyFunc;
+    alias Variant function(Object) ReadPriKeyValueFunc;
 
     PersistFunc persistFunc;
     RemoveFunc removeFunc;
     MergeFunc mergeFunc;
     FindFunc findFunc;
 	SetPriKeyFunc setPriKeyFunc;
+	ReadPriKeyValueFunc readPriKeyValueFunc;
 
 	this(string name,string tableName,string primaryKey,FieldInfo[string] fields,
-     PersistFunc persist,RemoveFunc remove,MergeFunc merge,FindFunc find,SetPriKeyFunc setPriKey)
+     PersistFunc persist,RemoveFunc remove,MergeFunc merge,FindFunc find,SetPriKeyFunc setPriKey,
+	 ReadPriKeyValueFunc readPriKeyValue)
 	{
 		this.name = name;
 		this.tableName = tableName;
@@ -35,6 +38,7 @@ class EntityInfo
         this.mergeFunc = merge;
         this.findFunc = find;
 		this.setPriKeyFunc = setPriKey;
+		this.readPriKeyValueFunc = readPriKeyValue;
 	}
 
 	string[] getAllFields()
@@ -50,6 +54,11 @@ class EntityInfo
 	string getPrimaryKey()
 	{
 		return primaryKey;
+	}
+
+	T getPrimaryKeyValue(T)(Object obj)
+	{
+		return cast(T)*readPriKeyValueFunc(obj).peek!T;	
 	}
 
 	void setPrimaryKey(T)(Object obj,T value)
