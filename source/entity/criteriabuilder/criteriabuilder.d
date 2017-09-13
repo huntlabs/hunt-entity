@@ -10,6 +10,7 @@ class CriteriaBuilder
 	Database _db;
 
     string _name;
+	bool _countFlag = false;
     EntityInfo[string] _models;
     EntityInfo[TypeInfo_Class] _classMap;
 
@@ -42,6 +43,7 @@ class CriteriaBuilder
     }
     CriteriaBuilder createCriteriaCount()
     {
+		_countFlag = true;
         sqlbuilder.from(_tableName).count();
         return this;
     }
@@ -79,12 +81,12 @@ class CriteriaBuilder
     }
     CriteriaBuilder asc(FieldInfo info)
     {
-        sqlbuilder.groupBy(info.fieldName ~ " ASC ");
+        sqlbuilder.orderBy(info.fieldName ~ " ASC ");
         return this;
     }
     CriteriaBuilder desc(FieldInfo info)
     {
-        sqlbuilder.groupBy(info.fieldName ~ " DESC ");
+        sqlbuilder.orderBy(info.fieldName ~ " DESC ");
         return this;
     }
     CriteriaBuilder offset(int offset)
@@ -161,7 +163,14 @@ class CriteriaBuilder
 
     int execute()
     {
-        return _db.execute(this.toString()); 
+        auto stmt = _db.prepare(this.toString()); 
+		if(_countFlag){
+			_countFlag = false;
+			return stmt.count();
+		}else{
+			return stmt.execute();
+		}
+	
     }
 
 	auto getResultList()
