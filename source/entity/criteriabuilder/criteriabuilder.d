@@ -81,12 +81,12 @@ class CriteriaBuilder
     }
     CriteriaBuilder asc(FieldInfo info)
     {
-        sqlbuilder.orderBy(info.fieldName ~ " ASC ");
+        sqlbuilder.orderBy(info.fieldName ,"ASC");
         return this;
     }
     CriteriaBuilder desc(FieldInfo info)
     {
-        sqlbuilder.orderBy(info.fieldName ~ " DESC ");
+        sqlbuilder.orderBy(info.fieldName ,"DESC");
         return this;
     }
     CriteriaBuilder offset(int offset)
