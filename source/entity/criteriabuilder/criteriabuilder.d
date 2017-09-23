@@ -147,7 +147,7 @@ class CriteriaBuilder
     {
 		return new CriteriaBuilderWhereExpression(info.fieldName,">=",_dialect.toSqlValue(val));
     }
-    CriteriaBuilderhereExpression le(T)(FieldInfo info,T val)
+    CriteriaBuilderWhereExpression le(T)(FieldInfo info,T val)
     {
 		return new CriteriaBuilderWhereExpression(info.fieldName,"<=",_dialect.toSqlValue(val));
     }
