@@ -119,59 +119,17 @@ class EntityManager
 		return cast(T)null;
 	}
 
-	T[] getResultList(T)(string sql)
+	T[] getResultList(T,F)(F ct)
 	{
 		T[] result;
+        string sql;
+        static if (is(F == SqlBuilder))
+            sql = ct.build.toString;
+        else static if (is(F == string))
+            sql = ct;
+        else
+            sql = ct.toString;
 		auto stmt = db.prepare(sql);
-		auto res = stmt.query();
-		foreach(r;res){
-			auto t = new T();
-			auto entity = findEntityForObject(t);
-			foreach(field;entity.fields){
-				field.fieldValue = Variant(r[field.fieldName]);
-				field.write(t);
-			}
-			result ~= t;
-		}
-		return result;
-	}
-
-	T[] getResultList(T)(SqlBuilder builder)
-	{
-		T[] result;
-		auto stmt = db.prepare(builder.build.toString);
-		auto res = stmt.query();
-		foreach(r;res){
-			auto t = new T();
-			auto entity = findEntityForObject(t);
-			foreach(field;entity.fields){
-				field.fieldValue = Variant(r[field.fieldName]);
-				field.write(t);
-			}
-			result ~= t;
-		}
-		return result;
-	}
-	T[] getResultList(T)(SqlSyntax syntax)
-	{
-		T[] result;
-		auto stmt = db.prepare(syntax.toString);
-		auto res = stmt.query();
-		foreach(r;res){
-			auto t = new T();
-			auto entity = findEntityForObject(t);
-			foreach(field;entity.fields){
-				field.fieldValue = Variant(r[field.fieldName]);
-				field.write(t);
-			}
-			result ~= t;
-		}
-		return result;
-	}
-	T[] getResultList(T)(CriteriaBuilder builder)
-	{
-		T[] result;
-		auto stmt = db.prepare(builder.toString);
 		auto res = stmt.query();
 		foreach(r;res){
 			auto t = new T();
