@@ -2,8 +2,8 @@
     "name": "entity",
     "authors": ["HuntLabs.cn"],
     "dependencies": {
-        "database": "~>0.0.9",
-        "dbal": "~>0.0.7"
+        "database": "~>0.0.12",
+        "dbal": "~>0.0.8"
     },
     "description": "An object-relational mapping (ORM) framework for dlang's database,  support PostgreSQL / MySQL / SQLite.",
     "copyright": "Copyright (C) 2015-2017 Shanghai Putao Technology Co., Ltd",
