@@ -116,7 +116,7 @@ class EntityManager
             }
             return result;
         }
-		return cast(T)null;
+		return null;
 	}
 
 	T[] getResultList(T,F)(F ct)
