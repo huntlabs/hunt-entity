@@ -29,9 +29,11 @@ class SqliteDialect : Dialect
 		if(typeid(type) == typeid(dBoolType))
 				return value.get!(bool) ? "1" : "0";
 		else if(typeid(type) == typeid(dFloatType))
-				return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+				//return isNaN(*value.peek!float) ? "0" : *value.peek!string;
+                return (*value.peek!float).to!string;
 		else if(typeid(type) == typeid(dDoubleType))
-				return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+				//return isNaN(*value.peek!double) ? "0" : *value.peek!string;
+                return (*value.peek!double).to!string;
 		else if(typeid(type) == typeid(dIntType))
 				return value.toString;
 		else
