@@ -163,6 +163,7 @@ class CriteriaBuilder
 
     int execute()
     {
+        log(this.toString()); 
         auto stmt = _db.prepare(this.toString()); 
 		if(_countFlag){
 			_countFlag = false;

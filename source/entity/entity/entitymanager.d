@@ -12,6 +12,9 @@ class EntityManager
 	EntityInfo[TypeInfo_Class] classMap;
     SqlFactory sqlFactory;
 
+    bool logStatus = true;
+
+
 	this(string name,DatabaseConfig config,Database db,Dialect dialect,
 			EntityInfo[string] entityList,
 			EntityInfo[TypeInfo_Class] classMap)
@@ -87,23 +90,28 @@ class EntityManager
 
     int execute(SqlSyntax syntax)
     {
+        entityLog(syntax.toString); 
 		return execute(syntax.toString);	
     }
 	int execute(SqlBuilder builder)
 	{
+        entityLog(builder.build().toString); 
 		return execute(builder.build().toString);	
 	}
 	int execute(CriteriaBuilder builder)
 	{
+        entityLog(builder.toString);
 		return execute(builder.toString);	
 	}
 	int execute(string sql)
 	{
+        entityLog(sql);
 		return db.execute(sql);	
 	}
     
 	T getResult(T)(string sql)
 	{
+        entityLog(sql);
 		auto stmt = db.prepare(sql);
 		auto res = stmt.query();
         if(!res.empty()){
@@ -129,6 +137,7 @@ class EntityManager
             sql = ct;
         else
             sql = ct.toString;
+        entityLog(sql);
 		auto stmt = db.prepare(sql);
 		auto res = stmt.query();
 		foreach(r;res){
@@ -149,4 +158,19 @@ class EntityManager
 			throw new EntityException("Cannot find entity by class " ~ obj.classinfo.toString());	
 		return classMap[obj.classinfo];
 	}
+
+    void enableLog()
+    {
+        this.logStatus = true;
+    }
+
+    void disableLog()
+    {
+        this.logStatus = false;
+    }
+
+    void entityLog(T)(T value,string file = __FILE__, size_t line = __LINE__)
+    {
+        if(this.logStatus)log(file,":",line," ",value); 
+    }
 }

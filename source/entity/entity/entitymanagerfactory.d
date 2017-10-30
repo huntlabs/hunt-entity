@@ -121,7 +121,7 @@ string makeEntityList(T...)(){
             str ~= "]);";
             if(incrementKey.length)str~="builder.setAutoIncrease(\""~incrementKey~"\");";
             str ~= "
-            //writeln(builder);
+			manager.entityLog(builder.build().toString);
             auto stmt = manager.db.prepare(builder.build().toString);
             int r = stmt.execute();
             ";
@@ -134,7 +134,7 @@ string makeEntityList(T...)(){
             auto builder = manager.createSqlBuilder();
             builder.remove(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
-            //writeln(builder.build().toString);
+			manager.entityLog(builder.build().toString);
             auto stmt = manager.db.prepare(builder.build().toString);
             return stmt.execute();
         },
@@ -147,7 +147,7 @@ string makeEntityList(T...)(){
                 if(kkk != incrementKey)str ~= ".set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity))" ;
             str ~= "
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
-            //writeln(builder);
+			manager.entityLog(builder.build().toString);
             auto stmt = manager.db.prepare(builder.build().toString);
             int r = stmt.execute();
             return r;
@@ -159,7 +159,7 @@ string makeEntityList(T...)(){
             builder.select(\"*\")
 				.from(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
-				//writeln(builder.build().toString);
+				manager.entityLog(builder.build().toString);
 				auto stmt = manager.db.prepare(builder.build().toString);
 				auto rs = stmt.query();
 				if(!rs.rows)return null;
