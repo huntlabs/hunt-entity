@@ -111,7 +111,7 @@ string makeEntityList(T...)(){
         }
         str ~= "info = new EntityInfo(\""~t.stringof~"\",\""~__traits(getAttributes,t)[0]~"\",\""~primaryKey~"\",fields,";
         str ~= "
-        function(Object obj,EntityInfo info,EntityManager manager){
+        function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
             //PersistFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             auto builder = manager.createSqlBuilder();
@@ -122,23 +122,23 @@ string makeEntityList(T...)(){
             if(incrementKey.length)str~="builder.setAutoIncrease(\""~incrementKey~"\");";
             str ~= "
 			manager.entityLog(builder.build().toString);
-            auto stmt = manager.db.prepare(builder.build().toString);
+            auto stmt = session.tran.prepare(builder.build().toString);
             int r = stmt.execute();
             ";
             if(incrementKey.length)str ~= "entity."~incrementKey~" = stmt.lastInsertId;";
             str ~= "return r;
         },
-        function(Object obj,EntityInfo info,EntityManager manager){
+        function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
             //RemoveFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             auto builder = manager.createSqlBuilder();
             builder.remove(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 			manager.entityLog(builder.build().toString);
-            auto stmt = manager.db.prepare(builder.build().toString);
+            auto stmt = session.tran.prepare(builder.build().toString);
             return stmt.execute();
         },
-        function(Object obj,EntityInfo info,EntityManager manager){
+        function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
             //MergeFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             auto builder = manager.createSqlBuilder();
@@ -148,11 +148,11 @@ string makeEntityList(T...)(){
             str ~= "
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 			manager.entityLog(builder.build().toString);
-            auto stmt = manager.db.prepare(builder.build().toString);
+            auto stmt = session.tran.prepare(builder.build().toString);
             int r = stmt.execute();
             return r;
         },
-        function(Object obj,EntityInfo info,EntityManager manager){
+        function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
             //FindFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             auto builder = manager.createSqlBuilder();
@@ -160,7 +160,7 @@ string makeEntityList(T...)(){
 				.from(\""~tableName~"\")
                 .where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 				manager.entityLog(builder.build().toString);
-				auto stmt = manager.db.prepare(builder.build().toString);
+				auto stmt = session.tran.prepare(builder.build().toString);
 				auto rs = stmt.query();
 				if(!rs.rows)return null;
 				auto row = rs.front();

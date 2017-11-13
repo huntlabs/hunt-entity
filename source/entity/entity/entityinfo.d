@@ -10,10 +10,10 @@ class EntityInfo
 	string[] fieldsColumn;
 	string primaryKey;
 
-    alias int function(Object,EntityInfo,EntityManager) PersistFunc;
-    alias int function(Object,EntityInfo,EntityManager) RemoveFunc;
-    alias int function(Object,EntityInfo,EntityManager) MergeFunc;
-    alias Object function(Object,EntityInfo,EntityManager) FindFunc;
+    alias int function(Object,EntityInfo,EntityManager,EntitySession) PersistFunc;
+    alias int function(Object,EntityInfo,EntityManager,EntitySession) RemoveFunc;
+    alias int function(Object,EntityInfo,EntityManager,EntitySession) MergeFunc;
+    alias Object function(Object,EntityInfo,EntityManager,EntitySession) FindFunc;
     alias Object function(Object,Variant) SetPriKeyFunc;
     alias Variant function(Object) ReadPriKeyValueFunc;
 
