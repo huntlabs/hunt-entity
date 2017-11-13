@@ -28,6 +28,12 @@ class EntityManager
         sqlFactory = new SqlFactory();
 	}
     
+
+    EntitySession createEntityTransaction()
+    {
+        return new EntitySession(this);
+    }
+
 	SqlBuilder createSqlBuilder()
     {
         version(USE_MYSQL){
@@ -49,13 +55,19 @@ class EntityManager
 	int persist(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		return info.persistFunc(obj,info,this);
+		auto session = createEntityTransaction();
+        int result = info.persistFunc(obj,info,this,session);
+        session.commit();
+        return result;
 	}
 
 	Object find(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		return info.findFunc(obj,info,this);
+		auto session = createEntityTransaction();
+		auto result = info.findFunc(obj,info,this,session);
+        session.commit();
+        return result;
 	}
 
 	Object find(T,F)(F value)
@@ -71,7 +83,10 @@ class EntityManager
 	int remove(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		return info.removeFunc(obj,info,this);
+		auto session = createEntityTransaction();
+		int result = info.removeFunc(obj,info,this,session);
+        session.commit();
+        return result;
 	}
 	
 	int remove(T,F)(F value)
@@ -85,7 +100,10 @@ class EntityManager
 	int merge(Object obj)
 	{
 		auto info = findEntityForObject(obj);
-		return info.mergeFunc(obj,info,this);
+		auto session = createEntityTransaction();
+		int result = info.mergeFunc(obj,info,this,session);
+        session.commit();
+        return result;
 	}
 
     int execute(SqlSyntax syntax)
@@ -108,6 +126,20 @@ class EntityManager
         entityLog(sql);
 		return db.execute(sql);	
 	}
+    
+    int execute(T)(T t)
+    {
+        string str;
+        static if(is(T == SqlSyntax))
+            str = t.toString();
+        else static if(is(T == SqlBuilder))
+            str = t.build().toString();
+        else static if(is(T == CriteriaBuilder))
+            str = t.toString();
+        else
+            str = t;
+        return execute(str);
+    }
     
 	T getResult(T)(string sql)
 	{

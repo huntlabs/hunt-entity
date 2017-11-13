@@ -6,6 +6,7 @@ public import dbal;
 public import entity.entity.persistence;
 public import entity.entity.entitymanagerfactory;
 public import entity.entity.entitymanager;
+public import entity.entity.entitysession;
 public import entity.entity.fieldinfo;
 public import entity.entity.entityinfo;
 

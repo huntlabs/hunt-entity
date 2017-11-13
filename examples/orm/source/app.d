@@ -33,26 +33,50 @@ void main()
 {
     writeln("Edit source/app.d to start your project.");
     DatabaseConfig config = new DatabaseConfig("postgresql://postgres:123456@10.1.11.44:5432/test?charset=utf-8");
-    config.setMaximumConnection = 1;
+    config.setMaximumConnection = 2;
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
     EntityManager entitymanager = entityManagerFactory.createEntityManager!(User,Blog);
 
-    Dialect dialect = new MysqlDialect();
+    //Dialect dialect = new MysqlDialect();
 
     //insert
     User user = new User();
     user.name = "viile";
     user.money = 10.5;
+    user.email = "";
     user.status = true;
+
+    //auto r = entitymanager.findEntityForObject(user).getPrimaryKeyValue!int(user);
+    //writeln(r);
+
     entitymanager.persist(user);
 
-    writeln(user.id);
+    auto session = entitymanager.createEntityTransaction();
 
-    auto t = cast(User)entitymanager.find!(User,int)(25);
-    writeln(t.name);
+    User user1 = new User();
+    user1.name = "user1";
+    user1.money = 0;
+    user1.email = "test";
+    user1.status = false;
+    User user2 = new User();
+    user2.name = "user2";
+    user2.money = 0;
+    user2.email = "test";
+    user2.status = true;
+
+    session.persist(user1);
+    session.persist(user2);
+    //session.commit();
+    session.rollback();
+
+
+    //writeln(user.id);
+
+    //auto t = cast(User)entitymanager.find!(User,int)(25);
+    //writeln(t.name);
     
-    int r = entitymanager.remove!(User,int)(28);
-    writeln(r);
+    //int r = entitymanager.remove!(User,int)(28);
+    //writeln(r);
     
     /*
     //remove
@@ -82,5 +106,6 @@ void main()
         writeln(u.name,"-",u.money,"-",u.email,"-",u.status);
     }
     */
+
 }
 
