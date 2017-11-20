@@ -164,7 +164,7 @@ string makeEntityList(T...)(){
 				auto rs = stmt.query();
 				if(!rs.rows)return null;
 				auto row = rs.front();
-                //import std.stdio;writeln(row);
+                manager.entityLog(row.toString());
 				";
             foreach(key;keys)
                 if(key != primaryKey)str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);info.fields[\""~key~"\"].write(entity);";

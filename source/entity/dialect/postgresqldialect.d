@@ -31,11 +31,11 @@ class PostgresqlDialect : Dialect
 		else if(typeid(type) == typeid(dFloatType))
 				//return isNaN(*value.peek!float) ? "0" : *value.peek!string;
 				//return value.toString;
-                return (*value.peek!float).to!string;
+                return safeConvert!(float,string)(*value.peek!float);
 		else if(typeid(type) == typeid(dDoubleType))
 				//return isNaN(*value.peek!double) ? "0" : *value.peek!string;
 				//return value.toString;
-                return (*value.peek!double).to!string;
+                return safeConvert!(double,string)(*value.peek!double);
 		else if(typeid(type) == typeid(dIntType))
 				return value.toString;
 		else
