@@ -141,8 +141,13 @@ class EntityManager
         return execute(str);
     }
     
-	T getResult(T)(string sql)
+	T getResult(T,F)(F cb)
 	{
+        string sql;
+        static if(is(F == CriteriaBuilder))
+            sql = cb.toString;
+        else
+            sql = cb;
         entityLog(sql);
 		auto stmt = db.prepare(sql);
 		auto res = stmt.query();

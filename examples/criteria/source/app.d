@@ -12,7 +12,7 @@ class User
 
     @NotNull
     string name;
-    float money;
+    double money;
     string email;
     bool status;
 
@@ -37,27 +37,44 @@ void main()
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",config);
     EntityManager entitymanager = entityManagerFactory.createEntityManager!(User,Blog);
 
+    /*
+    CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
+    criteria.leftJoin!Blog(criteria.User.id,criteria.Blog.uid);
+    criteria.where(criteria.eq(criteria.User.id,26762));
+    writeln(criteria.toString);
+    */
     CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
     with(criteria){
         where(
             expr.andX(
-                expr.eq(criteria.User.money, 10.5),
+				expr.eq(criteria.User.money, 10.5),
                 expr.eq(criteria.User.status, true),
                 )
 
             );
     }
-    User[] users = entitymanager.getResultList!User(criteria.toString);
+    criteria.desc(criteria.User.money);
+    criteria.offset(20);
+    criteria.limit(100);
+	log(criteria.toString);
+    User[] users = entitymanager.getResultList!User(criteria);
     foreach(user;users){
-        writeln(user.id);
+        //writeln(user.id);
     }
-
-    CriteriaBuilder cb = entitymanager.createCriteriaBuilder!User;
-    cb.createCriteriaDelete().where(cb.eq(cb.User.id,26802)).execute();
+    
+    //CriteriaBuilder cb = entitymanager.createCriteriaBuilder!User;
+    //cb.createCriteriaDelete().where(cb.eq(cb.User.id,26802)).execute();
 
     CriteriaBuilder cb2 = entitymanager.createCriteriaBuilder!User;
     cb2.createCriteriaUpdate()
     .set(cb2.User.email,"viile@gamil.com")
-    .where(cb2.gt(cb2.User.id,26761)).execute();
+    .where(cb2.eq(cb2.User.id,26761)).execute();
+
+    /*
+    CriteriaBuilder cb = entitymanager.createCriteriaBuilder!User;
+    cb.createCriteriaCount().where(cb.gt(cb.User.id,1));
+    auto count = cb.execute();
+    writeln(count);
+    */
 }
 
