@@ -12,7 +12,7 @@
 		{
 			"name": "default",
 			"subConfigurations": {
-				"orm": "mysql"
+				"entity": "postgresql"
 			}
 		}
 	]
