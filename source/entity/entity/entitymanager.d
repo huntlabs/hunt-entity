@@ -210,4 +210,13 @@ class EntityManager
     {
         if(this.logStatus)log(file,":",line," ",value); 
     }
+    
+    EntityInfo opDispatch(string name)() 
+    {
+        return entityList.get(name,null);
+    }
+    EntityInfo opIndex(string name) 
+    {
+        return entityList.get(name,null);
+    }
 }
