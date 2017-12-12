@@ -1,18 +1,24 @@
-entity is ORM for D language (similar to Hibernate)
+## Entity
+[Entity](https://github.com/huntlabs/entity) is an object-relational mapping tool for the D programming language. Referring to the design idea of [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API).
 
-Use SQLite 3.7.11 or later. 
-Use Mysql 5.1 or later.
-Use pgsql 9.0 or later.
-In older versions is not supported.
+## Support databases
+ * PostgreSQL 9.0+
+ * MySQL 5.1+
+ * SQLite 3.7.11+
+ 
+ ## Depends
+ * [dbal](https://github.com/huntlabs/dbal)
+ * [database](https://github.com/huntlabs/database)
 
-## Quick Start
+## Simple code
 ```D
 import entity;
 
-@Table("user")
+@Table("users")
 class User
 {
-    @AutoIncrement @PrimaryKey 
+    @AutoIncrement
+    @PrimaryKey 
     int id;
 
     string name;
@@ -24,6 +30,7 @@ class User
 void main()
 {
     DatabaseConfig config = new DatabaseConfig("postgresql://postgres:postgres@127.0.0.1:5432/test?charset=utf-8");
+    
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
     EntityManager entitymanager = entityManagerFactory.createEntityManager!(User);
 
