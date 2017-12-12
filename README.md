@@ -7,7 +7,6 @@
  * SQLite 3.7.11+
  
  ## Depends
- * [dbal](https://github.com/huntlabs/dbal)
  * [database](https://github.com/huntlabs/database)
 
 ## Simple code
