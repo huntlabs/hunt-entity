@@ -2,7 +2,7 @@
     "name": "entity",
     "authors": ["HuntLabs.cn"],
     "dependencies": {
-        "database": {"path":"../database/"},
+        "database": "~>0.0.14",
         "dbal": "~>0.0.9"
     },
     "description": "An object-relational mapping (ORM) framework for dlang's database,  support PostgreSQL / MySQL / SQLite.",
