@@ -1,7 +1,6 @@
 module entity;
 
 public import database;
-public import dbal;
 
 public import entity.entity.persistence;
 public import entity.entity.entitymanagerfactory;
@@ -16,6 +15,10 @@ public import entity.dialect.dialect;
 public import entity.dialect.postgresqldialect;
 public import entity.dialect.mysqldialect;
 public import entity.dialect.sqlitedialect;
+
+public import entity.utils.time;
+public import entity.utils.memory;
+public import entity.utils.serialize;
 
 public import entity.defined;
 public import entity.exception;

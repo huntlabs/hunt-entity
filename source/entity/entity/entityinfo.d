@@ -14,6 +14,7 @@ class EntityInfo
     alias int function(Object,EntityInfo,EntityManager,EntitySession) RemoveFunc;
     alias int function(Object,EntityInfo,EntityManager,EntitySession) MergeFunc;
     alias Object function(Object,EntityInfo,EntityManager,EntitySession) FindFunc;
+    alias string[] function(Object,Object,EntityInfo,EntityManager) CompareFunc;
     alias Object function(Object,Variant) SetPriKeyFunc;
     alias Variant function(Object) ReadPriKeyValueFunc;
 
@@ -25,7 +26,7 @@ class EntityInfo
 	ReadPriKeyValueFunc readPriKeyValueFunc;
 
 	this(string name,string tableName,string primaryKey,FieldInfo[string] fields,
-     PersistFunc persist,RemoveFunc remove,MergeFunc merge,FindFunc find,SetPriKeyFunc setPriKey,
+     PersistFunc persist,RemoveFunc remove,MergeFunc merge,FindFunc find,CompareFunc compare,SetPriKeyFunc setPriKey,
 	 ReadPriKeyValueFunc readPriKeyValue)
 	{
 		this.name = name;

@@ -165,12 +165,32 @@ string makeEntityList(T...)(){
 				if(!rs.rows)return null;
 				auto row = rs.front();
                 manager.entityLog(row.toString());
+				string objAddr = (&obj).to!string;
+				auto objCopy = new "~fullyQualifiedName!t~"();
 				";
-            foreach(key;keys)
-                if(key != primaryKey)str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);info.fields[\""~key~"\"].write(entity);";
+            foreach(key;keys){
+                if(key != primaryKey){
+					str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);
+							info.fields[\""~key~"\"].write(entity);";
+				}
+				str ~= "objCopy."~key~"=obj."~key~";";
+			}
         str ~= "
+			MemoryInstance.set(\""~fullyQualifiedName!t~"_\" ~ objAddr,serialize!("~fullyQualifiedName!t~")(objCopy));
             return obj;
         },
+        function(Object obj1,Object obj2,EntityInfo info,EntityManager manager){
+            //CompareFunc
+			string[] result;
+            "~fullyQualifiedName!t~" entity1 = cast("~fullyQualifiedName!t~")obj1;
+            "~fullyQualifiedName!t~" entity2 = cast("~fullyQualifiedName!t~")obj2;
+			";
+            foreach(key;keys){
+				str ~= "if(obj1."~key~" != obj2.key){result ~= "~key~"}";	
+			}
+			str ~="
+			return result;
+		},
 		function(Object obj,Variant value){
 			//SetPriKeyFunc
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
