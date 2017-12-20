@@ -19,6 +19,7 @@ public import entity.dialect.sqlitedialect;
 
 public import entity.defined;
 public import entity.exception;
+public import entity.utils;
 
 public import std.json;
 public import std.datetime;
