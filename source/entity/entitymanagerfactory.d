@@ -96,7 +96,7 @@ string makeEntityList(T...)(){
                 function(Object obj,FieldInfo info,Dialect dialect) {
                 //WriteFunc
                     "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-					entity."~removeDoubleQuotes(tt.stringof)~" = cast("~getDlangTypeStr!Type~")*(dialect.fromSqlValue(info).peek!"~getDlangTypeStr!Type~");
+					entity."~removeDoubleQuotes(tt.stringof)~" = cast("~getDlangTypeStr!Type~")*(dialect.fromSqlValue(info.fieldType,info.fieldValue).peek!"~getDlangTypeStr!Type~");
                 },
                 function(Object obj,FieldInfo info,Dialect dialect){
                 //ReadFunc
@@ -144,10 +144,10 @@ string makeEntityList(T...)(){
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             "~fullyQualifiedName!t~" entitycache;
 			string[] compare;
-			auto cache = MemoryInstance.get(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"],read(entity));
+			auto cache = MemoryInstance().get(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity));
 			if(cache.length){
 				entitycache = deserialize!("~fullyQualifiedName!t~")(cast(byte[])cache);
-				compare = info.compare(entitycache,entity);
+				compare = manager.compare(entitycache,entity);
 				if(!compare.length)return 1;
 			}
             auto builder = manager.createSqlBuilder();
@@ -161,8 +161,8 @@ string makeEntityList(T...)(){
 			manager.entityLog(builder.build().toString);
             auto stmt = session.tran.prepare(builder.build().toString);
             int r = stmt.execute();
-			MemoryInstance.set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"],read(entity),
-					serialize!("~fullyQualifiedName!t~")(entity),120);
+			MemoryInstance().set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity),
+					cast(ubyte[])serialize!("~fullyQualifiedName!t~")(entity),120);
             return r;
         },
         function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
@@ -185,21 +185,21 @@ string makeEntityList(T...)(){
 					str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);
 							info.fields[\""~key~"\"].write(entity);";
 				}
-				str ~= "objCopy."~key~"=obj."~key~";";
+				str ~= "objCopy."~key~"=entity."~key~";";
 			}
         str ~= "
-			MemoryInstance.set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"],read(entity),
-					serialize!("~fullyQualifiedName!t~")(objCopy),120);
+			MemoryInstance().set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity),
+					cast(ubyte[])serialize!("~fullyQualifiedName!t~")(objCopy),120);
             return obj;
         },
-        function(Object obj1,Object obj2,EntityInfo info,EntityManager manager){
+        function(Object objold,Object objnew){
             //CompareFunc
 			string[] result;
-            "~fullyQualifiedName!t~" entity1 = cast("~fullyQualifiedName!t~")obj1;
-            "~fullyQualifiedName!t~" entity2 = cast("~fullyQualifiedName!t~")obj2;
+            "~fullyQualifiedName!t~" entityold = cast("~fullyQualifiedName!t~")objold;
+            "~fullyQualifiedName!t~" entitynew = cast("~fullyQualifiedName!t~")objnew;
 			";
             foreach(key;keys){
-				str ~= "if(obj1."~key~" != obj2."~key~"){result ~= \""~key~"\";}";	
+				str ~= "if(entityold."~key~" != entitynew."~key~"){result ~= \""~key~"\";}";	
 			}
 			str ~="
 			return result;
