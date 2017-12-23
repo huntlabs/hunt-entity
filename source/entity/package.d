@@ -2,19 +2,13 @@ module entity;
 
 public import database;
 
-public import entity.entity.persistence;
-public import entity.entity.entitymanagerfactory;
-public import entity.entity.entitymanager;
-public import entity.entity.entitysession;
-public import entity.entity.fieldinfo;
-public import entity.entity.entityinfo;
-
-public import entity.criteriabuilder.criteriabuilder;
-
-public import entity.dialect.dialect;
-public import entity.dialect.postgresqldialect;
-public import entity.dialect.mysqldialect;
-public import entity.dialect.sqlitedialect;
+public import entity.persistence;
+public import entity.entitymanagerfactory;
+public import entity.entitymanager;
+public import entity.entitysession;
+public import entity.fieldinfo;
+public import entity.entityinfo;
+public import entity.criteriabuilder;
 
 public import entity.utils.time;
 public import entity.utils.memory;
