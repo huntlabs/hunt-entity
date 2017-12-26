@@ -29,7 +29,7 @@ class EntityManagerFactory
 
     public EntityManager createEntityManager(T...)()
     {
-        pragma(msg,makeEntityList!(T)());
+        //pragma(msg,makeEntityList!(T)());
         mixin(makeEntityList!(T)());
         assert(models,"Register Entity Error,models is null");
         assert(classMap,"Register Entity Error,class map is null");
@@ -153,9 +153,10 @@ string makeEntityList(T...)(){
             auto builder = manager.createSqlBuilder();
             builder.update(\""~tableName~"\");";
             foreach(kkk;keys)
-                if(kkk != incrementKey)str ~= "
-					if(canFind(compare,\""~kkk~"\"))builder.set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity));
-				" ;
+                if(kkk != incrementKey)
+                    str ~= "if(canFind(compare,\""~kkk~"\"))builder.set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity));";
+                else
+                    str ~= "builder.set(\""~kkk~"\",info.fields[\""~kkk~"\"].read(entity));";
             str ~= "
                 builder.where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 			manager.entityLog(builder.build().toString);
