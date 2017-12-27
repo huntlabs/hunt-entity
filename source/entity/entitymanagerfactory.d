@@ -144,7 +144,7 @@ string makeEntityList(T...)(){
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
             "~fullyQualifiedName!t~" entitycache;
 			string[] compare;
-			auto cache = MemoryInstance().get(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity));
+            auto cache = manager.CacheStatus ? MemoryInstance().get(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity)) : [];
 			if(cache.length){
 				entitycache = deserialize!("~fullyQualifiedName!t~")(cast(byte[])cache);
 				compare = manager.compare(entitycache,entity);
