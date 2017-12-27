@@ -155,8 +155,7 @@ string makeEntityList(T...)(){
             foreach(kkk;keys)
                 if(kkk != incrementKey)
                     str ~= "if(canFind(compare,\""~kkk~"\"))builder.set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity));";
-                else
-                    str ~= "builder.set(\""~kkk~"\",info.fields[\""~kkk~"\"].read(entity));";
+            str ~= "builder.set(\""~primaryKey~"\",info.fields[\""~primaryKey~"\"].read(entity));";
             str ~= "
                 builder.where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
 			manager.entityLog(builder.build().toString);
