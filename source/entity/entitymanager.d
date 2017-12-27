@@ -13,6 +13,7 @@ class EntityManager
     SqlFactory sqlFactory;
 
     bool logStatus = true;
+	bool CacheStatus = false;
 
 
 	this(string name,DatabaseConfig config,Database db,Dialect dialect,
