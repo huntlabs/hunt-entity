@@ -5,7 +5,7 @@ import entity;
 import std.json;
 
 @Table("user")
-class User
+class User : Entity
 {
     @AutoIncrement @PrimaryKey 
     int id;
@@ -19,7 +19,7 @@ class User
 }
 
 @Table("blog")
-class Blog
+class Blog : Entity
 {
     @AutoIncrement @PrimaryKey
     int id;
@@ -48,9 +48,17 @@ void main()
 
     //auto r = entitymanager.findEntityForObject(user).getPrimaryKeyValue!int(user);
     //writeln(r);
-
     entitymanager.persist(user);
 
+    writeln(user.id);
+
+    auto u = new User();
+    u.id = 14;
+    entitymanager.find(u);
+    u.email = "viile@gmail.com";
+    entitymanager.merge(u);
+
+    /*
     auto session = entitymanager.createEntityTransaction();
 
     User user1 = new User();
@@ -68,7 +76,7 @@ void main()
     session.persist(user2);
     //session.commit();
     session.rollback();
-
+*/
 
     //writeln(user.id);
 

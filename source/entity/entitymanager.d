@@ -13,7 +13,7 @@ class EntityManager
     SqlFactory sqlFactory;
 
     bool logStatus = true;
-	bool CacheStatus = false;
+	bool CacheStatus = true;
 
 
 	this(string name,DatabaseConfig config,Database db,Dialect dialect,
@@ -212,6 +212,16 @@ class EntityManager
     void disableLog()
     {
         this.logStatus = false;
+    }
+    
+	void enableCache()
+    {
+        this.CacheStatus = true;
+    }
+
+    void disableCache()
+    {
+        this.CacheStatus = false;
     }
 
     void entityLog(T)(T value,string file = __FILE__, size_t line = __LINE__)

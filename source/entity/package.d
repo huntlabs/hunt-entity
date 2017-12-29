@@ -2,6 +2,7 @@ module entity;
 
 public import database;
 
+public import entity.entity;
 public import entity.persistence;
 public import entity.entitymanagerfactory;
 public import entity.entitymanager;

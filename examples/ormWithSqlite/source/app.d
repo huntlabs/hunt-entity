@@ -8,7 +8,7 @@ import std.json;
 CREATE TABLE user(id integer primary key autoincrement,name varchar(255),money double,email varchar(255),status integer);
 */
 @Table("user")
-class User
+class User : Entity
 {
     @AutoIncrement @PrimaryKey 
     int id;
@@ -25,7 +25,7 @@ class User
 CREATE TABLE blog(id integer primary key autoincrement,uid integer,title varchar(255),content varchar(255));
 */
 @Table("blog")
-class Blog
+class Blog : Entity
 {
     @AutoIncrement @PrimaryKey
     int id;

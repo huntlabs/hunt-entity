@@ -14,7 +14,7 @@
 import entity;
 
 @Table("users")
-class User
+class User : Entity
 {
     @AutoIncrement
     @PrimaryKey 
