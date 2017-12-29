@@ -29,7 +29,7 @@ class EntityManagerFactory
 
     public EntityManager createEntityManager(T...)()
     {
-        //pragma(msg,makeEntityList!(T)());
+        pragma(msg,makeEntityList!(T)());
         mixin(makeEntityList!(T)());
         assert(models,"Register Entity Error,models is null");
         assert(classMap,"Register Entity Error,class map is null");
@@ -126,7 +126,9 @@ string makeEntityList(T...)(){
             int r = stmt.execute();
             ";
             if(incrementKey.length)str ~= "entity."~incrementKey~" = stmt.lastInsertId;";
-            str ~= "return r;
+            str ~= "
+			entity._objectCache = serialize!("~fullyQualifiedName!t~")(entity);
+            return r;
         },
         function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
             //RemoveFunc
@@ -142,11 +144,11 @@ string makeEntityList(T...)(){
             //MergeFunc
 			import std.algorithm.searching;
             "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
-            "~fullyQualifiedName!t~" entitycache;
+            "~fullyQualifiedName!t~" entitycache ;
 			string[] compare;
-            auto cache = manager.CacheStatus ? MemoryInstance().get(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity)) : [];
+            auto cache = manager.CacheStatus ? entity._objectCache : [];
 			if(cache.length){
-				entitycache = deserialize!("~fullyQualifiedName!t~")(cast(byte[])cache);
+				entitycache = deserialize!("~fullyQualifiedName!t~")(cache);
 				compare = manager.compare(entitycache,entity);
 				if(!compare.length)return 1;
 			}
@@ -161,8 +163,6 @@ string makeEntityList(T...)(){
 			manager.entityLog(builder.build().toString);
             auto stmt = session.tran.prepare(builder.build().toString);
             int r = stmt.execute();
-			MemoryInstance().set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity),
-					cast(ubyte[])serialize!("~fullyQualifiedName!t~")(entity),120);
             return r;
         },
         function(Object obj,EntityInfo info,EntityManager manager,EntitySession session){
@@ -178,18 +178,15 @@ string makeEntityList(T...)(){
 				if(!rs.rows)return null;
 				auto row = rs.front();
                 manager.entityLog(row.toString());
-				auto objCopy = new "~fullyQualifiedName!t~"();
 				";
             foreach(key;keys){
                 if(key != primaryKey){
 					str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);
 							info.fields[\""~key~"\"].write(entity);";
 				}
-				str ~= "objCopy."~key~"=entity."~key~";";
 			}
         str ~= "
-			MemoryInstance().set(\""~fullyQualifiedName!t~"_\" ~ info.fields[\""~primaryKey~"\"].read(entity),
-					cast(ubyte[])serialize!("~fullyQualifiedName!t~")(objCopy),120);
+				entity._objectCache = serialize!("~fullyQualifiedName!t~")(entity);
             return obj;
         },
         function(Object objold,Object objnew){

@@ -5,7 +5,7 @@ import entity;
 import std.json;
 
 @Table("user")
-class User
+class User : Entity
 {
     @AutoIncrement @PrimaryKey 
     int id;
@@ -19,7 +19,7 @@ class User
 }
 
 @Table("blog")
-class Blog
+class Blog : Entity
 {
     @AutoIncrement @PrimaryKey
     int id;
