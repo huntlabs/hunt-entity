@@ -37,15 +37,7 @@ class EntityManager
 
 	SqlBuilder createSqlBuilder()
     {
-        version(USE_MYSQL){
-            return sqlFactory.createMySqlBuilder();
-        }
-        version(USE_POSTGRESQL){
-            return sqlFactory.createPostgresqlSqlBuilder();
-        }
-        version(USE_SQLITE){
-            return sqlFactory.createSqliteBuilder();
-        }
+		return this.db.createSqlBuilder();
     }
 	
 	CriteriaBuilder createCriteriaBuilder(T)()

@@ -13,18 +13,8 @@ class EntityManagerFactory
     {
         this.name = name;
         this.config = config;
-        version(USE_MYSQL){
-            this.dialect = new MysqlDialect();
-        }
-        version(USE_POSTGRESQL)
-        {
-            this.dialect = new PostgresqlDialect(); 
-        }
-        version(USE_SQLITE)
-        {
-            this.dialect = new SqliteDialect(); 
-        }
         this.db = new Database(config);
+        this.dialect = this.db.createDialect();
     }
 
     public EntityManager createEntityManager(T...)()
