@@ -81,6 +81,13 @@ class EntityManager
 		return cast(T)t;
 	}
 	
+	Object copy(Object obj)
+	{
+		auto info = findEntityForObject(obj);
+		info.copyFunc(obj);
+		return info;
+	}
+
 	string[] compare(Object objold,Object objnew)
 	{
 		auto info = findEntityForObject(objold);
@@ -148,7 +155,7 @@ class EntityManager
             str = t;
         return execute(str);
     }
-    
+
 	T getResult(T,F)(F cb)
 	{
         string sql;
@@ -167,7 +174,7 @@ class EntityManager
                 field.fieldValue = Variant(r[field.fieldName]);
                 field.write(result);
             }
-            return result;
+            return this.copy(result);
         }
 		return null;
 	}
@@ -192,7 +199,7 @@ class EntityManager
 				field.fieldValue = Variant(r[field.fieldName]);
 				field.write(t);
 			}
-			result ~= t;
+			result ~= this.copy(t);
 		}
 		return result;
 	}
