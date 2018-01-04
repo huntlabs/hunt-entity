@@ -189,6 +189,12 @@ string makeEntityList(T...)(){
 				entity._objectCache = serialize!("~fullyQualifiedName!t~")(entity);
             return obj;
         },
+        function(Object obj){
+            //CopyFunc
+            "~fullyQualifiedName!t~" entity = cast("~fullyQualifiedName!t~")obj;
+				entity._objectCache = serialize!("~fullyQualifiedName!t~")(entity);
+            return obj;
+        },
         function(Object objold,Object objnew){
             //CompareFunc
 			string[] result;
