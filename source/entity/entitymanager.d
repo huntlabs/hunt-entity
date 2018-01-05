@@ -166,7 +166,8 @@ class EntityManager
                 field.fieldValue = Variant(r[field.fieldName]);
                 field.write(result);
             }
-            return this.copy(result);
+            this.copy(result);
+			return result;
         }
 		return null;
 	}
@@ -191,7 +192,8 @@ class EntityManager
 				field.fieldValue = Variant(r[field.fieldName]);
 				field.write(t);
 			}
-			result ~= this.copy(t);
+			this.copy(t);
+			result ~= t;
 		}
 		return result;
 	}
