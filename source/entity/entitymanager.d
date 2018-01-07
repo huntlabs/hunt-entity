@@ -172,6 +172,20 @@ class EntityManager
 		return null;
 	}
 
+	T arrayToObject(T)(string[string] data)
+	{
+		if(!data.length)
+			return null;
+		auto result = new T();
+		auto entity = findEntityForObject(result);
+		foreach(field;entity.fields){
+			field.fieldValue = Variant(data[field.fieldName]);
+			field.write(result);
+		}
+		this.copy(result);
+		return result;
+	}
+
 	T[] getResultList(T,F)(F ct)
 	{
 		T[] result;
