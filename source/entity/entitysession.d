@@ -2,6 +2,8 @@ module entity.entitysession;
 
 import entity;
 
+import std.stdio;
+
 class EntitySession
 {
 	EntityManager manager;
@@ -15,18 +17,21 @@ class EntitySession
 	
 	int persist(Object obj)
 	{
+		scope(exit){this.tran.release();}
 		auto info = manager.findEntityForObject(obj);
 		return info.persistFunc(obj,info,manager,this);
 	}
 
 	Object find(Object obj)
 	{
+		scope(exit){this.tran.release();}
 		auto info = manager.findEntityForObject(obj);
 		return info.findFunc(obj,info,manager,this);
 	}
 
 	Object find(T,F)(F value)
 	{
+		scope(exit){this.tran.release();}
 		auto t = new T();
 		auto info = manager.findEntityForObject(t);
 		info.setPriKeyFunc(t,Variant(value));
@@ -37,12 +42,14 @@ class EntitySession
 
 	int remove(Object obj)
 	{
+		scope(exit){this.tran.release();}
 		auto info = manager.findEntityForObject(obj);
 		return info.removeFunc(obj,info,manager,this);
 	}
 	
 	int remove(T,F)(F value)
 	{
+		scope(exit){this.tran.release();}
 		auto t = new T();
 		auto info = manager.findEntityForObject(t);
 		info.setPriKeyFunc(t,Variant(value));
@@ -51,12 +58,14 @@ class EntitySession
 
 	int merge(Object obj)
 	{
+		scope(exit){this.tran.release();}
 		auto info = manager.findEntityForObject(obj);
 		return info.mergeFunc(obj,info,manager,this);
 	}
 
 	int execute(string sql)
 	{
+		scope(exit){this.tran.release();}
         manager.entityLog(sql);
 		return tran.execute(sql);	
 	}
