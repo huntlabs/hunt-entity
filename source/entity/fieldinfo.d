@@ -5,7 +5,7 @@ import entity;
 class FieldInfo
 {
     string fieldName;
-    string columnNmae;
+    string columnName;
     DlangDataType fieldType;
     Variant fieldValue;
     int[] fieldAttrs;
@@ -17,11 +17,11 @@ class FieldInfo
     WriteFunc writeFunc;
     ReadFunc readFunc;
 
-    this(string fieldName,string columnNmae,DlangDataType fieldType,
+    this(string fieldName,string columnName,DlangDataType fieldType,
          int[] fieldAttrs,Dialect dialect, WriteFunc write,ReadFunc read)
     {
         this.fieldName = fieldName;
-        this.columnNmae = columnNmae;
+        this.columnName = columnName;
         this.fieldType = fieldType;
         this.fieldAttrs = fieldAttrs;
         this.dialect = dialect;

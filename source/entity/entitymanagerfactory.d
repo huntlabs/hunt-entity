@@ -67,21 +67,30 @@ string makeEntityList(T...)(){
         {
             //pragma(msg,"\tField Name:",tt.stringof);
             auto key = removeDoubleQuotes(tt.stringof);
+			string _columnName = tt.stringof;
             keys ~= key;
             alias Type = typeof(__traits(getMember,t,tt));
 			//pragma(msg,typeid(Type));
             str ~= "fieldType = new "~getDlangDataTypeStr!Type~"();";
             //pragma(msg,"\tField Attr:",__traits(getAttributes,__traits(getMember,t,tt)));
-            foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
-				str~="fieldAttrs~=cast(int)"~to!string(k)~";";
-                if(k == Auto || k == AutoIncrement)incrementKey = key;
-                if(k == PrimaryKey){
-					primaryKey = key;
-					primaryKeyType = getDlangTypeStr!Type;
+			static if(getDlangTypeStr!Type == "int"){
+				foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
+					//pragma(msg,k);
+					str~="fieldAttrs~=cast(int)"~to!string(k)~";";
+					if(k == Auto || k == AutoIncrement)incrementKey = key;
+					if(k == PrimaryKey){
+						primaryKey = key;
+						primaryKeyType = getDlangTypeStr!Type;
+					}
+					if(k == NotNull)notNullKeys ~= key;
 				}
-                if(k == NotNull)notNullKeys ~= key;
+			}else{
+				foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
+					//pragma(msg,k);
+					if(k[0] == "Column")_columnName = '"' ~k[1] ~'"';
+				}
 			}
-            str ~= "fieldInfo = new FieldInfo("~tt.stringof~","~tt.stringof~",
+            str ~= "fieldInfo = new FieldInfo("~tt.stringof~","~_columnName~",
                 fieldType,fieldAttrs,dialect,
                 function(Object obj,FieldInfo info,Dialect dialect) {
                 //WriteFunc
@@ -107,7 +116,7 @@ string makeEntityList(T...)(){
             auto builder = manager.createSqlBuilder();
             builder.insert(\""~tableName~"\").values([";
             foreach(kkk;keys)
-                if(kkk != incrementKey)str ~= "\""~ kkk ~ "\":info.fields[\""~kkk~"\"].read(entity) ," ;
+                if(kkk != incrementKey)str ~= "info.fields[\""~ kkk ~ "\"].columnName:info.fields[\""~kkk~"\"].read(entity) ," ;
             str ~= "]);";
             if(incrementKey.length)str~="builder.setAutoIncrease(\""~incrementKey~"\");";
             str ~= "
@@ -146,7 +155,7 @@ string makeEntityList(T...)(){
             builder.update(\""~tableName~"\");";
             foreach(kkk;keys)
                 if(kkk != incrementKey)
-                    str ~= "if(!cache.length || canFind(compare,\""~kkk~"\"))builder.set(\""~ kkk ~ "\",info.fields[\""~kkk~"\"].read(entity));";
+                    str ~= "if(!cache.length || canFind(compare,\""~kkk~"\"))builder.set(info.fields[\""~ kkk ~ "\"].columnName,info.fields[\""~kkk~"\"].read(entity));";
             str ~= "builder.set(\""~primaryKey~"\",info.fields[\""~primaryKey~"\"].read(entity));";
             str ~= "
                 builder.where(\""~primaryKey~" = \" ~info.fields[\""~primaryKey~"\"].read(entity) );
@@ -171,7 +180,7 @@ string makeEntityList(T...)(){
 				";
             foreach(key;keys){
                 if(key != primaryKey){
-					str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[\""~key~"\"]);
+					str ~= "info.fields[\""~key~"\"].fieldValue = Variant(row[info.fields[\""~key~"\"].columnName]);
 							info.fields[\""~key~"\"].write(entity);";
 				}
 			}
