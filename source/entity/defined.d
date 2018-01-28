@@ -4,6 +4,8 @@ import entity;
 
 //TableName
 string Table(string name){return name;}
+//ColumnName
+string[] Column(string name){return ["Column",name];}
 
 //Attribute
 enum {

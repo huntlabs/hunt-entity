@@ -10,7 +10,6 @@ class User : Entity
     @AutoIncrement @PrimaryKey 
     int id;
 
-    @NotNull
     string name;
     float money;
     string email;
@@ -26,6 +25,7 @@ class Blog : Entity
     int uid;
 
     string title;
+	@Column("post_content")
     string context;
 }
 
@@ -37,6 +37,7 @@ void main()
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
     EntityManager entitymanager = entityManagerFactory.createEntityManager!(User,Blog);
 
+	/*
     //Dialect dialect = new MysqlDialect();
 
     //insert
@@ -57,7 +58,7 @@ void main()
     entitymanager.find(u);
     u.email = "viile@gmail.com";
     entitymanager.merge(u);
-
+	*/
     /*
     auto session = entitymanager.createEntityTransaction();
 
