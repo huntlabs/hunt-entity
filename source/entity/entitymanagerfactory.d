@@ -65,31 +65,29 @@ string makeEntityList(T...)(){
                             : t.stringof;
         foreach(tt; __traits(derivedMembers, t)) 
         {
-            //pragma(msg,"\tField Name:",tt.stringof);
+            // pragma(msg,"\tField Name:",tt.stringof);
             auto key = removeDoubleQuotes(tt.stringof);
 			string _columnName = tt.stringof;
             keys ~= key;
             alias Type = typeof(__traits(getMember,t,tt));
 			//pragma(msg,typeid(Type));
             str ~= "fieldType = new "~getDlangDataTypeStr!Type~"();";
-            //pragma(msg,"\tField Attr:",__traits(getAttributes,__traits(getMember,t,tt)));
-			static if(getDlangTypeStr!Type == "int"){
-				foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
-					//pragma(msg,k);
-					str~="fieldAttrs~=cast(int)"~to!string(k)~";";
-					if(k == Auto || k == AutoIncrement)incrementKey = key;
-					if(k == PrimaryKey){
-						primaryKey = key;
-						primaryKeyType = getDlangTypeStr!Type;
-					}
-					if(k == NotNull)notNullKeys ~= key;
-				}
-			}else{
-				foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
-					//pragma(msg,k);
-					if(k[0] == "Column")_columnName = '"' ~k[1] ~'"';
-				}
-			}
+            static if (hasUDA!(__traits(getMember,t,tt),AutoIncrement) || hasUDA!(__traits(getMember,t,tt),Auto)) {
+                incrementKey = key;
+            }
+            static if (hasUDA!(__traits(getMember,t,tt),PrimaryKey)) {
+                primaryKey = key;
+				primaryKeyType = getDlangTypeStr!Type;
+            }
+            foreach(k;__traits(getAttributes,__traits(getMember,t,tt))){
+                static if (isArray!(typeof(k))) {
+                    if(k[0] == "Column")_columnName = '"' ~k[1] ~'"';
+                }
+                else {
+                    str~="fieldAttrs~=cast(int)"~to!string(k)~";";
+                    if(k == NotNull)notNullKeys ~= key;
+                }
+            }
             str ~= "fieldInfo = new FieldInfo("~tt.stringof~","~_columnName~",
                 fieldType,fieldAttrs,dialect,
                 function(Object obj,FieldInfo info,Dialect dialect) {
