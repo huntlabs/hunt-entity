@@ -1,97 +1,58 @@
-module entity.entitysession;
+module entity.EntitySession;
 
 import entity;
 
-import std.stdio;
 
-class EntitySession
-{
-	EntityManager manager;
-	Transaction tran;
+class EntitySession {
 
-	this(EntityManager manager)
-	{
-		this.manager = manager;
-		this.tran = manager.db.beginTransaction();
-	}
-	
-	int persist(Object obj)
-	{
-		scope(exit){this.tran.release();}
-		auto info = manager.findEntityForObject(obj);
-		return info.persistFunc(obj,info,manager,this);
-	}
 
-	Object find(Object obj)
-	{
-		scope(exit){this.tran.release();}
-		auto info = manager.findEntityForObject(obj);
-		return info.findFunc(obj,info,manager,this);
-	}
+    private EntityManager _manager;
 
-	Object find(T,F)(F value)
-	{
-		scope(exit){this.tran.release();}
-		auto t = new T();
-		auto info = manager.findEntityForObject(t);
-		info.setPriKeyFunc(t,Variant(value));
-		if(find(t) is null)
-			return null;
-		return cast(T)t;
-	}
+    private Transaction _trans;
 
-	int remove(Object obj)
-	{
-		scope(exit){this.tran.release();}
-		auto info = manager.findEntityForObject(obj);
-		return info.removeFunc(obj,info,manager,this);
-	}
-	
-	int remove(T,F)(F value)
-	{
-		scope(exit){this.tran.release();}
-		auto t = new T();
-		auto info = manager.findEntityForObject(t);
-		info.setPriKeyFunc(t,Variant(value));
-		return remove(t);
-	}
+    private Connection _conn;
 
-	int merge(Object obj)
-	{
-		scope(exit){this.tran.release();}
-		auto info = manager.findEntityForObject(obj);
-		return info.mergeFunc(obj,info,manager,this);
-	}
-
-	int execute(string sql)
-	{
-		scope(exit){this.tran.release();}
-        manager.entityLog(sql);
-		return tran.execute(sql);	
-	}
-    
-    int execute(T)(T t)
-    {
-        string str;
-        static if(is(T == SqlSyntax))
-            str = t.toString();
-        else static if(is(T == SqlBuilder))
-            str = t.build().toString();
-        else static if(is(T == CriteriaBuilder))
-            str = t.toString();
-        else
-            str = t;
-        return execute(str);
+    this(EntityManager manager) {
+        _manager = manager;
+        _conn = manager.getDatabase().getConnection();
+        _trans = manager.getDatabase().getTransaction(_conn);
     }
-    
 
-	void rollback()
-	{
-		this.tran.rollback();	
-	}
+    public void beginTransaction() {
+        checkConnection();
+        _trans.begin();
+    }
+    public void commit() {
+        checkConnection();
+        _trans.commit();
+    }
+    public void rollback() {
+        checkConnection();
+        _trans.rollback();
+    }
 
-	void commit()
-	{
-		this.tran.commit();
-	}
-} 
+    public Statement prepare(string sql) {
+        checkConnection();
+        return _trans.prepare(sql);
+    }
+
+    public Connection getConnection() {return _conn;}
+
+    public Transaction getTransaction() {return _trans;}
+
+    public void close() {
+        if (_conn)
+            _manager.getDatabase().closeConnection(_conn);
+        _conn = null;
+    }
+
+    private void checkConnection() {
+        if (_conn is null)
+            throw new EntityException("the entity connection is poor");
+    }
+
+
+}
+
+
+

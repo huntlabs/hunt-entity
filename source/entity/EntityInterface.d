@@ -1,4 +1,6 @@
-module entity.entity;
+module entity.EntityInterface;
+
+
 
 import entity;
 
