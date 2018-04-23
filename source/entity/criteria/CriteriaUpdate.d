@@ -13,12 +13,17 @@ class CriteriaUpdate(T) : CriteriaBase!T{
     }
 
     override public CriteriaUpdate!T where(Predicate condition) {
-        _sqlBuidler.where(condition.toString());
-        return this;
+        return cast(CriteriaUpdate!T)super.where(condition);
     }
 
     public CriteriaUpdate!T set(P)(EntityFieldInfo field, P p) {
+        field.assertType!P;
         _sqlBuidler.set(field.getFileldName(), _criteriaBuilder.getDialect().toSqlValue(p));
+        return this;
+    }
+
+    public CriteriaUpdate!T set(EntityFieldInfo field) {
+        _sqlBuidler.set(field.getFileldName(), _criteriaBuilder.getDialect().toSqlValue(field.getFieldValue()));
         return this;
     }
     

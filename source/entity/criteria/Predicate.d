@@ -3,10 +3,6 @@ module entity.criteria.Predicate;
 
 class Predicate {
 
-    private string _key;
-    private string _op;
-    private string _value;
-
     string _str;
 
     this () {
@@ -27,7 +23,20 @@ class Predicate {
         } 
         _str ~= " ) ";
         return this;
-    }
+    }  
+
+    Predicate orValue(T...)(T args) {
+        _str ~= " ( ";
+        foreach(k,v;args) {
+            _str ~= v.toString();
+            if (k != args.length - 1)
+                _str ~= " OR ";
+        } 
+        _str ~= " ) ";
+        return this;
+    }  
+
+    
 
 
     override string toString()

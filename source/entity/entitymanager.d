@@ -42,7 +42,7 @@ class EntityManager {
         Predicate condition;
         static if (is(P == T)) {
             r = criteriaQuery.from(primaryKeyOrT);
-            condition = criteriaBuilder.equal(r.getPrimaryField(), r.getEntityInfo().getPrimaryValue());
+            condition = criteriaBuilder.equal(r.getPrimaryField());
         }
         else {
             r = criteriaQuery.from();
@@ -51,6 +51,8 @@ class EntityManager {
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
         return query.getSingleResult();
     }
+
+
     
 
     public int remove(T,P)(P primaryKeyOrT) {
@@ -60,34 +62,28 @@ class EntityManager {
         Predicate condition;
         static if (is(P == T)) {
             r = criteriaDelete.from(primaryKeyOrT);
-            condition = criteriaBuilder.equal(r.getPrimaryField(), r.getEntityInfo().getPrimaryValue());
+            condition = criteriaBuilder.equal(r.getPrimaryField());
         }
         else {
             r = criteriaDelete.from();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
-        Query!T query = createQuery(criteriaDelete.where(condition));
-        return query.executeUpdate();
+        return createQuery(criteriaDelete.where(condition)).executeUpdate();
     }
 
 
-    //TODO
-    // public T merge(T)(T entity) {
-    //     CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
-    //     CriteriaUpdate!T criteriaUpdate = criteriaBuilder.createCriteriaUpdate!(T);
-    //     Root!T r;
-    //     Predicate condition;
-    //     static if (is(P == T)) {
-    //         r = criteriaUpdate.from(primaryKeyOrT);
-    //         condition = criteriaBuilder.equal(r.getPrimaryField(), r.getEntityInfo().getPrimaryValue());
-    //     }
-    //     else {
-    //         r = criteriaUpdate.from();
-    //         condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
-    //     }
-    //     Query!T query = createQuery(criteriaUpdate.where(condition));
-    //     return query.executeUpdate();
-    // }
+    public int merge(T)(T entity) {
+        CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
+        CriteriaUpdate!T criteriaUpdate = criteriaBuilder.createCriteriaUpdate!(T);
+        Root!T r = criteriaUpdate.from(entity);
+        Predicate condition = criteriaBuilder.equal(r.getPrimaryField());
+        foreach(k,v; r.getEntityInfo().getFields()) {
+            if (k != r.getEntityInfo().getPrimaryKeyString()) {
+                criteriaUpdate.set(v);
+            }
+        }
+        return createQuery(criteriaUpdate.where(condition)).executeUpdate();
+    }
 
 
     public void flush() {
