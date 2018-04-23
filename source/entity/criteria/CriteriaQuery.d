@@ -11,10 +11,9 @@ class CriteriaQuery (T) : CriteriaBase!T {
         _sqlBuidler.select("*").from(root.getTableName());
         return this;
     }
-
+    
     override public CriteriaQuery!T where(Predicate condition) {
-        _sqlBuidler.where(condition.toString());
-        return this;
+        return cast(CriteriaQuery!T)super.where(condition);
     }
 
 

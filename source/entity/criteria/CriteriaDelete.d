@@ -15,7 +15,6 @@ class CriteriaDelete(T) : CriteriaBase!T {
     }
 
     override public CriteriaDelete!T where(Predicate condition) {
-        _sqlBuidler.where(condition.toString());
-        return this;
+        return cast(CriteriaDelete!T)super.where(condition);
     }
 }

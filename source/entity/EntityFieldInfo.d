@@ -23,6 +23,16 @@ class EntityFieldInfo {
         _fieldValue = fieldValue;
     }
     
+    public void assertType(T)() {
+        if (_fieldType.getName() == "string" && getDlangTypeStr!T != "string") {
+            throw new EntityException("EntityFieldInfo %s type need been string not %s".format(_fileldName, typeid(T)));
+        }
+        if (_fieldType.getName() != "string" && getDlangTypeStr!T == "string") {
+            throw new EntityException("EntityFieldInfo %s type need been number not string".format(_fileldName));
+        }
+    }
+    
+
     public Variant getFieldValue() {return _fieldValue;}
     public string getFileldName() {return _fileldName;}
     public DlangDataType getFieldType() {return _fieldType;}
@@ -38,7 +48,5 @@ class EntityFieldInfo {
     public int checkmark(int mark) {
         return _mark & mark;
     }
-    
-
 
 }

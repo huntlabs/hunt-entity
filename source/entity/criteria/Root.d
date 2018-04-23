@@ -9,7 +9,7 @@ import std.traits;
 
 
 class Root(T) {
-    private EntityInfo!T _entityInfo;
+    public EntityInfo!T _entityInfo;
     public this(Dialect dialect, T t = null) {
         _entityInfo = new EntityInfo!T(dialect, t);
     }
@@ -32,4 +32,5 @@ class Root(T) {
         return _entityInfo.getPrimaryField();
     }
     public EntityInfo!T getEntityInfo() {return _entityInfo;}
+
 }

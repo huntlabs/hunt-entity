@@ -17,6 +17,6 @@ struct Column {
 
 enum {
     Auto = 0x1,
-    PrimaryKey = 0x1,
-    AutoIncrement = 0x2,
+    AutoIncrement = 0x1,
+    PrimaryKey = 0x2,
 }

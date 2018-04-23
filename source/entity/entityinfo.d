@@ -20,15 +20,11 @@ class EntityInfo(T) {
     // public T deSerialize(Row row) {}
     // public void setIncreaseKey(ref T entity, int value) {}
     // public R getPrimaryValue() {}
-
-
+    
     pragma(msg,makeInitEntityData!(T));
     pragma(msg,makeDeSerialize!(T));
     pragma(msg,makeSetIncreaseKey!(T));
     pragma(msg,makeGetPrimaryValue!(T));
-
-
-    
 
     mixin(makeInitEntityData!(T)());
     mixin(makeDeSerialize!(T)());
@@ -72,6 +68,9 @@ class EntityInfo(T) {
     public string getEntityClassName() {return _entityClassName;}
     public string getTableName() {return _tableName;}
     public string getAutoIncrementKey() {return _autoIncrementKey;}
+    public EntityFieldInfo[string] getFields() {return _fields;};
+    public string getPrimaryKeyString() {return _primaryKey;}
+    public EntityFieldInfo getSingleField(string name) {return _fields.get(name,null);}
 }
 
 
@@ -90,6 +89,7 @@ string makeGetPrimaryValue(T)() {
     str ~= "}\n";
     return str;
 }
+
 
 
 
