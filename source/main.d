@@ -42,10 +42,53 @@ int testCriteriaUpdate(EntityManager manager, CriteriaBuilder builder, int prima
     CriteriaUpdate!User criteriaUpdate = builder.createCriteriaUpdate!(User);
     Root!User root = criteriaUpdate.from();
     Predicate c = builder.equal(root.User.id, primaryValue);
-    Query!User query = manager.createQuery(criteriaUpdate.set(root.User.money, 1000).where(c));
+    Query!User query = manager.createQuery(criteriaUpdate.set(root.User.money, money).where(c));
     return query.executeUpdate();
 }
 
+User[] testCriteriaQueryDistinctGroupBy(EntityManager manager, CriteriaBuilder builder) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    criteriaQuery.groupBy(root.User.name);
+    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).distinct(true));
+    return typedQuery.getResultList();
+}
+
+
+
+User[] testCriteriaQueryLike(EntityManager manager, CriteriaBuilder builder, string name, string email, string likeValue) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    Predicate c1 = builder.equal(root.User.name, name);
+    Predicate c2 = builder.equal(root.User.email, email);
+    Predicate c3 = builder.like(root.User.name, likeValue);
+    // Predicate c3 = builder.notLike(root.User.name, likeValue);
+    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(builder.or(c1, c2),c3));
+    // TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(builder.or(c1, c2)).where(c3));
+    return typedQuery.getResultList();
+}
+
+User[] testCriteriaQueryOffsetLimit(EntityManager manager, CriteriaBuilder builder, string name, string email) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    Predicate c1 = builder.equal(root.User.name, name);
+    Predicate c2 = builder.gt(root.User.money, 0);
+    criteriaQuery.orderBy(builder.asc(root.User.money), builder.asc(root.User.id));
+    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(builder.or(c1, c2)));
+    return typedQuery.setFirstResult(1).setMaxResults(1).getResultList();
+    
+}
+
+User[] testCriteriaQueryOrderBy(EntityManager manager, CriteriaBuilder builder, string name, string email) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    Predicate c1 = builder.equal(root.User.name, name);
+    Predicate c2 = builder.equal(root.User.email, email);
+    criteriaQuery.orderBy(builder.asc(root.User.money));
+    // criteriaQuery.orderBy(builder.desc(root.User.money));
+    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(builder.or(c1, c2)));
+    return typedQuery.getResultList();
+}
 
 User[] testCriteriaQueryOr(EntityManager manager, CriteriaBuilder builder, string name, string email) {
     CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
@@ -133,7 +176,7 @@ void main() {
     u1 = testEntityFind2(manager, u1);
     log("testEntityFind2 email ", u1.email);
 
-    int count = testEntityMerge(manager, u1, 1000);
+    int count = testEntityMerge(manager, u1, 888);
     log("testEntityMerge count ", count);
 
     User u2 = testEntityPersist(manager, "u2", "u2@163.com", 1001);
@@ -155,9 +198,19 @@ void main() {
     User[] u4 = testCriteriaQueryOr(manager, builder, "u1", "u2.163.com");
     log("testCriteriaQueryOr u4 length ", u4.length);
 
+    u4 = testCriteriaQueryOrderBy(manager, builder, "u1", "u2.163.com");
+    log("testCriteriaQueryOrderBy u4 ", u4[0].money);
 
+    u4 = testCriteriaQueryOffsetLimit(manager, builder, "u1", "u2.163.com");
+    log("testCriteriaQueryOffsetLimit u4 ", u4[0].money);
+
+    u4 = testCriteriaQueryLike(manager, builder, "u1", "u2.163.com", "u%");
+    log("testCriteriaQueryLike u4[0] money ", u4[0].money);
+    log("testCriteriaQueryLike u4[1] money ", u4[1].money);
     
-    
+    u4 = testCriteriaQueryDistinctGroupBy(manager, builder);
+    log("testCriteriaQueryDistinctGroupBy u4 length ", u4.length);
+
     count = testCriteriaDelete2(manager, builder, u3[0]);
     log("testCriteriaDelete2 count ", count);
 
@@ -165,8 +218,8 @@ void main() {
     log("testEntityRemove2 count ", count);
 
 
-
-
+    //todo groupby max min having between /*top*/ in join union (select into) (FOREIGN KEY)
+    //todo avg count first last sum
 
     manager.getTransaction().commit();
     // manager.getTransaction().rollback();

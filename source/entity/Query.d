@@ -21,6 +21,4 @@ class Query(T) {
         return stmt.execute();
     }
 
-
-
 }

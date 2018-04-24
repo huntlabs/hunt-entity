@@ -16,13 +16,20 @@ class CriteriaBase(T) {
 
     public Root!T from(T t = null) {
         _root = new Root!(T)(_criteriaBuilder.getDialect(), t); 
+        _sqlBuidler.from(_root.getTableName());
         return _root;
     }
 
     public Root!T getRoot() {return _root;}
 
-    public CriteriaBase!T where(Predicate condition) {
-        _sqlBuidler.where(condition.toString());
+    public CriteriaBase!T where(P...)(P predicates) {
+        string s;
+        foreach(k, v; predicates) {
+            s ~= v.toString();
+            if (k != predicates.length-1) 
+                s ~= " AND ";
+        }
+        _sqlBuidler.where(s);
         return this;
     }
 

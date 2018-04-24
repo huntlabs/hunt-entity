@@ -30,14 +30,24 @@ public class CriteriaBuilder {
     public CriteriaUpdate!T createCriteriaUpdate(T)() {
         return new CriteriaUpdate!(T)(this);
     }
-    
-    public Predicate and(T...)(T args) {
-        return new Predicate().andValue(args);
+
+    public Order asc(EntityFieldInfo info) {
+        return new Order(info.getColumnName(), OrderBy.Asc);
     }
 
-    public Predicate or(T...)(T args) {
-        return new Predicate().orValue(args);
+    public Order desc(EntityFieldInfo info) {
+        return new Order(info.getColumnName(), OrderBy.Desc);
     }
+
+    //P should be Predicate
+    public Predicate and(P...)(P predicates) {
+        return new Predicate().andValue(predicates);
+    }
+    //P should be Predicate
+    public Predicate or(P...)(P predicates) {
+        return new Predicate().orValue(predicates);
+    }
+
     public Predicate equal(T)(EntityFieldInfo info, T t) {
         info.assertType!T;
         return new Predicate().addValue(info.getFileldName(), "=", _factory.getDialect().toSqlValue(t));
@@ -47,10 +57,10 @@ public class CriteriaBuilder {
     }
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
         info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), "!=", _factory.getDialect().toSqlValue(t));
+        return new Predicate().addValue(info.getFileldName(), "<>", _factory.getDialect().toSqlValue(t));
     }
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), "!=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFileldName(), "<>", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
@@ -84,6 +94,15 @@ public class CriteriaBuilder {
     public Predicate le(EntityFieldInfo info){
         return new Predicate().addValue(info.getFileldName(), "<=", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
+    public Predicate like(EntityFieldInfo info, string pattern) {
+        return new Predicate().addValue(info.getFileldName(), "like", _factory.getDialect().toSqlValue(pattern));
+    }
+    public Predicate notLike(EntityFieldInfo info, string pattern) {
+        return new Predicate().addValue(info.getFileldName(), "not like", _factory.getDialect().toSqlValue(pattern));
+    }
+
+    
+
 }
 
 

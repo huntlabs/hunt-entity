@@ -9,8 +9,9 @@ import std.traits;
 
 
 class Root(T) {
-    public EntityInfo!T _entityInfo;
+    private EntityInfo!T _entityInfo;
     public this(Dialect dialect, T t = null) {
+        pragma(msg, "root");
         _entityInfo = new EntityInfo!T(dialect, t);
     }
 

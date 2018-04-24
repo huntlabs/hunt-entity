@@ -26,6 +26,7 @@ class EntityManager {
 
     public void persist(T)(ref T entity) {
         SqlBuilder builder = _factory.createSqlBuilder();
+        pragma(msg, "persist");
         EntityInfo!T info = new EntityInfo!(T)(_factory.getDialect(), entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
