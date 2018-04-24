@@ -11,11 +11,10 @@ class CriteriaUpdate(T) : CriteriaBase!T{
         _sqlBuidler.update(_root.getTableName());
         return _root;
     }
-
-    override public CriteriaUpdate!T where(Predicate condition) {
-        return cast(CriteriaUpdate!T)super.where(condition);
+    //P = Predicate
+    public CriteriaUpdate!T where(P...)(P predicates) {
+        return cast(CriteriaUpdate!T)super.where(predicates);
     }
-
     public CriteriaUpdate!T set(P)(EntityFieldInfo field, P p) {
         field.assertType!P;
         _sqlBuidler.set(field.getFileldName(), _criteriaBuilder.getDialect().toSqlValue(p));

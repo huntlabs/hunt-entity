@@ -20,3 +20,9 @@ enum {
     AutoIncrement = 0x1,
     PrimaryKey = 0x2,
 }
+
+
+enum OrderBy {
+    Asc = 0,
+    Desc = 1,
+}

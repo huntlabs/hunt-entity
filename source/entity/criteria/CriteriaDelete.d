@@ -14,7 +14,8 @@ class CriteriaDelete(T) : CriteriaBase!T {
         return _root;
     }
 
-    override public CriteriaDelete!T where(Predicate condition) {
-        return cast(CriteriaDelete!T)super.where(condition);
+    //P = Predicate
+    public CriteriaDelete!T where(P...)(P predicates) {
+        return cast(CriteriaDelete!T)super.where(predicates);
     }
 }

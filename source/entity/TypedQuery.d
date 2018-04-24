@@ -15,11 +15,10 @@ class TypedQuery(T) {
     this(CriteriaQuery!T query, EntityManager manager) {
         _query = query;
         _manager = manager;
-        _sqlSting = query.toString();
     }
 
     public T getSingleResult() {
-        auto stmt = _manager.getSession().prepare(_sqlSting);
+        auto stmt = _manager.getSession().prepare(_query.toString());
 		auto res = stmt.query();
         if(!res.empty()){
 			return _query.getRoot().deSerialize((res.front()));
@@ -29,7 +28,7 @@ class TypedQuery(T) {
 
     public T[] getResultList() {
         T[] ret;
-        auto stmt = _manager.getSession().prepare(_sqlSting);
+        auto stmt = _manager.getSession().prepare(_query.toString());
 		auto res = stmt.query();
         foreach(value; res) {
             T t = _query.getRoot().deSerialize((value));
@@ -40,5 +39,14 @@ class TypedQuery(T) {
 		return ret;
     }
 
+    public TypedQuery!T setMaxResults(int maxResult) {
+        _query.getSqlBuilder().limit(maxResult);
+        return this;
+    }
+
+    public TypedQuery!T setFirstResult(int startPosition) {
+        _query.getSqlBuilder().offset(startPosition);
+        return this;
+    }
     
 }
