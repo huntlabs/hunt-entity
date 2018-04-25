@@ -48,6 +48,33 @@ public class CriteriaBuilder {
         return new Predicate().orValue(predicates);
     }
 
+    public EntityFieldInfo max(EntityFieldInfo info) {
+        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("MAX");
+    }
+    public EntityFieldInfo min(EntityFieldInfo info) {
+        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("MIN");
+    }
+    public EntityFieldInfo avg(EntityFieldInfo info) {
+        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("AVG");
+    }
+    public EntityFieldInfo sum(EntityFieldInfo info) {
+        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("SUM");
+    }
+    public EntityFieldInfo count(EntityFieldInfo info) {
+        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("COUNT");
+    }
+    public EntityFieldInfo count(T)(Root!T root) {
+        return new EntityFieldInfo("*").setColumeSpecifier("COUNT");
+    }
+    public EntityFieldInfo countDistinct(EntityFieldInfo info) {
+        return new EntityFieldInfo("DISTINCT "~info.getColumnName()).setColumeSpecifier("COUNT");
+    }
+    public EntityFieldInfo countDistinct(T)(Root!T root) {
+        return new EntityFieldInfo("DISTINCT *").setColumeSpecifier("COUNT");
+    }
+
+    
+
     public Predicate equal(T)(EntityFieldInfo info, T t) {
         info.assertType!T;
         return new Predicate().addValue(info.getFileldName(), "=", _factory.getDialect().toSqlValue(t));

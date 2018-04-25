@@ -46,11 +46,33 @@ int testCriteriaUpdate(EntityManager manager, CriteriaBuilder builder, int prima
     return query.executeUpdate();
 }
 
-User[] testCriteriaQueryDistinctGroupBy(EntityManager manager, CriteriaBuilder builder) {
+long testCriteriaQuery_count(EntityManager manager, CriteriaBuilder builder) {
     CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
     Root!User root = criteriaQuery.from();
+    criteriaQuery.select(builder.count(root));
+    // can test this
+    // criteriaQuery.select(builder.count(root.User.id));
+    Long ret = cast(Long)(manager.createQuery(criteriaQuery).getSingleResult());
+    return ret.longValue();
+}
+
+User testCriteriaQuery_multiselect_max_min_avg_sum(EntityManager manager, CriteriaBuilder builder, string name) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    criteriaQuery.multiselect(builder.max(root.User.name), builder.avg(root.User.status), builder.min(root.User.id), builder.sum(root.User.money));
+    return cast(User)(manager.createQuery(criteriaQuery).getSingleResult());
+}
+
+
+User[] testCriteriaQuery_Distinct_GroupBy_Having(EntityManager manager, CriteriaBuilder builder) {
+    CriteriaQuery!User criteriaQuery = builder.createQuery!(User);
+    Root!User root = criteriaQuery.from();
+    Predicate c = builder.gt(root.User.money, 0);
+    criteriaQuery.select(root);
+    criteriaQuery.distinct(true);
     criteriaQuery.groupBy(root.User.name);
-    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).distinct(true));
+    criteriaQuery.having(c);
+    TypedQuery!User typedQuery = manager.createQuery(criteriaQuery);
     return typedQuery.getResultList();
 }
 
@@ -114,7 +136,7 @@ User testCriteriaQuery2(EntityManager manager, CriteriaBuilder builder, User use
     Root!User root = criteriaQuery.from(user);
     Predicate c = builder.equal(root.User.id);
     TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(c));
-    return typedQuery.getSingleResult();
+    return cast(User)(typedQuery.getSingleResult());
 }
 
 User testCriteriaQuery1(EntityManager manager, CriteriaBuilder builder, int primaryValue) {
@@ -122,7 +144,7 @@ User testCriteriaQuery1(EntityManager manager, CriteriaBuilder builder, int prim
     Root!User root = criteriaQuery.from();
     Predicate c = builder.equal(root.User.id, primaryValue);
     TypedQuery!User typedQuery = manager.createQuery(criteriaQuery.select(root).where(c));
-    return typedQuery.getSingleResult();
+    return cast(User)(typedQuery.getSingleResult());
 }
 
 
@@ -208,8 +230,15 @@ void main() {
     log("testCriteriaQueryLike u4[0] money ", u4[0].money);
     log("testCriteriaQueryLike u4[1] money ", u4[1].money);
     
-    u4 = testCriteriaQueryDistinctGroupBy(manager, builder);
-    log("testCriteriaQueryDistinctGroupBy u4 length ", u4.length);
+    u4 = testCriteriaQuery_Distinct_GroupBy_Having(manager, builder);
+    log("testCriteriaQuery_Distinct_GroupBy_Having u4 length ", u4.length);
+
+
+    User u5 = testCriteriaQuery_multiselect_max_min_avg_sum(manager, builder, "u1");
+    log("testCriteriaQuery_multiselect_max_min_avg_sum u5 name = %s,money = %s,id = %s ".format(u5.name, u5.money, u5.id));
+
+    count = cast(int)testCriteriaQuery_count(manager, builder);
+    log("testCriteriaQuery_count u5 length ", count);
 
     count = testCriteriaDelete2(manager, builder, u3[0]);
     log("testCriteriaDelete2 count ", count);
@@ -218,13 +247,13 @@ void main() {
     log("testEntityRemove2 count ", count);
 
 
-    //todo groupby max min having between /*top*/ in join union (select into) (FOREIGN KEY)
-    //todo avg count first last sum
+    //todo between /*top*/ in join union (select into) (FOREIGN KEY)
+    //todo first last
 
     manager.getTransaction().commit();
     // manager.getTransaction().rollback();
     manager.close();
-    manager.close();
+    entityManagerFactory.close();
 
     
 

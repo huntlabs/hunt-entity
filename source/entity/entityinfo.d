@@ -17,7 +17,7 @@ class EntityInfo(T) {
 
     //auto mixin function
     // private void initEntityData(T t){}
-    // public T deSerialize(Row row) {}
+    // public T deSerialize(Row row, ref int count) {}
     // public void setIncreaseKey(ref T entity, int value) {}
     // public R getPrimaryValue() {}
     
@@ -30,6 +30,11 @@ class EntityInfo(T) {
     mixin(makeDeSerialize!(T)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
+
+
+   
+
+
 
 
     this(Dialect dialect, T t = null) {
@@ -111,12 +116,20 @@ string makeSetIncreaseKey(T)() {
 string makeDeSerialize(T)() {
     string endTag = ";\n\t\t";
     string str = "\t";
-    str ~= "public T deSerialize(Row row) {\n\t\t";
-    str ~= "T ret = new T()"~endTag;
+    str ~= "public T deSerialize(Row row, ref long count) {\n\t\t";
+    str ~= "T ret"~endTag;
+    str ~= "if (row.getSize() == 1 && (indexOf(row.toString(), \"COUNT(\") != -1)) {\n\t\t\t";
+    str ~= "count = row[0].to!long;\n\t\t\t";
+    str ~= "return ret"~endTag;
+    str ~= "}\n\t\t";
+
     foreach(memberName; __traits(derivedMembers, T)) {
         alias memType = typeof(__traits(getMember, T ,memberName));
         static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
+            str ~= "if (row.exsit(\""~memberName~"\")) {\n\t\t\t";
+            str ~= "if (ret is null) ret = new T();\n\t\t\t";
             str ~= "ret."~memberName~" = "~"*(_dialect.fromSqlValue(this."~memberName~".getFieldType(), Variant(row[\""~memberName~"\"]))).peek!"~memType.stringof~endTag;
+            str ~= "}\n\t\t";
         }
     }
     str ~= "return ret;\n\t";

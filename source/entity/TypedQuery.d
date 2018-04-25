@@ -17,11 +17,17 @@ class TypedQuery(T) {
         _manager = manager;
     }
 
-    public T getSingleResult() {
+    public Object getSingleResult() {
         auto stmt = _manager.getSession().prepare(_query.toString());
 		auto res = stmt.query();
         if(!res.empty()){
-			return _query.getRoot().deSerialize((res.front()));
+            log("res.front", res.front());
+            long count;
+			T t = _query.getRoot().deSerialize(res.front(), count);
+            if (t is null && count != 0) {
+                return new Long(count);
+            }
+            return t;
         }
 		return null;
     }
@@ -30,8 +36,9 @@ class TypedQuery(T) {
         T[] ret;
         auto stmt = _manager.getSession().prepare(_query.toString());
 		auto res = stmt.query();
+        long count;
         foreach(value; res) {
-            T t = _query.getRoot().deSerialize((value));
+            T t = _query.getRoot().deSerialize(value, count);
             if (t is null)
                 throw new EntityException("getResultList has an null data");
 		    ret ~= t;
