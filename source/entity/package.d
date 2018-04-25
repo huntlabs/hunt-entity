@@ -19,11 +19,12 @@ public import entity.EntityInterface;
 public import entity.EntityFieldInfo;
 public import entity.EntityTransaction;
 public import entity.EntityManagerFactory;
-public import entity.criteria.CriteriaBase;
 
+public import entity.criteria.Long;
 public import entity.criteria.Root;
 public import entity.criteria.Order;
 public import entity.criteria.Predicate;
+public import entity.criteria.CriteriaBase;
 public import entity.criteria.CriteriaQuery;
 public import entity.criteria.CriteriaDelete;
 public import entity.criteria.CriteriaBuilder;

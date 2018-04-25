@@ -8,7 +8,11 @@ class CriteriaQuery (T) : CriteriaBase!T {
         super(criteriaBuilder);
     }
     public CriteriaQuery!T select(Root!T root) {
-        _sqlBuidler.select("*");
+        _sqlBuidler.select(["*"]);
+        return this;
+    }
+    public CriteriaQuery!T select(EntityFieldInfo info) {
+        _sqlBuidler.select([info.getFullColumeString()]);
         return this;
     }
     //P = Predicate
@@ -22,7 +26,6 @@ class CriteriaQuery (T) : CriteriaBase!T {
         }
         return this;
     }
-
     //P = Predicate
     public CriteriaQuery!T groupBy(P...)(P predicates) {
         foreach(v; predicates) {
@@ -30,9 +33,26 @@ class CriteriaQuery (T) : CriteriaBase!T {
         }
         return this;
     }
-
-
-
+    //P = Predicate
+    public CriteriaQuery!T having(P...)(P predicates) { 
+        string s;
+        foreach(k, v; predicates) {
+            s ~= v.toString();
+            if (k != predicates.length-1) 
+                s ~= " AND ";
+        }
+        _sqlBuidler.having(s);
+        return this;
+    }
+    //E = EntityFieldInfo
+    public CriteriaQuery!T multiselect(E...)(E entityFieldInfos) {
+        string[] columes;
+        foreach(v; entityFieldInfos) {
+            columes ~= v.getFullColumeString();
+        }
+        _sqlBuidler.select(columes);
+        return this;
+    }
 
     public CriteriaQuery!T distinct(bool distinct) {
         _sqlBuidler.setDistinct(distinct);

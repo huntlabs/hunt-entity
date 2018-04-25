@@ -11,7 +11,6 @@ import std.traits;
 class Root(T) {
     private EntityInfo!T _entityInfo;
     public this(Dialect dialect, T t = null) {
-        pragma(msg, "root");
         _entityInfo = new EntityInfo!T(dialect, t);
     }
 
@@ -26,8 +25,8 @@ class Root(T) {
             throw new EntityException("Cannot find entityinfo by name : " ~ name);	
         return _entityInfo;
     }
-    public T deSerialize(Row row) {
-        return _entityInfo.deSerialize(row);
+    public T deSerialize(Row row,ref long count) {
+        return _entityInfo.deSerialize(row, count);
     }
     public EntityFieldInfo getPrimaryField() {
         return _entityInfo.getPrimaryField();

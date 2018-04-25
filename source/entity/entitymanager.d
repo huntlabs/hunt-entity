@@ -26,7 +26,6 @@ class EntityManager {
 
     public void persist(T)(ref T entity) {
         SqlBuilder builder = _factory.createSqlBuilder();
-        pragma(msg, "persist");
         EntityInfo!T info = new EntityInfo!(T)(_factory.getDialect(), entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
@@ -50,7 +49,7 @@ class EntityManager {
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
-        return query.getSingleResult();
+        return cast(T)(query.getSingleResult());
     }
 
 
