@@ -21,7 +21,7 @@ obj/
 _ReSharper*/
 Unittest/*
 libentity.a
-example
+mysql-example
 
 # Ignore generated files
 lib/
@@ -29,7 +29,6 @@ __test__library__
 *.sqlite
 *.db
 .dub/
-
 
 # Ignore code coverage:
 *.lst
