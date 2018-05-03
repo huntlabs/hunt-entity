@@ -1,0 +1,10 @@
+{
+	"name": "mysql-example",
+	"authors": ["HuntLabs.cn"],
+	"dependencies": {
+		"entity": {"path":"../../"}
+	},
+	"targetType": "executable",
+	"description": "A mysql example application for entity.",
+	"copyright": "Copyright © 2017, HuntLabs.cn"
+}

@@ -6,91 +6,105 @@
  * MySQL 5.1+
  * SQLite 3.7.11+
  
- ## Depends
+## Depends
  * [database](https://github.com/huntlabs/database)
 
 ## Simple code
 ```D
 import entity;
 
-@Table("users")
+@Table("user")
 class User : Entity
 {
+    @PrimaryKey
     @AutoIncrement
-    @PrimaryKey 
     int id;
 
     string name;
-    float money;
+    double money;
     string email;
     bool status;
 }
 
 void main()
 {
-    DatabaseConfig config = new DatabaseConfig("postgresql://postgres:postgres@127.0.0.1:5432/test?charset=utf-8");
-    
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("pgsql",config);
-    EntityManager entitymanager = entityManagerFactory.createEntityManager!(User);
+    DatabaseOption options = new DatabaseOption("mysql://root:123456@localhost:3306/huntblog?charset=utf-8");
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default", options);
+    EntityManager em = entityManagerFactory.createEntityManager();
 
-    //insert
-    {
-      User user = new User();
-      user.name = "viile";
-      user.money = 10.5;
-      user.status = true;
-      entitymanager.persist(user);
-    }
+    // begin transaction
+    em.getTransaction().begin();
 
-    //remove by primary key
-    {
-      User user = new User();
-      user.id = 26760;
-      entitymanager.remove(user);
-     }
+    // define your database existing row id in here
+    int id = 10;
 
-    //find by primary key
-    {
-      User user = new User();
-      user.id = 26760;
-      if(entitymanager.find(user) is null){
-        writeln("user not found");
-      }
-     }
+    auto user = em.find!User(id);
+    log("User name is: ", user.name);
 
-    //update by primary key
-    {
-      User user = new User();
-      user.id = 26760;
-      user.email = "viile@foxmail.com";
-      entitymanager.merge(user);
-     }
-     
-     //Get a row data from the query condition
-     {
-        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
-        criteria.where(criteria.gt(criteria.User.id,26762));
-        User user = entitymanager.getResult!User(criteria.toString);
-     }
-     
-     //Get multi row data from the query condition
-     {
-        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
-        criteria.where(criteria.gt(criteria.User.id,26762));
-        User[] users = entitymanager.getResultList!User(criteria.toString);
-     }
-     
-     //update multi record by condition
-     {
-        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
-        criteria.createCriteriaUpdate().set(criteria.User.email,"dakgzhu@foxmail.com")
-            .where(criteria.gt(criteria.User.id,26761)).execute();
-     }
-     
-     //remove multi record by condition
-     {
-        CriteriaBuilder criteria = entitymanager.createCriteriaBuilder!User;
-        criteria.createCriteriaDelete().where(criteria.gt(criteria.User.id,26761)).execute();
-     }
+    // commit transaction
+    em.getTransaction().commit();
+
+    em.close();
+    entityManagerFactory.close();
 }
+```
+
+## Insert row
+```D
+    auto user = new User();
+    user.name = "Brian";
+    user.email = "brian@huntlabs.cn";
+    user.money = 99.9;
+    
+    // insert user
+    em.persist(user);
+    log("User id is: ", user.id);
+```
+
+## Delete row
+```D
+    int n = em.remove!User(id);
+    log("The member of users deleted is: ", n);
+```
+
+## Update row
+```D
+    auto user = em.find!User(id);
+    log("User name is: ", user.name);
+    user.name = "zoujiaqing";
+    em.merge!User(user);
+    log("The number of users updated is: ", n);
+```
+
+## Use CriteriaQuery to find
+```D
+    // create CriteriaBuilder object from em
+    CriteriaBuilder builder = em.getCriteriaBuilder();
+
+    CriteriaQuery!User criteriaQuery = builder.createQuery!User;
+    Root!User root = criteriaQuery.from();
+    Predicate p1 = builder.equal(root.User.id, id);
+    TypedQuery!User typedQuery = em.createQuery(criteriaQuery.select(root).where(p1));
+
+    auto user =  cast(User)(typedQuery.getSingleResult());
+
+    log("User name is: ", user.name);
+```
+
+## Use CriteriaQuery to Multi-condition find
+```D
+    // create CriteriaBuilder object from em
+    CriteriaBuilder builder = em.getCriteriaBuilder();
+
+    CriteriaQuery!User criteriaQuery = builder.createQuery!User;
+    Root!User root = criteriaQuery.from();
+
+    Predicate p1 = builder.lt(root.User.id, 1000);  // User id is less than 1000.
+    Predicate p2 = builder.gt(root.User.money, 0);  // User money is greater than 0.
+    Predicate p3 = builder.like(root.User.name, "z%");  // User name prefix is z.
+
+    TypedQuery!User typedQuery = em.createQuery(criteriaQuery.select(root).where(builder.and(p1, p2), p3));
+    User[] users typedQuery.getResultList();
+
+    log("The number of users found is: ", users.length);
 ```

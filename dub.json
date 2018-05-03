@@ -4,8 +4,8 @@
     "dependencies": {
         "database": "0.1.0"
     },
-    "description": "An object-relational mapping (ORM) framework for dlang's database,  support PostgreSQL / MySQL / SQLite.",
-    "copyright": "Copyright (C) 2015-2017 Shanghai Putao Technology Co., Ltd",
+    "description": "Entity is an object-relational mapping tool for the D programming language. Referring to the design idea of JPA. support PostgreSQL / MySQL / SQLite.",
+    "copyright": "Copyright (C) 2015-2018 Shanghai Putao Technology Co., Ltd",
     "license": "Apache-2.0",
     "configurations": [
         {
