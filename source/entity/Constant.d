@@ -4,15 +4,47 @@ module entity.Constant;
 
 
 
-//TableName
+//@TableName
 struct Table {
     string name;
 }
 
-//ColumnName
+//@ColumnName
 struct Column {
     string name;
 }
+
+//@JoinColumn
+struct JoinColumn {
+    string name;
+}
+
+struct PrimaryKeyJoinColumn {
+    string name;
+    string referencedColumnName;
+}
+
+
+//@OneToOne
+struct OneToOne {
+    FetchType fetch = FetchType.LAZY;
+    CascadeType cascade = CascadeType.ALL;
+}
+//@OneToMany
+struct ManyToMany {
+    FetchType fetch = FetchType.LAZY;
+    CascadeType cascade = CascadeType.ALL;
+}
+//@OneToMany
+struct OneToMany {
+    FetchType fetch = FetchType.LAZY;
+    CascadeType cascade = CascadeType.ALL;
+} 
+//@ManyToOne
+struct ManyToOne {
+    FetchType fetch = FetchType.EAGER;
+    CascadeType cascade = CascadeType.ALL;
+} 
 
 
 enum {
@@ -21,8 +53,37 @@ enum {
     PrimaryKey = 0x2,
 }
 
-
 enum OrderBy {
-    Asc = 0,
-    Desc = 1,
+    ASC = 0,
+    DESC = 1,
+}
+enum JoinType {
+    INNER = 0,
+    LEFT = 1,
+    RIGHT = 2,
+}
+enum FetchType {
+    LAZY,
+    EAGER
+}
+
+
+
+enum CascadeType {
+    PERSIST, //级联新建
+    REMOVE,  //级联删除
+    REFRESH, //级联刷新
+    MERGE,   //级联更新 中选择一个或多个
+    ALL,      //所有
+}
+
+//#fetch属性是该实体的加载方式，有两种：LAZY和EAGER。
+
+
+
+struct JoinSqlBuild  {
+    string tableName;
+    string joinWhere;
+    JoinType joinType;
+    string[] columnNames;
 }

@@ -16,13 +16,13 @@ class CriteriaUpdate(T) : CriteriaBase!T{
         return cast(CriteriaUpdate!T)super.where(predicates);
     }
     public CriteriaUpdate!T set(P)(EntityFieldInfo field, P p) {
-        field.assertType!P;
-        _sqlBuidler.set(field.getFileldName(), _criteriaBuilder.getDialect().toSqlValue(p));
+        _criteriaBuilder.assertType!(P)(field);
+        _sqlBuidler.set(field.getFullColumn(), _criteriaBuilder.getDialect().toSqlValue(p));
         return this;
     }
 
     public CriteriaUpdate!T set(EntityFieldInfo field) {
-        _sqlBuidler.set(field.getFileldName(), _criteriaBuilder.getDialect().toSqlValue(field.getFieldValue()));
+        _sqlBuidler.set(field.getFullColumn(), _criteriaBuilder.getDialect().toSqlValue(field.getFieldValue()));
         return this;
     }
     

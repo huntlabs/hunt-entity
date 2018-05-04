@@ -3,67 +3,32 @@
 
 module entity.EntityFieldInfo;
 
-import std.variant;
 import entity;
 
-class EntityFieldInfo {
-    
-    private int _mark;
-    private string _columnName;
+class EntityFieldInfo : EntityExpression{
+
     private string _fileldName;
-    private DlangDataType _fieldType;
     private Variant _fieldValue;
-    private string _columeSpecifier;
+    protected string _joinColumn;
+    
+    
 
-
-    public this(string columnName) {
-        _columnName = columnName;
-    }
-
-    public this(string fileldName,string columnName, DlangDataType fieldType, Variant fieldValue,int mark = 0) {
+    public this(string fileldName, string columnName, Variant fieldValue, string tableName) {
+        super(columnName, tableName);
         _fileldName = fileldName;
-        _columnName = columnName;
-        _fieldType = fieldType;
-        _mark = mark;
         _fieldValue = fieldValue;
+        
     }
     
-    public void assertType(T)() {
-        if (_fieldType.getName() == "string" && getDlangTypeStr!T != "string") {
-            throw new EntityException("EntityFieldInfo %s type need been string not %s".format(_fileldName, typeid(T)));
-        }
-        if (_fieldType.getName() != "string" && getDlangTypeStr!T == "string") {
-            throw new EntityException("EntityFieldInfo %s type need been number not string".format(_fileldName));
-        }
-    }
+    // need override those functions
+    // public R deSerialize(R)(string data){};
+    // public void assertType(T)() {}
 
+    
     public Variant getFieldValue() {return _fieldValue;}
     public string getFileldName() {return _fileldName;}
-    public DlangDataType getFieldType() {return _fieldType;}
-    public string getColumnName() {return _columnName;}
+    public string getJoinColumn() {return _joinColumn;}
 
-    public EntityFieldInfo setColumeSpecifier(string s) {
-        _columeSpecifier = s;
-        return this;
-    }
-    public string getFullColumeString() {
-        if (_columeSpecifier != "")  {
-            if (_columeSpecifier != "COUNT")
-                return _columeSpecifier ~ "(" ~ _columnName ~ ") as "~_columnName;
-            return _columeSpecifier ~ "(" ~ _columnName ~ ")";
-        }
-        return _columnName;
-    }
-
-
-    public int addmark(int mark) {
-        return _mark |= mark;
-    }
-    public int removemark(int mark) {
-        return _mark & (~mark);
-    }
-    public int checkmark(int mark) {
-        return _mark & mark;
-    }
+    
 
 }

@@ -21,7 +21,6 @@ class TypedQuery(T) {
         auto stmt = _manager.getSession().prepare(_query.toString());
 		auto res = stmt.query();
         if(!res.empty()){
-            log("res.front", res.front());
             long count;
 			T t = _query.getRoot().deSerialize(res.front(), count);
             if (t is null && count != 0) {
