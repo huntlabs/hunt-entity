@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/huntlabs/entity.svg?branch=master)](https://travis-ci.org/huntlabs/entity)
+
 ## Entity
 [Entity](https://github.com/huntlabs/entity) is an object-relational mapping tool for the D programming language. Referring to the design idea of [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API).
 
