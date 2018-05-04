@@ -6,27 +6,27 @@ import entity;
 class Order {
 
     private OrderBy _by;
-    private string _colume;
+    private string _column;
 
     private enum string[OrderBy] OrderMap = [
-        OrderBy.Asc : "ASC", 
-        OrderBy.Desc : "DESC",
+        OrderBy.ASC : "ASC", 
+        OrderBy.DESC : "DESC",
     ];
 
-    this(string colume, OrderBy by) {
-        _colume = colume;
+    this(string column, OrderBy by) {
+        _column = column;
         _by = by;
     }
 
     public Order reverse() {
-        if (_by == OrderBy.Asc) 
-            _by = OrderBy.Desc;
+        if (_by == OrderBy.ASC) 
+            _by = OrderBy.DESC;
         else 
-            _by = OrderBy.Asc;
+            _by = OrderBy.ASC;
         return this;
     }
 
-    public string getColume() {return _colume;}
+    public string getColumn() {return _column;}
 
     public string getOrderType() {
         return OrderMap[_by];

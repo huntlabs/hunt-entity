@@ -13,7 +13,6 @@ class Predicate {
         _str ~= key ~ " " ~ op ~ " " ~ value;
         return this;
     }
-    
     Predicate andValue(T...)(T args) {
         _str ~= " ( ";
         foreach(k,v;args) {
@@ -24,7 +23,6 @@ class Predicate {
         _str ~= " ) ";
         return this;
     }  
-
     Predicate orValue(T...)(T args) {
         _str ~= " ( ";
         foreach(k,v;args) {
@@ -35,7 +33,27 @@ class Predicate {
         _str ~= " ) ";
         return this;
     }  
-
+    Predicate betweenValue(string key, string c1, string c2) {
+        _str = " "~key~" BETWEEN "~c1~" AND "~c2;
+        return this;
+    }
+    Predicate In(T...)(T args) {
+        foreach(k,v; args) {
+            if (k == 0) {
+                _str ~= " " ~ v ~ " IN (";
+            }
+            else {
+                _str ~= " \"" ~ v~"\"";
+                if (k == args.length - 1) {
+                    _str ~= ")";
+                }
+                else {
+                    _str ~= ",";
+                }
+            }
+        }
+        return this;
+    }
     
 
 

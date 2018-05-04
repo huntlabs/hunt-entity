@@ -32,11 +32,11 @@ public class CriteriaBuilder {
     }
 
     public Order asc(EntityFieldInfo info) {
-        return new Order(info.getColumnName(), OrderBy.Asc);
+        return new Order(info.getFullColumn(), OrderBy.ASC);
     }
 
     public Order desc(EntityFieldInfo info) {
-        return new Order(info.getColumnName(), OrderBy.Desc);
+        return new Order(info.getFullColumn(), OrderBy.DESC);
     }
 
     //P should be Predicate
@@ -48,88 +48,107 @@ public class CriteriaBuilder {
         return new Predicate().orValue(predicates);
     }
 
-    public EntityFieldInfo max(EntityFieldInfo info) {
-        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("MAX");
+    public EntityExpression max(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("MAX");
     }
-    public EntityFieldInfo min(EntityFieldInfo info) {
-        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("MIN");
+    public EntityExpression min(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("MIN");
     }
-    public EntityFieldInfo avg(EntityFieldInfo info) {
-        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("AVG");
+    public EntityExpression avg(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("AVG");
     }
-    public EntityFieldInfo sum(EntityFieldInfo info) {
-        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("SUM");
+    public EntityExpression sum(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("SUM");
     }
-    public EntityFieldInfo count(EntityFieldInfo info) {
-        return new EntityFieldInfo(info.getColumnName()).setColumeSpecifier("COUNT");
+    public EntityExpression count(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("COUNT");
     }
-    public EntityFieldInfo count(T)(Root!T root) {
-        return new EntityFieldInfo("*").setColumeSpecifier("COUNT");
+    public EntityExpression count(T)(Root!T root) {
+        return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setColumnSpecifier("COUNT");
     }
-    public EntityFieldInfo countDistinct(EntityFieldInfo info) {
-        return new EntityFieldInfo("DISTINCT "~info.getColumnName()).setColumeSpecifier("COUNT");
+    public EntityExpression countDistinct(EntityFieldInfo info) {
+        return new EntityExpression(info.getColumnName(), info.getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
-    public EntityFieldInfo countDistinct(T)(Root!T root) {
-        return new EntityFieldInfo("DISTINCT *").setColumeSpecifier("COUNT");
+    public EntityExpression countDistinct(T)(Root!T root) {
+        return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
-
-    
 
     public Predicate equal(T)(EntityFieldInfo info, T t) {
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), "=", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
     }
     public Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFileldName(), "=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), "<>", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), "<>", _factory.getDialect().toSqlValue(t));
     }
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), "<>", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<>", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), ">", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), ">", _factory.getDialect().toSqlValue(t));
     }
     public Predicate gt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), ">", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), ">", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), ">=", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), ">=", _factory.getDialect().toSqlValue(t));
     }
     public Predicate ge(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), ">=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), ">=", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), "<", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), "<", _factory.getDialect().toSqlValue(t));
     }
     public Predicate lt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), "<", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
 
     public Predicate le(T)(EntityFieldInfo info, T t){
-        info.assertType!T;
-        return new Predicate().addValue(info.getFileldName(), "<=", _factory.getDialect().toSqlValue(t));
+        assertType!(T)(info);
+        return new Predicate().addValue(info.getFullColumn(), "<=", _factory.getDialect().toSqlValue(t));
     }
     public Predicate le(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFileldName(), "<=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<=", _factory.getDialect().toSqlValue(info.getFieldValue()));
     }
     public Predicate like(EntityFieldInfo info, string pattern) {
-        return new Predicate().addValue(info.getFileldName(), "like", _factory.getDialect().toSqlValue(pattern));
+        return new Predicate().addValue(info.getFullColumn(), "like", _factory.getDialect().toSqlValue(pattern));
     }
     public Predicate notLike(EntityFieldInfo info, string pattern) {
-        return new Predicate().addValue(info.getFileldName(), "not like", _factory.getDialect().toSqlValue(pattern));
+        return new Predicate().addValue(info.getFullColumn(), "not like", _factory.getDialect().toSqlValue(pattern));
     }
 
+    public Predicate between(T)(EntityFieldInfo info, T t1, T t2) {
+        assertType!(T)(info);
+        return new Predicate().betweenValue(info.getFullColumn(), _factory.getDialect().toSqlValue(t1), _factory.getDialect().toSqlValue(t2));
+    }
+
+    public Predicate In(T...)(EntityFieldInfo info, T args) {
+        foreach(k,v; args) {
+            if (k == 0) {
+                assertType!(typeof(v))(info);
+            }
+        }
+        return new Predicate().In(info.getFullColumn(), args);
+    }
+
+    public void assertType(T)(EntityFieldInfo info) {
+        if (cast(EntityFieldNormal)info !is null)
+            (cast(EntityFieldNormal)info).assertType!T;
+        else 
+            throw new EntityException("EntityFieldInfo %s is object can not be Predicate".format(info.getFileldName()));
+    }
     
 
+ 
 }
 
 

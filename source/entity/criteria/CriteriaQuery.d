@@ -4,15 +4,38 @@ module entity.criteria.CriteriaQuery;
 import entity;
 
 class CriteriaQuery (T) : CriteriaBase!T {
+
     this(CriteriaBuilder criteriaBuilder) {
         super(criteriaBuilder);
     }
     public CriteriaQuery!T select(Root!T root) {
-        _sqlBuidler.select(["*"]);
+        string[] selectColumn = root.getAllSelectColumn();
+        foreach(value; root.getJoins()) {
+            if (value.joinType == JoinType.INNER) {
+                _sqlBuidler.innerJoin(value.tableName, value.joinWhere);
+                foreach(v; value.columnNames) {
+                    selectColumn ~= v;
+                }
+            }
+            else if (value.joinType == JoinType.LEFT) {
+                _sqlBuidler.leftJoin(value.tableName, value.joinWhere);
+                foreach(v; value.columnNames) {
+                    selectColumn ~= v;
+                }
+            }
+            else {
+                _sqlBuidler.rightJoin(value.tableName, value.joinWhere);
+                foreach(v; value.columnNames) {
+                    selectColumn ~= v;
+                }
+            } 
+        }
+        _sqlBuidler.select(selectColumn);
         return this;
     }
-    public CriteriaQuery!T select(EntityFieldInfo info) {
-        _sqlBuidler.select([info.getFullColumeString()]);
+
+    public CriteriaQuery!T select(EntityExpression info) {
+        _sqlBuidler.select([info.getSelectColumn()]);
         return this;
     }
     //P = Predicate
@@ -22,14 +45,14 @@ class CriteriaQuery (T) : CriteriaBase!T {
     //O = Order
     public CriteriaQuery!T orderBy(O...)(O orders) {
         foreach(v; orders) {
-            _sqlBuidler.orderBy(v.getColume(), v.getOrderType());
+            _sqlBuidler.orderBy(v.getColumn(), v.getOrderType());
         }
         return this;
     }
-    //P = Predicate
-    public CriteriaQuery!T groupBy(P...)(P predicates) {
-        foreach(v; predicates) {
-            _sqlBuidler.groupBy(v.getColumnName());
+    //E = EntityFieldInfo
+    public CriteriaQuery!T groupBy(E...)(E entityFieldInfos) {
+        foreach(v; entityFieldInfos) {
+            _sqlBuidler.groupBy(v.getFullColumn());
         }
         return this;
     }
@@ -45,12 +68,12 @@ class CriteriaQuery (T) : CriteriaBase!T {
         return this;
     }
     //E = EntityFieldInfo
-    public CriteriaQuery!T multiselect(E...)(E entityFieldInfos) {
-        string[] columes;
-        foreach(v; entityFieldInfos) {
-            columes ~= v.getFullColumeString();
+    public CriteriaQuery!T multiselect(E...)(E entityExpressions) {
+        string[] columns;
+        foreach(v; entityExpressions) {
+            columns ~= v.getSelectColumn();
         }
-        _sqlBuidler.select(columes);
+        _sqlBuidler.select(columns);
         return this;
     }
 
