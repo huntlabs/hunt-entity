@@ -1,8 +1,17 @@
+/*
+ * Entity - Entity is an object-relational mapping tool for the D programming language. Referring to the design idea of JPA.
+ *
+ * Copyright (C) 2015-2018  Shanghai Putao Technology Co., Ltd
+ *
+ * Developer: HuntLabs.cn
+ *
+ * Licensed under the Apache-2.0 License.
+ *
+ */
+ 
 module entity.EntityInfo;
 
 import entity;
-
-
 
 class EntityInfo(T) {
     
@@ -33,7 +42,8 @@ class EntityInfo(T) {
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
 
-    this(Dialect dialect, T t = null) {
+    this(Dialect dialect, T t = null)
+    {
         _dialect = dialect;
         if (t is null)
             _data = new T();
@@ -42,17 +52,22 @@ class EntityInfo(T) {
         initEntityData(_data);
     }
 
-    public EntityFieldInfo getPrimaryField() {
+    public EntityFieldInfo getPrimaryField()
+    {
         if (_primaryKey.length > 0) 
             return _fields[_primaryKey];
         return null;
     }
 
-    public string[string] getInsertString() {
+    public string[string] getInsertString()
+    {
         string[string] str;
-        foreach(info; _fields) {
-            if (info.getFileldName() != _autoIncrementKey) {
-                if (cast(EntityFieldNormal)(info)) {
+        foreach(info; _fields)
+        {
+            if (info.getFileldName() != _autoIncrementKey)
+            {
+                if (cast(EntityFieldNormal)(info))
+                {
                     str[info.getColumnName()] = _dialect.toSqlValueImpl((cast(EntityFieldNormal)info).getFieldType(), info.getFieldValue());
                 }
             }
@@ -76,13 +91,13 @@ class EntityInfo(T) {
     public EntityFieldInfo getSingleField(string name) {return _fields.get(name,null);}
 }
 
-
-string makeImport(T)() {
+string makeImport(T)()
+{
     return "\n\timport "~moduleName!T~";";
 }
 
-
-string makeGetPrimaryValue(T)() {
+string makeGetPrimaryValue(T)()
+{
     string str = "\t";
     string R;
     string name;
@@ -98,10 +113,8 @@ string makeGetPrimaryValue(T)() {
     return str;
 }
 
-
-
-
-string makeSetIncreaseKey(T)() {
+string makeSetIncreaseKey(T)()
+{
     string endTag = ";\n\t\t";
     string str = "\t";
     str ~= "public void setIncreaseKey(ref T entity, int value) {\n\t\t";
@@ -114,9 +127,8 @@ string makeSetIncreaseKey(T)() {
     return str;
 }
 
-
-
-string makeDeSerialize(T)() {
+string makeDeSerialize(T)() 
+{
     string endTag = ";\n\t\t";
     string str = "\t";
     str ~= "public T deSerialize(Row row, ref long count) {\n\t\t";
@@ -147,26 +159,36 @@ string makeDeSerialize(T)() {
 
         }
     }
+
     str ~= "return ret;\n\t";
     str ~= "}\n";
+
     return str;
 }
 
-string makeInitEntityData(T)() {
+string makeInitEntityData(T)()
+{
     string endTag = ";\n\t\t";
     string str = "\t";
+
     str ~= "private void initEntityData(T t) {\n\t\t";
     str ~= "_entityClassName = \"" ~ T.stringof ~"\""~ endTag;
-    static if (hasUDA!(T,Table)) {
+
+    static if (hasUDA!(T,Table))
+    {
         str ~= "_tableName = \"" ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~"\""~ endTag;
     }
-    else {
+    else
+    {
         str ~= "_tableName = \"" ~ T.stringof ~"\""~ endTag;
     }
+
     str ~= "if (t is null) {\n\t\t\t";
     str ~= "t = new T();\n\t\t";
     str ~= "}\n\t\t";
-    foreach(memberName; __traits(derivedMembers, T)) {
+
+    foreach(memberName; __traits(derivedMembers, T))
+    {
         alias memType = typeof(__traits(getMember, T ,memberName));
         static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
 
@@ -220,8 +242,10 @@ string makeInitEntityData(T)() {
 
         }
     }
+
     str ~= "if (_fields.length == 0)\n\t\t";
     str ~= "\tthrow new EntityException(\"Entity class member cannot be empty : " ~ T.stringof~ "\");\n\t";
     str ~= "}\n";
+
     return str;
 }
