@@ -66,7 +66,7 @@ void main()
 ## Delete row
 ```D
     int n = em.remove!User(id);
-    log("The member of users deleted is: ", n);
+    log("The number of users deleted is: ", n);
 ```
 
 ## Update row
