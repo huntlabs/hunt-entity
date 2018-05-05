@@ -1,14 +1,27 @@
-
+/*
+ * Entity - Entity is an object-relational mapping tool for the D programming language. Referring to the design idea of JPA.
+ *
+ * Copyright (C) 2015-2018  Shanghai Putao Technology Co., Ltd
+ *
+ * Developer: HuntLabs.cn
+ *
+ * Licensed under the Apache-2.0 License.
+ *
+ */
+ 
 module entity.criteria.CriteriaQuery;
 
 import entity;
 
-class CriteriaQuery (T) : CriteriaBase!T {
-
-    this(CriteriaBuilder criteriaBuilder) {
+class CriteriaQuery (T) : CriteriaBase!T
+{
+    this(CriteriaBuilder criteriaBuilder)
+    {
         super(criteriaBuilder);
     }
-    public CriteriaQuery!T select(Root!T root) {
+
+    public CriteriaQuery!T select(Root!T root)
+    {
         string[] selectColumn = root.getAllSelectColumn();
         foreach(value; root.getJoins()) {
             if (value.joinType == JoinType.INNER) {
@@ -81,8 +94,9 @@ class CriteriaQuery (T) : CriteriaBase!T {
         _sqlBuidler.setDistinct(distinct);
         return this;
     }
-
-
-    public SqlBuilder getSqlBuilder() {return _sqlBuidler;}
     
+    public SqlBuilder getSqlBuilder()
+    {
+        return _sqlBuidler;
+    }
 }

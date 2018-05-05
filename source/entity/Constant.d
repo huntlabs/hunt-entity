@@ -1,8 +1,15 @@
-
-
+/*
+ * Entity - Entity is an object-relational mapping tool for the D programming language. Referring to the design idea of JPA.
+ *
+ * Copyright (C) 2015-2018  Shanghai Putao Technology Co., Ltd
+ *
+ * Developer: HuntLabs.cn
+ *
+ * Licensed under the Apache-2.0 License.
+ *
+ */
+ 
 module entity.Constant;
-
-
 
 //@TableName
 struct Table {
@@ -23,7 +30,6 @@ struct PrimaryKeyJoinColumn {
     string name;
     string referencedColumnName;
 }
-
 
 //@OneToOne
 struct OneToOne {
@@ -46,7 +52,6 @@ struct ManyToOne {
     CascadeType cascade = CascadeType.ALL;
 } 
 
-
 enum {
     Auto = 0x1,
     AutoIncrement = 0x1,
@@ -67,8 +72,6 @@ enum FetchType {
     EAGER
 }
 
-
-
 enum CascadeType {
     PERSIST, //级联新建
     REMOVE,  //级联删除
@@ -78,8 +81,6 @@ enum CascadeType {
 }
 
 //#fetch属性是该实体的加载方式，有两种：LAZY和EAGER。
-
-
 
 struct JoinSqlBuild  {
     string tableName;
