@@ -88,7 +88,7 @@ void main()
     Predicate p1 = builder.equal(root.User.id, id);
     TypedQuery!User typedQuery = em.createQuery(criteriaQuery.select(root).where(p1));
 
-    auto user =  cast(User)(typedQuery.getSingleResult());
+    auto user = typedQuery.getSingleResult();
 
     log("User name is: ", user.name);
 ```
@@ -106,7 +106,7 @@ void main()
     Predicate p3 = builder.like(root.User.name, "z%");  // User name prefix is z.
 
     TypedQuery!User typedQuery = em.createQuery(criteriaQuery.select(root).where(builder.and(p1, p2), p3));
-    User[] users typedQuery.getResultList();
+    User[] users = typedQuery.getResultList();
 
     log("The number of users found is: ", users.length);
 ```
