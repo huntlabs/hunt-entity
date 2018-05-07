@@ -15,18 +15,18 @@ import entity;
 
 class Persistence
 {
-	private static EntityManagerFactory[string] _connections;
+	private static EntityManagerFactory[string] _factories;
 
     public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option)
 	{
 		auto factory = new EntityManagerFactory(name, option);
-		this._connections[name] = factory;
+		this._factories[name] = factory;
 
 		return factory;
 	}
 
     public static EntityManagerFactory getEntityManagerFactory(string name)
 	{
-		return this._connections[name];
+		return this._factories[name];
 	}
 }
