@@ -17,26 +17,27 @@ class EntityManagerFactory
 {
 
     public Dialect _dialect;
-    public DatabaseConfig _config;
+    public DatabaseOption _option;
     public Database _db;
     public string _name;
     private CriteriaBuilder _criteriaBuilder;
 
-    public this(string name, DatabaseConfig config)
+    public this(string name, DatabaseOption option)
     {
         _name = name;
-        _config = config;
-        _db = new Database(config);
+        _option = option;
+        _db = new Database(option);
         _dialect = _db.createDialect();
         _criteriaBuilder = new CriteriaBuilder(this);
     }
 
     public EntityManager createEntityManager()
     {
-        return new EntityManager(this, _name, _config, _db, _dialect);
+        return new EntityManager(this, _name, _option, _db, _dialect);
     }
 
-    public SqlBuilder createSqlBuilder() {
+    public SqlBuilder createSqlBuilder()
+    {
         return _db.createSqlBuilder();
     }
     

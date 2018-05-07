@@ -13,8 +13,20 @@ module entity.Persistence;
 
 import entity;
 
-class Persistence {
-    public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseConfig config) {
-		return new EntityManagerFactory(name,config);
+class Persistence
+{
+	private static EntityManagerFactory[string] _connections;
+
+    public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option)
+	{
+		auto factory = new EntityManagerFactory(name, option);
+		this._connections[name] = factory;
+
+		return factory;
+	}
+
+    public static EntityManagerFactory getEntityManagerFactory(string name)
+	{
+		return this._connections[name];
 	}
 }
