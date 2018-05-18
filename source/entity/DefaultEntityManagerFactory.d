@@ -17,9 +17,9 @@ private EntityManagerFactory _defaultEntityManagerFactory;
 
 @property EntityManagerFactory defaultEntityManagerFactory()
 {
-	if (null == _defaultEntityManagerFactory)
+	if (_defaultEntityManagerFactory is null)
 	{
-		// error
+		// throw error
 		return null;
 	}
 
