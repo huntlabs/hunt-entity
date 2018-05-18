@@ -13,14 +13,45 @@ module entity.Persistence;
 
 import entity;
 
+
+import entity.EntityManagerFactory;
+
+private EntityManagerFactory _defaultEntityManagerFactory;
+
+@property EntityManagerFactory defaultEntityManagerFactory()
+{
+	if (null == _defaultEntityManagerFactory)
+	{
+		// error
+		return null;
+	}
+
+	return _defaultEntityManagerFactory;
+}
+
+set setDefaultEntityManagerFactory(EntityManagerFactory factory)
+{
+
+}
+
 class Persistence
 {
 	private static EntityManagerFactory[string] _factories;
+
+    public static EntityManagerFactory createEntityManagerFactory(DatabaseOption option)
+	{
+		createEntityManagerFactory("default", option);
+	}
 
     public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option)
 	{
 		auto factory = new EntityManagerFactory(name, option);
 		this._factories[name] = factory;
+
+		if ("default" == name)
+		{
+			setDefaultEntityManagerFactory(factory);
+		}
 
 		return factory;
 	}
