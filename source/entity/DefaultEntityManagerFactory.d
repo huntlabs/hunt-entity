@@ -13,7 +13,7 @@ module entity.DefaultEntityManagerFactory;
 
 import entity.EntityManagerFactory;
 
-private EntityManagerFactory _defaultEntityManagerFactory;
+__gshared private EntityManagerFactory _defaultEntityManagerFactory;
 
 @property EntityManagerFactory defaultEntityManagerFactory()
 {
