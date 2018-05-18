@@ -31,6 +31,7 @@ public import entity.EntityFieldManyToOne;
 public import entity.EntityFieldOneToOne;
 public import entity.EntityTransaction;
 public import entity.EntityManagerFactory;
+public import entity.DefaultEntityManagerFactory;
 
 public import entity.criteria.Join;
 public import entity.criteria.Long;
