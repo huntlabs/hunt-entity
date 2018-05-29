@@ -31,6 +31,8 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 		Root!T root = criteriaQuery.from();`;
 	}
 
+	alias count =  CrudRepository!(T, ID).count;
+	alias findAll = CrudRepository!(T, ID).findAll;
 
 	long count(Specification!T specification)
 	{
