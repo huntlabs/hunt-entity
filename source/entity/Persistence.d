@@ -15,29 +15,33 @@ import entity;
 
 import entity.DefaultEntityManagerFactory;
 
+
 class Persistence
 {
+	private static string DEFAULT_NAME = "default";
+
 	private static EntityManagerFactory[string] _factories;
 
     public static EntityManagerFactory createEntityManagerFactory(DatabaseOption option)
 	{
-		return createEntityManagerFactory("default", option);
+		return createEntityManagerFactory(DEFAULT_NAME, option);
 	}
 
     public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option)
 	{
+		if (name in _factories)
+			return _factories[name];
+		
 		auto factory = new EntityManagerFactory(name, option);
 		this._factories[name] = factory;
-
-		if ("default" == name)
+		if (DEFAULT_NAME == name)
 		{
 			setDefaultEntityManagerFactory(factory);
 		}
-
 		return factory;
 	}
 
-    public static EntityManagerFactory getEntityManagerFactory(string name)
+    public static EntityManagerFactory getEntityManagerFactory(string name = DEFAULT_NAME)
 	{
 		return this._factories[name];
 	}
