@@ -27,19 +27,22 @@ class CriteriaQuery (T) : CriteriaBase!T
             if (value.joinType == JoinType.INNER) {
                 _sqlBuidler.innerJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {
-                    selectColumn ~= v;
+                    if (v != "")
+                        selectColumn ~= v;
                 }
             }
             else if (value.joinType == JoinType.LEFT) {
                 _sqlBuidler.leftJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {
-                    selectColumn ~= v;
+                    if (v != "")
+                        selectColumn ~= v;
                 }
             }
             else {
                 _sqlBuidler.rightJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {
-                    selectColumn ~= v;
+                    if (v != "")
+                        selectColumn ~= v;
                 }
             } 
         }

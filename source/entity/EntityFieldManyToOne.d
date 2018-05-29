@@ -13,28 +13,41 @@ module entity.EntityFieldManyToOne;
 
 import entity;
 
-class EntityFieldManyToOne(T) : EntityFieldInfo
-{
+class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
+
     private ManyToOne _mode;
-    private T _value;
-    private EntityInfo!T _entityInfo;
+    private string _findSqlStr;
+    private CriteriaBuilder _builder;
 
-    // private Root!T _root;
-    this( string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode)
-    {
-        super(fileldName, columnName, Variant(fieldValue), tableName);
-        _mode = mode;
+    this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
+        super(builder, fileldName, columnName, tableName, fieldValue, null, EntityFieldType.MANY_TO_ONE);
+        _mode = mode;      
+        _builder = builder; 
         _joinColumn = columnName;
-        _value = fieldValue;
-        // _root = new 
+        initJoinData(tableName, columnName);
     }
 
-    public void deSerialize(Dialect dialect, Row row, ref T ret)
-    {
-        if (_entityInfo is null)
-            _entityInfo = new EntityInfo!T(dialect);
-
-        long count;
-        ret = _entityInfo.deSerialize(row, count);
+    private void initJoinData(string tableName, string joinColumn) {
+        _joinData = new JoinSqlBuild(); 
+        _joinData.tableName = _entityInfo.getTableName();
+        _joinData.joinWhere = tableName ~ "." ~ joinColumn ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _entityInfo.getPrimaryKeyString();
+        _joinData.joinType = JoinType.LEFT;
+        foreach(value; _entityInfo.getFields()) {
+            _joinData.columnNames ~= value.getSelectColumn();
+        }
     }
+
+    override public JoinSqlBuild getJoinData() {
+        if (_mode.fetch == FetchType.LAZY)
+            return null;
+        return _joinData;
+    }
+
+    public T deSerialize(Row row) {
+        if (_mode.fetch == FetchType.LAZY)
+            return null;
+        long count = -1;
+        return _entityInfo.deSerialize([row], count, 0, true);        
+    }
+
 }

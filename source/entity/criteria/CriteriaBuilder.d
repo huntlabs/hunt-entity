@@ -17,10 +17,18 @@ public class CriteriaBuilder
 {
 
     private EntityManagerFactory _factory;
+    private EntityManager _manager;
 
     this(EntityManagerFactory factory) {
         _factory = factory;
     }
+
+    public CriteriaBuilder setManager(EntityManager manager) {
+        _manager = manager;
+        return this;
+    }
+
+    public EntityManager getManager() {return _manager;}
 
     public SqlBuilder createSqlBuilder() {
         return _factory.createSqlBuilder();
@@ -29,6 +37,10 @@ public class CriteriaBuilder
     public Dialect getDialect() {
         return _factory.getDialect();
     } 
+
+    public Database getDatabase() {
+        return _factory.getDatabase();
+    }
 
     public CriteriaQuery!T createQuery(T)() {
         return new CriteriaQuery!(T)(this);

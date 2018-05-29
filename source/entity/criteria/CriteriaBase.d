@@ -27,7 +27,7 @@ class CriteriaBase(T)
     }
 
     public Root!T from(T t = null) {
-        _root = new Root!(T)(_criteriaBuilder.getDialect(), t); 
+        _root = new Root!(T)(_criteriaBuilder, t); 
         _sqlBuidler.from(_root.getTableName());
         return _root;
     }
@@ -35,7 +35,7 @@ class CriteriaBase(T)
     public Root!T getRoot() {return _root;}
 
     public CriteriaBase!T where(P...)(P predicates) {
-        string s;
+        string s = " ";
         foreach(k, v; predicates) {
             s ~= v.toString();
             if (k != predicates.length-1) 

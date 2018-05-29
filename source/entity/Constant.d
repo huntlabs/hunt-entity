@@ -26,17 +26,16 @@ struct JoinColumn {
     string name;
 }
 
-struct PrimaryKeyJoinColumn {
-    string name;
-    string referencedColumnName;
-}
+
+
 
 //@OneToOne
 struct OneToOne {
-    FetchType fetch = FetchType.LAZY;
+    FetchType fetch = FetchType.EAGER;
+    string mappedBy;
     CascadeType cascade = CascadeType.ALL;
 }
-//@OneToMany
+//@ManyToMany
 struct ManyToMany {
     FetchType fetch = FetchType.LAZY;
     CascadeType cascade = CascadeType.ALL;
@@ -44,6 +43,7 @@ struct ManyToMany {
 //@OneToMany
 struct OneToMany {
     FetchType fetch = FetchType.LAZY;
+    string mappedBy;
     CascadeType cascade = CascadeType.ALL;
 } 
 //@ManyToOne
@@ -72,6 +72,18 @@ enum FetchType {
     EAGER
 }
 
+enum EntityFieldType {
+    DEFAULT,
+    NORMAL,
+    ONE_TO_MANY,
+    MANY_TO_ONE,
+    ONE_TO_ONE,
+    MANY_TO_MANY,
+    OWNER
+}
+
+
+
 enum CascadeType {
     PERSIST, //级联新建
     REMOVE,  //级联删除
@@ -82,7 +94,9 @@ enum CascadeType {
 
 //#fetch属性是该实体的加载方式，有两种：LAZY和EAGER。
 
-struct JoinSqlBuild  {
+
+
+class JoinSqlBuild  {
     string tableName;
     string joinWhere;
     JoinType joinType;

@@ -26,31 +26,19 @@ class TypedQuery(T) {
     }
 
     public Object getSingleResult() {
-        auto stmt = _manager.getSession().prepare(_query.toString());
-		auto res = stmt.query();
-        if(!res.empty()){
-            long count;
-			T t = _query.getRoot().deSerialize(res.front(), count);
-            if (t is null && count != 0) {
-                return new Long(count);
-            }
-            return t;
-        }
-		return null;
+        Object[] ret = _getResultList();
+        if (ret.length == 0)
+            return null;
+        return ret[0];
     }
 
     public T[] getResultList() {
-        T[] ret;
-        auto stmt = _manager.getSession().prepare(_query.toString());
-		auto res = stmt.query();
-        long count;
-        foreach(value; res) {
-            T t = _query.getRoot().deSerialize(value, count);
-            if (t is null)
-                throw new EntityException("getResultList has an null data");
-		    ret ~= t;
+        Object[] ret = _getResultList();
+        if (cast(T[])ret is null) {
+            T[] t;
+            return t;
         }
-		return ret;
+        return cast(T[])ret;
     }
 
     public TypedQuery!T setMaxResults(int maxResult) {
@@ -62,5 +50,32 @@ class TypedQuery(T) {
         _query.getSqlBuilder().offset(startPosition);
         return this;
     }
-    
+
+    private Object[] _getResultList() {
+        Object[] ret;
+        long count = -1;
+        auto stmt = _manager.getSession().prepare(_query.toString());
+		auto res = stmt.query();
+        Row[] rows;
+        foreach(value; res) {
+            rows ~= value;
+        }
+        foreach(k,v; rows) {
+            Object t = _query.getRoot().deSerialize(rows, count, cast(int)k);
+            if (t is null) {
+                if (count != -1) {
+                    ret ~= new Long(count);
+                }
+                else {
+                    throw new EntityException("getResultList has an null data");
+                }
+            }
+            ret ~= t;
+        }
+		return ret;
+    }
+
+
+
+
 }

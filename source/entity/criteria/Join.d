@@ -19,12 +19,11 @@ class Join(F,T) : Root!T
     private EntityFieldInfo _info;
     private Root!F _from;
 
-    this(Dialect dialect, EntityFieldInfo info, Root!F from, JoinType joinType = JoinType.INNER)
-    {
+    this(CriteriaBuilder _builder,EntityFieldInfo info, Root!F from, JoinType joinType = JoinType.INNER) {
         _info = info;
         _joinType = joinType;
         _from = from;
-        super(dialect);
+        super(_builder);
     }
 
     public EntityInfo!T opDispatch(string name)()
@@ -34,6 +33,6 @@ class Join(F,T) : Root!T
 
     public string getJoinOnString()
     {
-        return getTableName() ~ "." ~ getEntityInfo().getPrimaryKeyString() ~ " = " ~ _from.getTableName() ~ "." ~ _info.getJoinColumn();
+        return _from.getTableName() ~ "." ~ _info.getJoinColumn() ~ " = " ~ getTableName() ~ "." ~ getEntityInfo().getPrimaryKeyString();
     }
 }
