@@ -11,20 +11,20 @@
  
 module entity.EntityFieldNormal;
 
+
 import entity;
 
-class EntityFieldNormal : EntityFieldInfo
-{
+class EntityFieldNormal : EntityFieldInfo {
+
     private DlangDataType _fieldType;
+    private CriteriaBuilder _builder;
 
-    public this(string fileldName, string columnName, string tableName, Variant fieldValue, DlangDataType fieldType)
-    {
-        super(fileldName, columnName, fieldValue, tableName);
+    public this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, Variant fieldValue, DlangDataType fieldType) {
+        super(fileldName, columnName, fieldValue, tableName, EntityFieldType.NORMAL);
         _fieldType = fieldType;
+        _builder = builder;
     }
-
-    public void assertType(T)()
-    {
+    public void assertType(T)() {
         if (_fieldType.getName() == "string" && getDlangTypeStr!T != "string") {
             throw new EntityException("EntityFieldInfo %s type need been string not %s".format(getFileldName(), typeid(T)));
         }
@@ -32,10 +32,10 @@ class EntityFieldNormal : EntityFieldInfo
             throw new EntityException("EntityFieldInfo %s type need been number not string".format(getFileldName()));
         }
     }
-
     public DlangDataType getFieldType() {return _fieldType;}
 
-    public void deSerialize(R)(Dialect dialect, string value, ref R ret) {
-        ret = *(dialect.fromSqlValue(_fieldType, Variant(value))).peek!R;
+    public R deSerialize(R)(string value) {
+        return *(_builder.getDialect().fromSqlValue(_fieldType, Variant(value))).peek!R;
     }
+
 }

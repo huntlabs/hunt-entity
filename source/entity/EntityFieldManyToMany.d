@@ -11,18 +11,15 @@
  
 module entity.EntityFieldManyToMany;
 
-import entity;
+// import entity;
 
-class EntityFieldManyToMany(T) : EntityFieldInfo
-{
+
+// class EntityFieldManyToMany(T, F : string) : EntityFieldObject!(T,F){
     
-    private ManyToMany _mode;
-    private T _value;
-    this(string fileldName, string columnName, string joinColumn, string tableName, T fieldValue, ManyToMany mode)
-    {
-        super(fileldName, /*tableName~"."~columnName*/columnName, Variant(fieldValue), tableName);
-        _mode = mode;
-        _joinColumn = joinColumn;
-        _value = fieldValue;
-    }
-}
+//     private ManyToMany _mode;
+//     this(Dialect dialect, string fileldName, string columnName, string joinColumn, string tableName, T fieldValue, ManyToMany mode, F owner) {
+//         super(dialect, fileldName, joinColumn, tableName, fieldValue, owner);
+//         _mode = mode;
+//     }
+
+// }

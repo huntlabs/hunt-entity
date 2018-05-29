@@ -11,6 +11,7 @@
  
 module entity.EntityExpression;
 
+import std.string;
 class EntityExpression
 {
     private string _columnName;
@@ -45,7 +46,7 @@ class EntityExpression
     {
         _fullColumn = s ~ "(" ~ _fullColumn ~ ")";
         if (s == "COUNT" || s == "count") {
-            _columnAs = _tableName ~ "__as__count";
+            _columnAs = _tableName ~ "__as__countfor"~_tableName~"_";
         }
         return this;
     }
@@ -54,6 +55,8 @@ class EntityExpression
     {
         if (b)
             _fullColumn = "DISTINCT "~_fullColumn;
+        else 
+            _fullColumn = _fullColumn.replace("DISTINCT ", "");
         return this;
     } 
 }

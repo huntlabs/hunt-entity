@@ -18,12 +18,12 @@ import std.traits;
 class Root(T)
 {
     private EntityInfo!T _entityInfo;
-    private Dialect _dialect;
+    private CriteriaBuilder _builder;
     JoinSqlBuild[] _joins;
 
-    public this(Dialect dialect, T t = null) {
-        _dialect = dialect;
-        _entityInfo = new EntityInfo!T(dialect, t);
+    public this(CriteriaBuilder builder, T t = null) {
+        _builder = builder;
+        _entityInfo = new EntityInfo!(T)(_builder, t);
     }
 
     public string getEntityClassName() {
@@ -40,8 +40,8 @@ class Root(T)
     public EntityFieldInfo get(string field) {
         return _entityInfo.getSingleField(field);
     }
-    public T deSerialize(Row row, ref long count) {
-        return _entityInfo.deSerialize(row, count);
+    public T deSerialize(Row[] rows, ref long count, int startIndex) {
+        return _entityInfo.deSerialize(rows, count, startIndex);
     }
     public EntityFieldInfo getPrimaryField() {
         return _entityInfo.getPrimaryField();
@@ -53,11 +53,12 @@ class Root(T)
 
     public Join!(T,P) join(P)(EntityFieldInfo info, JoinType joinType = JoinType.INNER) {
 
-        Join!(T,P) ret = new Join!(T,P)(_dialect, info, this, joinType);
-        JoinSqlBuild data;
+        Join!(T,P) ret = new Join!(T,P)(_builder, info, this, joinType);
+        JoinSqlBuild data = new JoinSqlBuild();
         data.tableName = ret.getTableName();
         data.joinWhere = ret.getJoinOnString();
         data.joinType = joinType;
+        // data.columnNames = [ret.getPrimaryField().getSelectColumn()];
         data.columnNames = ret.getAllSelectColumn();
         _joins ~= data;
 
@@ -67,9 +68,19 @@ class Root(T)
     public string[] getAllSelectColumn() {
         string[] ret;
         foreach(value; _entityInfo.getFields()) {
-            if (cast(EntityFieldNormal)value)
+            if (value.getSelectColumn() != "") {
                 ret ~= value.getSelectColumn();
+            }
         }
         return ret;
     }
+
+    public void autoJoin() {
+        foreach(value; _entityInfo.getFields()) {
+            if (value.getJoinData())
+                _joins ~= value.getJoinData(); 
+        }
+    }
+
+
 }

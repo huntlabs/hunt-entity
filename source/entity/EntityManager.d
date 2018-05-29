@@ -13,135 +13,119 @@ module entity.EntityManager;
 
 import entity;
 
-class EntityManager
-{
+class EntityManager {
+
     public Dialect _dialect;
-    public DatabaseOption _option;
+    public DatabaseConfig _config;
     public Database _db;
     public string _name;
     private EntityManagerFactory _factory;
     private EntityTransaction _transaction;
     private EntitySession _EntitySession;
 
-    this(EntityManagerFactory factory, string name, DatabaseOption option, Database db, Dialect dialect)
-    {
+    this(EntityManagerFactory factory, string name, DatabaseConfig config, Database db, Dialect dialect) {
         _factory = factory;
         _name = name;
-        _option = option;
+        _config = config;
         _db = db;
         _dialect = dialect;
         _transaction = new EntityTransaction(this);
         _EntitySession = new EntitySession(this);
     }
 
-    public void persist(T)(ref T entity)
-    {
-        SqlBuilder builder = _factory.createSqlBuilder();
-        EntityInfo!T info = new EntityInfo!(T)(_factory.getDialect(), entity);
-        builder.insert(info.getTableName()).values(info.getInsertString());
 
+    public void persist(T)(ref T entity) {
+        SqlBuilder builder = _factory.createSqlBuilder();
+        EntityInfo!T info = new EntityInfo!(T)(getCriteriaBuilder(), entity);
+        builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
             builder.setAutoIncrease(info.getAutoIncrementKey());
-
         auto stmt = _EntitySession.prepare(builder.build().toString);
         int r = stmt.execute();
-
         info.setIncreaseKey(entity, stmt.lastInsertId);
     }
 
-    public T find(T,P)(P primaryKeyOrT)
-    {
+    public T find(T,P)(P primaryKeyOrT, bool autoJoin = true) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery!T criteriaQuery = criteriaBuilder.createQuery!(T);
         Root!T r;
         Predicate condition;
-
-        static if (is(P == T))
-        {
+        static if (is(P == T)) {
             r = criteriaQuery.from(primaryKeyOrT);
             condition = criteriaBuilder.equal(r.getPrimaryField());
         }
-        else
-        {
+        else {
             r = criteriaQuery.from();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
-
+        if (autoJoin)
+            r.autoJoin();
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
-
         return cast(T)(query.getSingleResult());
     }
 
-    public int remove(T,P)(P primaryKeyOrT)
-    {
+
+    
+
+    public int remove(T,P)(P primaryKeyOrT) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaDelete!T criteriaDelete = criteriaBuilder.createCriteriaDelete!(T);
         Root!T r;
         Predicate condition;
-
-        static if (is(P == T))
-        {
+        static if (is(P == T)) {
             r = criteriaDelete.from(primaryKeyOrT);
             condition = criteriaBuilder.equal(r.getPrimaryField());
         }
-        else
-        {
+        else {
             r = criteriaDelete.from();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
-
         return createQuery(criteriaDelete.where(condition)).executeUpdate();
     }
 
-    public int merge(T)(T entity)
-    {
+
+    public int merge(T)(T entity) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaUpdate!T criteriaUpdate = criteriaBuilder.createCriteriaUpdate!(T);
         Root!T r = criteriaUpdate.from(entity);
         Predicate condition = criteriaBuilder.equal(r.getPrimaryField());
-
-        foreach(k,v; r.getEntityInfo().getFields())
-        {
-            if (k != r.getEntityInfo().getPrimaryKeyString())
-            {
-                criteriaUpdate.set(v);
+        foreach(k,v; r.getEntityInfo().getFields()) {
+            if (k != r.getEntityInfo().getPrimaryKeyString() && v.getFileldType() == EntityFieldType.NORMAL) {
+                criteriaUpdate.set(v);    
             }
         }
-
         return createQuery(criteriaUpdate.where(condition)).executeUpdate();
     }
 
-    public void flush()
-    {
+
+    public void flush() {
         //TODO 将受控态的实体数据同步到数据库中
     }
-
-    public EntitySession getSession()
-    {
-        return _EntitySession;
-    }
     
-    public TypedQuery!(T) createQuery(T)(CriteriaQuery!T query)
-    {
+
+
+    
+    public TypedQuery!(T) createQuery(T)(CriteriaQuery!T query) {
         return new TypedQuery!(T)(query, this);
     }
 
-    public Query!(T) createQuery(T)(CriteriaDelete!T query)
-    {
+    public Query!(T) createQuery(T)(CriteriaDelete!T query) {
         return new Query!(T)(query, this);
     }
 
-    public Query!(T) createQuery(T)(CriteriaUpdate!T query)
-    {
+    public Query!(T) createQuery(T)(CriteriaUpdate!T query) {
         return new Query!(T)(query, this);
     }
 
-    public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder();}     
+    public Dialect getDialect() {return _dialect;}
+    public EntitySession getSession() {return _EntitySession;}
+    public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
     public EntityTransaction getTransaction() {return _transaction;}
     public Database getDatabase() {return _db;}
 
-    public void close()
-    {
+    public void close() {
         _EntitySession.close();
     }
+
 }
+
