@@ -27,7 +27,7 @@ class CriteriaBase(T)
     }
 
     public Root!T from(T t = null) {
-        _root = new Root!(T)(_criteriaBuilder, t); 
+        _root = new Root!(T)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t)); 
         _sqlBuidler.from(_root.getTableName());
         return _root;
     }
