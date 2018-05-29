@@ -11,6 +11,7 @@
  
 module entity.repository.EntityRepository;
 
+import entity;
 import entity.repository.CrudRepository;
 public import entity.domain;
 
