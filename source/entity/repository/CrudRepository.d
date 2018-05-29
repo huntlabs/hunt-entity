@@ -12,7 +12,8 @@
 module entity.repository.CrudRepository;
 
 import entity.Persistence;
-import entity.EntityManagerFactory;
+import entity.DefaultEntityManagerFactory;
+import entity;
 public import entity.repository.Repository;
 
 class CrudRepository(T, ID) : Repository!(T, ID)
@@ -120,8 +121,8 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     public T save(T entity)
     {
         auto em = this.createEntityManager();
-        
-        if (em.find!T(entity) is null)
+
+		if (mixin(code_findByID!T()) is null)
         {
             em.persist(entity);
         }
@@ -146,4 +147,9 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
         return resultList;
     }
+}
+
+string code_findByID(T)()
+{
+	return "em.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
 }
