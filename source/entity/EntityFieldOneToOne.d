@@ -62,7 +62,6 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     }
 
     public T deSerialize(Row row) {
-        log(_mode.fetch == FetchType.LAZY);
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
