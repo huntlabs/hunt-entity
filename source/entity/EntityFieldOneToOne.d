@@ -22,7 +22,8 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
 
     this(CriteriaBuilder builder, string fileldName, string primaryKey, string columnOrjoin, string tableName, OneToOne mode, F owner) {
-        _mode = mode;      
+        _mode = mode;  
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
         _isMappedBy = _mode.mappedBy != "";
         super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, null, owner, EntityFieldType.ONE_TO_ONE);
         _primaryKey = primaryKey;
@@ -43,8 +44,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
             return super.getSelectColumn();
     }
 
-
-
+    
 
     private void initJoinData(string tableName) {
         _joinData = new JoinSqlBuild(); 
@@ -65,7 +65,34 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
-        return _entityInfo.deSerialize([row], count, 0);        
+        return _entityInfo.deSerialize([row], count);        
+    }
+
+    public LazyData getLazyData(Row row) {
+        LazyData ret;
+        RowData data;
+        if (_isMappedBy) {
+            data = row.getAllRowData(getTableName());
+            if (data is null)
+                return null;
+            if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
+                return null;
+            ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
+        }
+        else {
+            data = row.getAllRowData(getTableName());
+            if (data is null)
+                return null;
+            if (data.getData(_joinColumn) is null)
+                return null;
+            ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
+        }
+        return ret;
+    }
+
+    public void setMode(OneToOne mode) {
+        _mode = mode;
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
 }

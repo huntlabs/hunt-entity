@@ -22,6 +22,7 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
     this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
         super(builder, fileldName, columnName, tableName, fieldValue, null, EntityFieldType.MANY_TO_ONE);
         _mode = mode;      
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
         _builder = builder; 
         _joinColumn = columnName;
         initJoinData(tableName, columnName);
@@ -37,17 +38,17 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         }
     }
 
-    override public JoinSqlBuild getJoinData() {
-        if (_mode.fetch == FetchType.LAZY)
-            return null;
-        return _joinData;
-    }
 
     public T deSerialize(Row row) {
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
         return _entityInfo.deSerialize([row], count, 0, true);        
+    }
+
+    public void setMode(ManyToOne mode) {
+        _mode = mode;
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
 }

@@ -45,7 +45,7 @@ class EntityManager {
         info.setIncreaseKey(entity, stmt.lastInsertId);
     }
 
-    public T find(T,P)(P primaryKeyOrT, bool autoJoin = true) {
+    public T find(T,P)(P primaryKeyOrT) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery!T criteriaQuery = criteriaBuilder.createQuery!(T);
         Root!T r;
@@ -58,8 +58,7 @@ class EntityManager {
             r = criteriaQuery.from();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
-        if (autoJoin)
-            r.autoJoin();
+        r.autoJoin();
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
         return cast(T)(query.getSingleResult());
     }

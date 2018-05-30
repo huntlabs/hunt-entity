@@ -17,6 +17,7 @@ public import database;
 public import entity.utils.Common;
 
 public import entity.Query;
+public import entity.Entity;
 public import entity.Constant;
 public import entity.EntityInfo;
 public import entity.TypedQuery;
@@ -24,7 +25,6 @@ public import entity.Persistence;
 public import entity.EntityManager;
 public import entity.EntitySession;
 public import entity.EntityException;
-public import entity.EntityInterface;
 public import entity.EntityFieldInfo;
 public import entity.EntityExpression;
 public import entity.EntityFieldNormal;

@@ -7,26 +7,32 @@ import std.stdio;
 
 
 @Table("Book")
-class Book : Entity {
+class Book : Entity{
     @AutoIncrement @PrimaryKey 
     long id;
 
     string name;
     
-    @OneToOne()
+    @OneToOne(FetchType.LAZY)
     @JoinColumn("book_detail")
     BookDetail detail;
+
+    mixin EnableLazyLoad;
+
 }
 
 @Table("BookDetail")
-class BookDetail : Entity {
+class BookDetail : Entity{
     @AutoIncrement @PrimaryKey 
     long id;
 
     long numberOfPages;
 
-    @OneToOne(FetchType.EAGER,"detail")
+    @OneToOne(FetchType.LAZY,"detail")
     Book book;
+
+    mixin EnableLazyLoad;
+
 }
 
 
@@ -34,7 +40,8 @@ class BookDetail : Entity {
 
 
 @Table("blog")
-class Blog : Entity{
+class Blog  : Entity{
+
 
     @AutoIncrement @PrimaryKey 
     int id;
@@ -46,11 +53,13 @@ class Blog : Entity{
     @JoinColumn("uid")
     User user;
 
+    
+
 }
 
 
 @Table("user")
-class User {
+class User : Entity{
     @AutoIncrement @PrimaryKey 
     int id;
 
@@ -391,6 +400,19 @@ void main() {
 
     count = testEntityRemove2(manager, u1.id);
     log("testEntityRemove2 count ", count);
+
+
+    Book book = manager.find!(Book)(1);
+    assert(book.detail is null, "book.detail is null");
+    assert(book.getDetail().numberOfPages, "book.getDetail().numberOfPages");
+    
+
+    BookDetail detail = manager.find!(BookDetail)(1);
+    assert(detail.book is null, "detail.book is null ");
+    assert(detail.getBook().id, "detail.getBook().id ");
+
+
+
 
 
 

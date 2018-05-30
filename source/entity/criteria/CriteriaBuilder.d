@@ -104,8 +104,10 @@ public class CriteriaBuilder
         return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
 
-    public Predicate equal(T)(EntityFieldInfo info, T t) {
-        assertType!(T)(info);
+    public Predicate equal(T)(EntityFieldInfo info, T t, bool check = true) {
+        //todo remove check = false
+        if (check)
+            assertType!(T)(info);
         return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
     }
 

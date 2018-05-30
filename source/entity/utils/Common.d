@@ -2,6 +2,9 @@
 module entity.utils.Common;
 
 import std.traits;
+import entity.Entity;
+import entity.Constant;
+
 
 class Common {
     static T sampleCopy(T)(T t) {
@@ -11,6 +14,12 @@ class Common {
             static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
                 mixin("copy."~memberName~" = "~"t."~memberName~";\n");
             }
+        }
+        if (cast(Entity)t) {
+            foreach(key, value; t._lazyDatas) {
+                copy._lazyDatas[key] = new LazyData(value);
+            }
+            copy.setManager(t.getManager());
         }
         return copy;
     }

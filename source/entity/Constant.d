@@ -102,3 +102,17 @@ class JoinSqlBuild  {
     JoinType joinType;
     string[] columnNames;
 }
+
+
+class LazyData {
+    this(LazyData data) {
+        key = data.key;
+        value = data.value;
+    }
+    this(string key, string value) {
+        this.key = key;
+        this.value = value;
+    }
+    string key;
+    string value;
+}
