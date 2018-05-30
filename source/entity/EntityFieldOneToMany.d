@@ -30,6 +30,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
 
     private void init(string primaryKey,  OneToMany mode, F owner) {
         _mode = mode;       
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
         _primaryKey = primaryKey;
         _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();
         initJoinData();
@@ -44,12 +45,6 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         foreach(value; _entityInfo.getFields()) {
             _joinData.columnNames ~= value.getSelectColumn();
         }
-    }
-
-    override public JoinSqlBuild getJoinData() {
-        if (_mode.fetch == FetchType.LAZY)
-            return null;
-        return _joinData;
     }
 
     override public string getSelectColumn() {
@@ -129,4 +124,11 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         _decodeCache[key] = ret;
         return _decodeCache[key];
     }
+
+    public void setMode(OneToMany mode) {
+        _mode = mode;
+        _enableJoin = _mode.fetch == FetchType.EAGER;    
+    }
+
+
 }

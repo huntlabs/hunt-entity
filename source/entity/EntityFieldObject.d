@@ -23,6 +23,7 @@ class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
 
     public CriteriaBuilder getBuilder() {return _builder;}
 
+
     // public void setPrimaryValue(string value) {
     //     _entityInfo.setPrimaryValue(value);
     // }

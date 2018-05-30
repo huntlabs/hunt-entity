@@ -37,13 +37,13 @@ class EntityInfo(T : Object, F : Object = T) {
     // public void setPrimaryValue(ref T entity, int value) {}
 
 
-    // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
+    pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
-    // pragma(msg,makeInitEntityData!(T,F));
-    // pragma(msg,makeDeSerialize!(T,F));
+    pragma(msg,makeInitEntityData!(T,F));
+    pragma(msg,makeDeSerialize!(T,F));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
-    // pragma(msg,makeSetPrimaryValue(string value));
+    // pragma(msg,makeSetPrimaryValue!(T)());
 
 
     mixin(makeImport!(T)());
@@ -66,6 +66,7 @@ class EntityInfo(T : Object, F : Object = T) {
         else {
             _owner = owner;
         }
+        _data.setManager(builder.getManager());
         initEntityData();
     }
 
@@ -274,7 +275,9 @@ string makeDeSerialize(T,F)() {
                     str ~= "}"~skip();
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-                    str ~= "_data."~memberName~" = (cast(EntityFieldOneToOne!("~memType.stringof~", F))(this."~memberName~")).deSerialize(rows[startIndex]);"~skip();
+                    str ~= "auto "~memberName~" = (cast(EntityFieldOneToOne!("~memType.stringof~", F))(this."~memberName~"));"~skip();
+                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
+                    str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
                 }
             }
         }
