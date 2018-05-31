@@ -13,10 +13,10 @@ module entity.criteria.CriteriaBase;
 
 import entity;
 
-class CriteriaBase(T)
+class CriteriaBase(T : Object, F : Object = T)
 {
 
-    protected Root!T _root;
+    protected Root!(T,F) _root;
     protected CriteriaBuilder _criteriaBuilder;
     protected SqlBuilder _sqlBuidler;
 
@@ -26,15 +26,15 @@ class CriteriaBase(T)
         _sqlBuidler = criteriaBuilder.createSqlBuilder();
     }
 
-    public Root!T from(T t = null) {
-        _root = new Root!(T)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t)); 
+    public Root!(T,F) from(T t = null, F owner = null) {
+        _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner); 
         _sqlBuidler.from(_root.getTableName());
         return _root;
     }
 
-    public Root!T getRoot() {return _root;}
+    public Root!(T,F) getRoot() {return _root;}
 
-    public CriteriaBase!T where(P...)(P predicates) {
+    public CriteriaBase!(T,F) where(P...)(P predicates) {
         string s = " ";
         foreach(k, v; predicates) {
             s ~= v.toString();

@@ -11,7 +11,7 @@ class Common {
         T copy = new T;
         foreach(memberName; __traits(derivedMembers, T)) {
             alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
+            static if (!isFunction!(memType)) {
                 mixin("copy."~memberName~" = "~"t."~memberName~";\n");
             }
         }

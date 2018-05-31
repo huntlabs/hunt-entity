@@ -13,19 +13,19 @@ module entity.criteria.CriteriaDelete;
 
 import entity;
 
-class CriteriaDelete(T) : CriteriaBase!T
+class CriteriaDelete(T : Object, F : Object = T) : CriteriaBase!(T,F)
 {
     this(CriteriaBuilder criteriaBuilder) {
         super(criteriaBuilder);
     }
-    override public Root!T from(T t = null) {
-        super.from(t);
+    override public Root!(T,F) from(T t = null, F owner = null) {
+        super.from(t, owner);
         _sqlBuidler.remove(_root.getTableName());
         return _root;
     }
 
     //P = Predicate
-    public CriteriaDelete!T where(P...)(P predicates) {
-        return cast(CriteriaDelete!T)super.where(predicates);
+    public CriteriaDelete!(T,F) where(P...)(P predicates) {
+        return cast(CriteriaDelete!(T,F))super.where(predicates);
     }
 }

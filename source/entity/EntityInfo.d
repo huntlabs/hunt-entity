@@ -38,12 +38,12 @@ class EntityInfo(T : Object, F : Object = T) {
 
 
     pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
-    // pragma(msg,makeImport!(T)());
+    pragma(msg,makeImport!(T)());
     pragma(msg,makeInitEntityData!(T,F));
     pragma(msg,makeDeSerialize!(T,F));
-    // pragma(msg,makeSetIncreaseKey!(T));
-    // pragma(msg,makeGetPrimaryValue!(T));
-    // pragma(msg,makeSetPrimaryValue!(T)());
+    pragma(msg,makeSetIncreaseKey!(T));
+    pragma(msg,makeGetPrimaryValue!(T));
+    pragma(msg,makeSetPrimaryValue!(T)());
 
 
     mixin(makeImport!(T)());
@@ -117,7 +117,8 @@ string makeSetPrimaryValue(T)() {
     string R;
     string name;
     foreach(memberName; __traits(derivedMembers, T)) {
-        static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
+        alias memType = typeof(__traits(getMember, T ,memberName));
+        static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
             R = typeof(__traits(getMember, T ,memberName)).stringof;
             name = memberName;
         }
@@ -140,7 +141,8 @@ string makeGetPrimaryValue(T)() {
     string R;
     string name;
     foreach(memberName; __traits(derivedMembers, T)) {
-        static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
+        alias memType = typeof(__traits(getMember, T ,memberName));
+        static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
             R = typeof(__traits(getMember, T ,memberName)).stringof;
             name = memberName;
         }
@@ -159,7 +161,8 @@ string makeSetIncreaseKey(T)() {
     string str = "\t";
     str ~= "public void setIncreaseKey(ref T entity, int value) {\n\t\t";
     foreach(memberName; __traits(derivedMembers, T)) {
-        static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto))) {
+        alias memType = typeof(__traits(getMember, T ,memberName));
+        static if (!isFunction!(memType) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto))) {
             str ~= "entity."~memberName~" = value;\n\t";
         }
     }
@@ -181,8 +184,7 @@ string makeInitEntityData(T,F)() {
     }
     foreach(memberName; __traits(derivedMembers, T)) {
         alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
-
+        static if (!isFunction!(memType)) {
             //primary key
             static if (hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
                 str ~= "_primaryKey = "~memberName.stringof~endTag;
@@ -204,7 +206,6 @@ string makeInitEntityData(T,F)() {
             else {
                 columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
             }
-
             //value 
             string value = "_data."~memberName;
             static if (is(F == memType)) {
@@ -254,7 +255,7 @@ string makeDeSerialize(T,F)() {
     str ~= "}"~skip();
     foreach(memberName; __traits(derivedMembers, T)) {
         alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!is(FunctionTypeOf!(__traits(getMember, T ,memberName)) == function)) {
+        static if (!isFunction!(memType)) {
             static if (isBasicType!memType || isSomeString!memType) {
                 str ~= "if (data.getData(\""~memberName~"\")) {"~skip(3);
                 str ~= "_data."~memberName~" = (cast(EntityFieldNormal)(this."~memberName~")).deSerialize!("~memType.stringof~")(data.getData(\""~memberName~"\").value);"~skip();
@@ -266,13 +267,14 @@ string makeDeSerialize(T,F)() {
                 }
                 else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
                     string singleType = memType.stringof.replace("[]","");
-                    str ~= "_data."~memberName~" = (cast(EntityFieldOneToMany!("~singleType~","~T.stringof~"))(this."~memberName~")).deSerialize(rows, startIndex, isFromManyToOne);"~skip();
+                    str ~= "auto "~memberName~" = (cast(EntityFieldOneToMany!("~singleType~",F))(this."~memberName~"));"~skip();
+                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
+                    str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows, startIndex, isFromManyToOne);"~skip();
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
                     str ~= "auto "~memberName~" = cast(EntityFieldManyToOne!("~memType.stringof~"))(this."~memberName~");"~skip();
-                    str ~= "if (data.getData("~memberName~".getColumnName())) {"~skip(3);
+                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
                     str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
-                    str ~= "}"~skip();
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                     str ~= "auto "~memberName~" = (cast(EntityFieldOneToOne!("~memType.stringof~", F))(this."~memberName~"));"~skip();

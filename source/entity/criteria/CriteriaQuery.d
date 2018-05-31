@@ -13,14 +13,14 @@ module entity.criteria.CriteriaQuery;
 
 import entity;
 
-class CriteriaQuery (T) : CriteriaBase!T
+class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
 {
     this(CriteriaBuilder criteriaBuilder)
     {
         super(criteriaBuilder);
     }
 
-    public CriteriaQuery!T select(Root!T root)
+    public CriteriaQuery!(T,F) select(Root!(T,F) root)
     {
         string[] selectColumn = root.getAllSelectColumn();
         foreach(value; root.getJoins()) {
@@ -50,30 +50,30 @@ class CriteriaQuery (T) : CriteriaBase!T
         return this;
     }
 
-    public CriteriaQuery!T select(EntityExpression info) {
+    public CriteriaQuery!(T,F) select(EntityExpression info) {
         _sqlBuidler.select([info.getSelectColumn()]);
         return this;
     }
     //P = Predicate
-    public CriteriaQuery!T where(P...)(P predicates) {
-        return cast(CriteriaQuery!T)super.where(predicates);
+    public CriteriaQuery!(T,F) where(P...)(P predicates) {
+        return cast(CriteriaQuery!(T,F))super.where(predicates);
     }
     //O = Order
-    public CriteriaQuery!T orderBy(O...)(O orders) {
+    public CriteriaQuery!(T,F) orderBy(O...)(O orders) {
         foreach(v; orders) {
             _sqlBuidler.orderBy(v.getColumn(), v.getOrderType());
         }
         return this;
     }
     //E = EntityFieldInfo
-    public CriteriaQuery!T groupBy(E...)(E entityFieldInfos) {
+    public CriteriaQuery!(T,F) groupBy(E...)(E entityFieldInfos) {
         foreach(v; entityFieldInfos) {
             _sqlBuidler.groupBy(v.getFullColumn());
         }
         return this;
     }
     //P = Predicate
-    public CriteriaQuery!T having(P...)(P predicates) { 
+    public CriteriaQuery!(T,F) having(P...)(P predicates) { 
         string s;
         foreach(k, v; predicates) {
             s ~= v.toString();
@@ -84,7 +84,7 @@ class CriteriaQuery (T) : CriteriaBase!T
         return this;
     }
     //E = EntityFieldInfo
-    public CriteriaQuery!T multiselect(E...)(E entityExpressions) {
+    public CriteriaQuery!(T,F) multiselect(E...)(E entityExpressions) {
         string[] columns;
         foreach(v; entityExpressions) {
             columns ~= v.getSelectColumn();
@@ -93,7 +93,7 @@ class CriteriaQuery (T) : CriteriaBase!T
         return this;
     }
 
-    public CriteriaQuery!T distinct(bool distinct) {
+    public CriteriaQuery!(T,F) distinct(bool distinct) {
         _sqlBuidler.setDistinct(distinct);
         return this;
     }

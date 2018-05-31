@@ -51,14 +51,13 @@ class EntityManager {
         Root!T r;
         Predicate condition;
         static if (is(P == T)) {
-            r = criteriaQuery.from(primaryKeyOrT);
+            r = criteriaQuery.from(primaryKeyOrT).autoJoin();
             condition = criteriaBuilder.equal(r.getPrimaryField());
         }
         else {
-            r = criteriaQuery.from();
+            r = criteriaQuery.from().autoJoin();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
-        r.autoJoin();
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
         return cast(T)(query.getSingleResult());
     }
@@ -104,8 +103,8 @@ class EntityManager {
 
 
     
-    public TypedQuery!(T) createQuery(T)(CriteriaQuery!T query) {
-        return new TypedQuery!(T)(query, this);
+    public TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
+        return new TypedQuery!(T,F)(query, this);
     }
 
     public Query!(T) createQuery(T)(CriteriaDelete!T query) {

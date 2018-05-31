@@ -51,4 +51,14 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
+    public LazyData getLazyData(Row row) {
+        RowData data = row.getAllRowData(getTableName());
+        if (data is null)
+            return null;
+        if (data.getData(_joinColumn) is null)
+            return null;
+        LazyData ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
+        return ret;
+    }
+
 }

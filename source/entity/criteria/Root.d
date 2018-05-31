@@ -15,15 +15,15 @@ import entity;
 
 import std.traits;
 
-class Root(T)
+class Root(T : Object, F : Object = T)
 {
-    private EntityInfo!T _entityInfo;
+    private EntityInfo!(T,F) _entityInfo;
     private CriteriaBuilder _builder;
     JoinSqlBuild[] _joins;
 
-    public this(CriteriaBuilder builder, T t = null) {
+    public this(CriteriaBuilder builder, T t = null, F owner = null) {
         _builder = builder;
-        _entityInfo = new EntityInfo!(T)(_builder, t);
+        _entityInfo = new EntityInfo!(T,F)(_builder, t, owner);
     }
 
     public string getEntityClassName() {
@@ -32,7 +32,7 @@ class Root(T)
     public string getTableName() {
         return _entityInfo.getTableName();
     }
-    public EntityInfo!T opDispatch(string name)() {
+    public EntityInfo!(T,F) opDispatch(string name)() {
         if (getEntityClassName() != name)
             throw new EntityException("Cannot find entityinfo by name : " ~ name);	
         return _entityInfo;
@@ -47,7 +47,7 @@ class Root(T)
         return _entityInfo.getPrimaryField();
     }
 
-    public EntityInfo!T getEntityInfo() {return _entityInfo;}
+    public EntityInfo!(T,F) getEntityInfo() {return _entityInfo;}
 
     public JoinSqlBuild[] getJoins() {return _joins;}
 
@@ -75,11 +75,12 @@ class Root(T)
         return ret;
     }
 
-    public void autoJoin() {
+    public Root!(T, F) autoJoin() {
         foreach(value; _entityInfo.getFields()) {
             if (value.getJoinData() && value.isEnableJoin())
                 _joins ~= value.getJoinData(); 
         }
+        return this;
     }
 
 

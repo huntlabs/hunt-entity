@@ -13,14 +13,14 @@ module entity.TypedQuery;
 
 import entity;
 
-class TypedQuery(T) {
+class TypedQuery(T : Object, F : Object = T) {
 
 
     private string _sqlSting;
-    private CriteriaQuery!T _query;
+    private CriteriaQuery!(T,F) _query;
     private EntityManager _manager;
 
-    this(CriteriaQuery!T query, EntityManager manager) {
+    this(CriteriaQuery!(T,F) query, EntityManager manager) {
         _query = query;
         _manager = manager;
     }
@@ -41,12 +41,12 @@ class TypedQuery(T) {
         return cast(T[])ret;
     }
 
-    public TypedQuery!T setMaxResults(int maxResult) {
+    public TypedQuery!(T,F) setMaxResults(int maxResult) {
         _query.getSqlBuilder().limit(maxResult);
         return this;
     }
 
-    public TypedQuery!T setFirstResult(int startPosition) {
+    public TypedQuery!(T,F) setFirstResult(int startPosition) {
         _query.getSqlBuilder().offset(startPosition);
         return this;
     }
