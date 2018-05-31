@@ -8,6 +8,8 @@ import std.stdio;
 
 @Table("Book")
 class Book : Entity{
+    mixin GetFunction;
+
     @AutoIncrement @PrimaryKey 
     long id;
 
@@ -17,12 +19,13 @@ class Book : Entity{
     @JoinColumn("book_detail")
     BookDetail detail;
 
-    mixin EnableLazyLoad;
 
 }
 
 @Table("BookDetail")
 class BookDetail : Entity{
+    mixin GetFunction;
+
     @AutoIncrement @PrimaryKey 
     long id;
 
@@ -31,7 +34,6 @@ class BookDetail : Entity{
     @OneToOne(FetchType.LAZY,"detail")
     Book book;
 
-    mixin EnableLazyLoad;
 
 }
 
@@ -42,6 +44,7 @@ class BookDetail : Entity{
 @Table("blog")
 class Blog  : Entity{
 
+    mixin GetFunction;
 
     @AutoIncrement @PrimaryKey 
     int id;
@@ -49,7 +52,7 @@ class Blog  : Entity{
     string title;
     string content;
 
-    @ManyToOne(FetchType.EAGER)
+    @ManyToOne(FetchType.LAZY)
     @JoinColumn("uid")
     User user;
 
@@ -60,6 +63,8 @@ class Blog  : Entity{
 
 @Table("user")
 class User : Entity{
+    mixin GetFunction;
+
     @AutoIncrement @PrimaryKey 
     int id;
 
@@ -68,7 +73,7 @@ class User : Entity{
     string email;
     bool status;
 
-    @OneToMany(FetchType.EAGER,"user")
+    @OneToMany(FetchType.LAZY,"user")
     Blog[] blogs;
 
 }
@@ -364,21 +369,26 @@ void main() {
 
     Blog[] blogs = testCriteriaJoin_left(manager, builder, "user1");
     log("testCriteriaJoin_left blogs length ", blogs.length);
-    log("blogs.user.name1 = ", blogs[0].user.email);
-    log("blogs.user.name2 = ", blogs[1].user.email);
+    log(blogs[0].getUser());
+    log(blogs[0].user.email);
+    log("blogs.user.name1 = ", blogs[0].getUser().email);
+    log("blogs.user.name2 = ", blogs[1].getUser().email);
     
     Blog blog = testEntityFind3(manager, 5);
-    log("testEntityFind3 name ", blog.user.name);
-    log("testEntityFind3  ", blog.user.blogs[0].id);
+    log("testEntityFind3 name ", blog.getUser().name);
+    log("testEntityFind3  ", blog.user.getBlogs()[0].id);
     log("testEntityFind3  ", blog.user.blogs[1].id);
     log("testEntityFind3  ", blog.user.blogs[0].content);
     log("testEntityFind3  ", blog.user.blogs[1].content);
-    log("testEntityFind3  ", blog.user.blogs[0].user.id);
+    log("testEntityFind3  ", blog.user.blogs[0].getUser().id);
     log("testEntityFind3  ", blog.user.blogs[1].user.id);
     log("testEntityFind3  ", blog.user.blogs[0].user.name);
     log("testEntityFind3  ", blog.user.blogs[1].user.name);
 
     u5 = testEntityFind4(manager, 26810);
+    u5.getBlogs();
+    u5.getBlogs()[0].getUser();
+    u5.getBlogs()[1].getUser();
     log("testEntityFind4 user.blogs.length ", u5.blogs.length);
     log("testEntityFind4 ",u5.id);
     log("testEntityFind4 ",u5.name);
@@ -386,6 +396,7 @@ void main() {
     log("testEntityFind4 ",u5.blogs[1].id);
     log("testEntityFind4 ",u5.blogs[0].content);
     log("testEntityFind4 ",u5.blogs[1].content);
+
     log("testEntityFind4 ",u5.blogs[0].user.id);
     log("testEntityFind4 ",u5.blogs[1].user.id);
     log("testEntityFind4 ",u5.blogs[0].user.name);
@@ -410,9 +421,6 @@ void main() {
     BookDetail detail = manager.find!(BookDetail)(1);
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
-
-
-
 
 
 

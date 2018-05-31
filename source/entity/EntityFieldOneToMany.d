@@ -130,5 +130,16 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
+    public LazyData getLazyData(Row row) {
+        RowData data = row.getAllRowData(getTableName());
+        if (data is null)
+            return null;
+        if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
+            return null;
+        LazyData ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
+        return ret;
+    }
+
+
 
 }

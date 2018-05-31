@@ -42,16 +42,16 @@ public class CriteriaBuilder
         return _factory.getDatabase();
     }
 
-    public CriteriaQuery!T createQuery(T)() {
-        return new CriteriaQuery!(T)(this);
+    public CriteriaQuery!(T,F) createQuery(T : Object,F : Object = T)() {
+        return new CriteriaQuery!(T,F)(this);
     }
 
-    public CriteriaDelete!T createCriteriaDelete(T)() {
-        return new CriteriaDelete!(T)(this);
+    public CriteriaDelete!(T,F) createCriteriaDelete(T : Object,F : Object = T)() {
+        return new CriteriaDelete!(T,F)(this);
     }
 
-    public CriteriaUpdate!T createCriteriaUpdate(T)() {
-        return new CriteriaUpdate!(T)(this);
+    public CriteriaUpdate!(T,F) createCriteriaUpdate(T : Object,F : Object = T)() {
+        return new CriteriaUpdate!(T,F)(this);
     }
 
     public Order asc(EntityFieldInfo info) {
