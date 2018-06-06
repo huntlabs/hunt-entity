@@ -21,6 +21,7 @@ class EntityFieldInfo : EntityExpression
     protected JoinSqlBuild _joinData;
     private EntityFieldType _fieldType;
     protected bool _enableJoin = true;
+    protected string _insertValue;
     
 
     public this(string fileldName, string columnName, Variant fieldValue, string tableName, EntityFieldType fieldType = EntityFieldType.DEFAULT) {
@@ -37,6 +38,7 @@ class EntityFieldInfo : EntityExpression
     public JoinSqlBuild getJoinData() {return _joinData;}
     public EntityFieldType getFileldType() {return _fieldType;}
     public bool isEnableJoin() {return _enableJoin;}
+    public string getInsertValue() {return _insertValue;}
 
  
 }

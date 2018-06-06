@@ -5,7 +5,6 @@ import entity;
 
 import std.stdio;
 
-
 @Table("Book")
 class Book : Entity{
     mixin GetFunction;
@@ -31,7 +30,7 @@ class BookDetail : Entity{
 
     long numberOfPages;
 
-    @OneToOne(FetchType.LAZY,"detail")
+    @OneToOne(FetchType.LAZY, "detail")
     Book book;
 
 
@@ -52,7 +51,7 @@ class Blog  : Entity{
     string title;
     string content;
 
-    @ManyToOne(FetchType.LAZY)
+    @ManyToOne(FetchType.EAGER)
     @JoinColumn("uid")
     User user;
 
@@ -73,7 +72,7 @@ class User : Entity{
     string email;
     bool status;
 
-    @OneToMany(FetchType.LAZY,"user")
+    @OneToMany("user", FetchType.LAZY)
     Blog[] blogs;
 
 }
@@ -302,7 +301,9 @@ User testEntityPersist(EntityManager manager, string name, string email, int mon
 
 void main() {
     
-    DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
+    //DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
+    DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog1?charset=utf-8");
+
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",config);
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
@@ -375,6 +376,7 @@ void main() {
     log("blogs.user.name2 = ", blogs[1].getUser().email);
     
     Blog blog = testEntityFind3(manager, 5);
+    log("   ", blog.user.name);
     log("testEntityFind3 name ", blog.getUser().name);
     log("testEntityFind3  ", blog.user.getBlogs()[0].id);
     log("testEntityFind3  ", blog.user.blogs[1].id);
@@ -421,8 +423,6 @@ void main() {
     BookDetail detail = manager.find!(BookDetail)(1);
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
-
-
 
     manager.getTransaction().commit();
     // manager.getTransaction().rollback();

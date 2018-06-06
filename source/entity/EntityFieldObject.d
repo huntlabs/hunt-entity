@@ -18,16 +18,13 @@ class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
         _value = fieldValue;
         _builder = builder;
         _owner = owner;
-        _entityInfo = new EntityInfo!(T,F)(builder, null, owner);
+        _entityInfo = new EntityInfo!(T,F)(builder, fieldValue, owner);
     }   
 
     public CriteriaBuilder getBuilder() {return _builder;}
 
+    
 
-    // public void setPrimaryValue(string value) {
-    //     _entityInfo.setPrimaryValue(value);
-    // }
- 
 
  
 

@@ -134,9 +134,9 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         RowData data = row.getAllRowData(getTableName());
         if (data is null)
             return null;
-        if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
+        if (data.getData(_primaryKey) is null)
             return null;
-        LazyData ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
+        LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
         return ret;
     }
 

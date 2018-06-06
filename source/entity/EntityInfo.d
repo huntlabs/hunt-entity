@@ -37,13 +37,13 @@ class EntityInfo(T : Object, F : Object = T) {
     // public void setPrimaryValue(ref T entity, int value) {}
 
 
-    pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
-    pragma(msg,makeImport!(T)());
-    pragma(msg,makeInitEntityData!(T,F));
-    pragma(msg,makeDeSerialize!(T,F));
-    pragma(msg,makeSetIncreaseKey!(T));
-    pragma(msg,makeGetPrimaryValue!(T));
-    pragma(msg,makeSetPrimaryValue!(T)());
+    // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
+    // pragma(msg,makeImport!(T)());
+    // pragma(msg,makeInitEntityData!(T,F));
+    // pragma(msg,makeDeSerialize!(T,F));
+    // pragma(msg,makeSetIncreaseKey!(T));
+    // pragma(msg,makeGetPrimaryValue!(T));
+    // pragma(msg,makeSetPrimaryValue!(T)());
 
 
     mixin(makeImport!(T)());
@@ -83,8 +83,12 @@ class EntityInfo(T : Object, F : Object = T) {
         string[string] str;
         foreach(info; _fields) {
             if (info.getFileldName() != _autoIncrementKey) {
-                if (cast(EntityFieldNormal)(info)) {
-                    str[info.getFullColumn()] = _builder.getDialect().toSqlValueImpl((cast(EntityFieldNormal)info).getFieldType(), info.getFieldValue());
+                EntityFieldType fieldType = info.getFileldType();
+                bool exsitValue = false;
+                if (fieldType == EntityFieldType.NORMAL || fieldType == EntityFieldType.MANY_TO_ONE || fieldType == EntityFieldType.ONE_TO_ONE) {
+                    if (info.getFieldValue() != null) {
+                        str[info.getFullColumn()] = info.getInsertValue();
+                    }
                 }
             }
         }
@@ -213,12 +217,18 @@ string makeInitEntityData(T,F)() {
             }
             else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                 string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToOne!("~memType.stringof~", F)(_builder, "~memberName.stringof~", _primaryKey, "~columnName~", _tableName, "
+                str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToOne!("~memType.stringof~", F)(_builder, "~memberName.stringof~", _primaryKey, "~columnName~", _tableName, "~value~", "
                                 ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~", "~owner~")"~ endTag;
             }
             else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", F)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
-                                ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _owner)"~ endTag;
+                static if (is(T==F)) {
+                    str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", F)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
+                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _owner)"~ endTag;
+                }
+                else {
+                    str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", T)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
+                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _data)"~ endTag;
+                }
             }
             else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
                 str ~= "_fields["~memberName.stringof~"] = new EntityFieldManyToOne!("~memType.stringof~")(_builder, "~memberName.stringof~", "~columnName~", _tableName, "~value~", "
