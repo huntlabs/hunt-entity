@@ -58,7 +58,7 @@ class Entity
 mixin template GetFunction()
 {
     mixin(makeEnableLazyLoad!(typeof(this)));
-    pragma(msg, makeEnableLazyLoad!(typeof(this)));
+    // pragma(msg, makeEnableLazyLoad!(typeof(this)));
 }
 
 string makeEnableLazyLoad(T)() {

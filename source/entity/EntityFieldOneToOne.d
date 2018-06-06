@@ -21,14 +21,15 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
 
 
-    this(CriteriaBuilder builder, string fileldName, string primaryKey, string columnOrjoin, string tableName, OneToOne mode, F owner) {
+    this(CriteriaBuilder builder, string fileldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
         _mode = mode;  
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _isMappedBy = _mode.mappedBy != "";
-        super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, null, owner, EntityFieldType.ONE_TO_ONE);
+        super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? fieldValue : null, owner, EntityFieldType.ONE_TO_ONE);
         _primaryKey = primaryKey;
         if (_isMappedBy) {
             _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();
+            _insertValue = _entityInfo.getPrimaryValue().to!string;
         }
         else {
             _joinColumn = columnOrjoin;

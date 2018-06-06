@@ -42,8 +42,8 @@ struct ManyToMany {
 }
 //@OneToMany
 struct OneToMany {
-    FetchType fetch = FetchType.LAZY;
     string mappedBy;
+    FetchType fetch = FetchType.LAZY;
     CascadeType cascade = CascadeType.ALL;
 } 
 //@ManyToOne

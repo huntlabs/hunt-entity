@@ -23,6 +23,7 @@ class EntityFieldNormal : EntityFieldInfo {
         super(fileldName, columnName, fieldValue, tableName, EntityFieldType.NORMAL);
         _fieldType = fieldType;
         _builder = builder;
+        _insertValue = _builder.getDialect().toSqlValueImpl(fieldType, fieldValue); 
     }
     public void assertType(T)() {
         if (_fieldType.getName() == "string" && getDlangTypeStr!T != "string") {
@@ -32,7 +33,6 @@ class EntityFieldNormal : EntityFieldInfo {
             throw new EntityException("EntityFieldInfo %s type need been number not string".format(getFileldName()));
         }
     }
-    public DlangDataType getFieldType() {return _fieldType;}
 
     public R deSerialize(R)(string value) {
         return *(_builder.getDialect().fromSqlValue(_fieldType, Variant(value))).peek!R;

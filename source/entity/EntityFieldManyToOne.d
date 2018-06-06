@@ -25,6 +25,7 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _builder = builder; 
         _joinColumn = columnName;
+        _insertValue = _entityInfo.getPrimaryValue().to!string;
         initJoinData(tableName, columnName);
     }
 
