@@ -66,7 +66,9 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
+
         em.close();
+
         return res;
     }
 
@@ -80,7 +82,9 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
+
         em.close();
+
         return res;
     }
 
@@ -99,11 +103,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-	em.close();
+        em.close();
 
-	return res;
+        return res;
     }
-
 
     Page!T findAll(Pageable pageable)
     {
@@ -118,11 +121,12 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //page
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-                .setMaxResults(pageable.getPageSize());
-        auto res = typedQuery.getResultList();
-        auto page = new Page!T(res , pageable , super.count());
+            .setMaxResults(pageable.getPageSize());
 
-	em.close();
+        auto res = typedQuery.getResultList();
+        auto page = new Page!T(res, pageable, super.count());
+
+        em.close();
 
         return page;
     }
@@ -133,7 +137,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn() , o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn(), o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(specification.toPredicate(
@@ -143,11 +147,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getPageSize());
         auto res = typedQuery.getResultList();
-        auto page = new Page!T(res , pageable , count(specification));
+        auto page = new Page!T(res, pageable, count(specification));
 
         em.close();
 
         return page;
     }
 }
-
