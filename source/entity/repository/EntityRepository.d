@@ -13,18 +13,17 @@ module entity.repository.EntityRepository;
 
 import entity;
 import entity.repository.CrudRepository;
+
 public import entity.domain;
 
 class EntityRepository (T, ID) : CrudRepository!(T, ID)
 {
-
 	static string tableName()
 	{
 		return getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
 	}
 
-
-	static string init_code()
+	static string initObjects()
 	{
 		return `		auto em = this.createEntityManager();
 		CriteriaBuilder builder = em.getCriteriaBuilder();	
@@ -37,19 +36,26 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
 	long count(Specification!T specification)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		criteriaQuery.select(builder.count(root)).where(specification.toPredicate(
 				root , criteriaQuery , builder));
 		
 		Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
+
 		em.close();
+
 		return result.longValue();
+	}
+
+	T find(ID id)
+	{
+		return this.findById(id);
 	}
 
 	T[] findAll(Sort sort)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		//sort
 		foreach(o ; sort.list)
@@ -64,10 +70,9 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 		return res;
 	}
 
-
 	T[] findAll(Specification!T specification)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		//specification
 		criteriaQuery.select(root).where(specification.toPredicate(
@@ -81,7 +86,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
 	T[] findAll(Specification!T specification , Sort sort)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		//sort
 		foreach(o ; sort.list)
@@ -100,7 +105,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
 	Page!T findAll(Pageable pageable)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		//sort
 		foreach(o ; pageable.getSort.list)
@@ -120,7 +125,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
 	Page!T findAll(Specification!T specification, Pageable pageable)
 	{
-		mixin(init_code);
+		mixin(initObjects);
 
 		//sort
 		foreach(o ; pageable.getSort.list)
@@ -135,8 +140,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 			.setMaxResults(pageable.getPageSize());
 		auto res = typedQuery.getResultList();
 		auto page = new Page!T(res , pageable , count(specification));
+
 		em.close();
+
 		return page;
 	}
-
 }
+
