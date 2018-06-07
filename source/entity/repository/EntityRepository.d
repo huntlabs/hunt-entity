@@ -18,132 +18,136 @@ public import entity.domain;
 
 class EntityRepository (T, ID) : CrudRepository!(T, ID)
 {
-	static string tableName()
-	{
-		return getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
-	}
+    static string tableName()
+    {
+        return getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
+    }
 
-	static string initObjects()
-	{
-		return `		auto em = this.createEntityManager();
-		CriteriaBuilder builder = em.getCriteriaBuilder();	
-		auto criteriaQuery = builder.createQuery!T;
-		Root!T root = criteriaQuery.from();`;
-	}
+    static string initObjects()
+    {
+        return `        auto em = this.createEntityManager();
+        CriteriaBuilder builder = em.getCriteriaBuilder();    
+        auto criteriaQuery = builder.createQuery!T;
+        Root!T root = criteriaQuery.from();`;
+    }
 
-	alias count =  CrudRepository!(T, ID).count;
-	alias findAll = CrudRepository!(T, ID).findAll;
+    alias count =  CrudRepository!(T, ID).count;
+    alias findAll = CrudRepository!(T, ID).findAll;
 
-	long count(Specification!T specification)
-	{
-		mixin(initObjects);
+    long count(Specification!T specification)
+    {
+        mixin(initObjects);
 
-		criteriaQuery.select(builder.count(root)).where(specification.toPredicate(
-				root , criteriaQuery , builder));
-		
-		Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
+        criteriaQuery.select(builder.count(root)).where(specification.toPredicate(
+                root , criteriaQuery , builder));
+        
+        Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
 
-		em.close();
+        em.close();
 
-		return result.longValue();
-	}
+        return result.longValue();
+    }
 
-	T find(ID id)
-	{
-		return this.findById(id);
-	}
+    T find(ID id)
+    {
+        return this.findById(id);
+    }
 
-	T[] findAll(Sort sort)
-	{
-		mixin(initObjects);
+    T[] findAll(Sort sort)
+    {
+        mixin(initObjects);
 
-		//sort
-		foreach(o ; sort.list)
-			criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+        //sort
+        foreach(o ; sort.list)
+            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
 
-		//all
-		criteriaQuery.select(root);
+        //all
+        criteriaQuery.select(root);
 
-		TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
-		auto res = typedQuery.getResultList();
-		em.close();
-		return res;
-	}
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        auto res = typedQuery.getResultList();
+        em.close();
+        return res;
+    }
 
-	T[] findAll(Specification!T specification)
-	{
-		mixin(initObjects);
+    T[] findAll(Specification!T specification)
+    {
+        mixin(initObjects);
 
-		//specification
-		criteriaQuery.select(root).where(specification.toPredicate(
-				root , criteriaQuery , builder));
+        //specification
+        criteriaQuery.select(root).where(specification.toPredicate(
+                root , criteriaQuery , builder));
 
-		TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
-		auto res = typedQuery.getResultList();
-		em.close();
-		return res;
-	}
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        auto res = typedQuery.getResultList();
+        em.close();
+        return res;
+    }
 
-	T[] findAll(Specification!T specification , Sort sort)
-	{
-		mixin(initObjects);
+    T[] findAll(Specification!T specification , Sort sort)
+    {
+        mixin(initObjects);
 
-		//sort
-		foreach(o ; sort.list)
-			criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+        //sort
+        foreach(o ; sort.list)
+            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
 
-		//specification
-		criteriaQuery.select(root).where(specification.toPredicate(
-				root , criteriaQuery , builder));
+        //specification
+        criteriaQuery.select(root).where(specification.toPredicate(
+            root , criteriaQuery , builder));
 
-		TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
-		auto res = typedQuery.getResultList();
-		em.close();
-		return res;
-	}
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        auto res = typedQuery.getResultList();
+
+	em.close();
+
+	return res;
+    }
 
 
-	Page!T findAll(Pageable pageable)
-	{
-		mixin(initObjects);
+    Page!T findAll(Pageable pageable)
+    {
+        mixin(initObjects);
 
-		//sort
-		foreach(o ; pageable.getSort.list)
-			criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+        //sort
+        foreach(o ; pageable.getSort.list)
+            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
 
-		//all
-		criteriaQuery.select(root);
+        //all
+        criteriaQuery.select(root);
 
-		//page
-		TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-				.setMaxResults(pageable.getPageSize());
-		auto res = typedQuery.getResultList();
-		auto page = new Page!T(res , pageable , super.count());
-		em.close();
-		return page;
-	}
+        //page
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
+                .setMaxResults(pageable.getPageSize());
+        auto res = typedQuery.getResultList();
+        auto page = new Page!T(res , pageable , super.count());
 
-	Page!T findAll(Specification!T specification, Pageable pageable)
-	{
-		mixin(initObjects);
+	em.close();
 
-		//sort
-		foreach(o ; pageable.getSort.list)
-			criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn() , o.getOrderType());
+        return page;
+    }
 
-		//specification
-		criteriaQuery.select(root).where(specification.toPredicate(
-				root , criteriaQuery , builder));
-				
-		//page
-		TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-			.setMaxResults(pageable.getPageSize());
-		auto res = typedQuery.getResultList();
-		auto page = new Page!T(res , pageable , count(specification));
+    Page!T findAll(Specification!T specification, Pageable pageable)
+    {
+        mixin(initObjects);
 
-		em.close();
+        //sort
+        foreach(o ; pageable.getSort.list)
+            criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn() , o.getOrderType());
 
-		return page;
-	}
+        //specification
+        criteriaQuery.select(root).where(specification.toPredicate(
+            root , criteriaQuery , builder));
+                
+        //page
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
+            .setMaxResults(pageable.getPageSize());
+        auto res = typedQuery.getResultList();
+        auto page = new Page!T(res , pageable , count(specification));
+
+        em.close();
+
+        return page;
+    }
 }
 
