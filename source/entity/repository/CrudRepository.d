@@ -20,8 +20,8 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 {
     EntityManager createEntityManager()
     {
-      	  return defaultEntityManagerFactory().createEntityManager();
-	}
+            return defaultEntityManagerFactory().createEntityManager();
+    }
 
     public long count()
     {
@@ -33,7 +33,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         criteriaQuery.select(builder.count(root));
         
         Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
-		em.close();
+        em.close();
         return result.longValue();
     }
 
@@ -122,7 +122,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     {
         auto em = this.createEntityManager();
 
-		if (mixin(code_findByID!T()) is null)
+        if (mixin(GenerateFindById!T()) is null)
         {
             em.persist(entity);
         }
@@ -149,7 +149,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     }
 }
 
-string code_findByID(T)()
+string GenerateFindById(T)()
 {
-	return "em.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
+    return "em.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
 }
