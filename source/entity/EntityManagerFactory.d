@@ -19,6 +19,7 @@ class EntityManagerFactory {
     public Database _db;
     public string _name;
     private CriteriaBuilder _criteriaBuilder;
+    private string _dbPrefix;
 
     public this(string name, DatabaseConfig config) {
         _name = name;
@@ -33,13 +34,19 @@ class EntityManagerFactory {
     public SqlBuilder createSqlBuilder() {
         return _db.createSqlBuilder();
     }
-    public Dialect getDialect() {return _dialect;}
-    public Database getDatabase() {return _db;}
-    public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
-
+    
     public void close() {
         if (_db)
             _db.close();
         _db = null;
     }
+
+    public void setDBPrefix(string prefix) {_dbPrefix = prefix;}
+    public Dialect getDialect() {return _dialect;}
+    public Database getDatabase() {return _db;}
+    public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
+    public string getDBPrefix() {return _dbPrefix;}
+
+    
+
 }

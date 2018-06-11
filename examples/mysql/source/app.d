@@ -301,10 +301,13 @@ User testEntityPersist(EntityManager manager, string name, string email, int mon
 
 void main() {
     
-    //DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
-    DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog1?charset=utf-8");
+    DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
+    // DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog?charset=utf-8");
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",config);
+    
+    // entityManagerFactory.setDBPrefix("test_");
+
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
     manager.getTransaction().begin();
@@ -338,16 +341,16 @@ void main() {
     log("testCriteriaUpdate count ", count);
 
     
-    User[] u4 = testCriteriaQueryOr(manager, builder, "u1", "u2.163.com");
+    User[] u4 = testCriteriaQueryOr(manager, builder, "u1", "u2@163.com");
     log("testCriteriaQueryOr u4 length ", u4.length);
 
-    u4 = testCriteriaQueryOrderBy(manager, builder, "u1", "u2.163.com");
+    u4 = testCriteriaQueryOrderBy(manager, builder, "u1", "u2@163.com");
     log("testCriteriaQueryOrderBy u4 ", u4[0].money);
 
-    u4 = testCriteriaQueryOffsetLimit(manager, builder, "u1", "u2.163.com");
+    u4 = testCriteriaQueryOffsetLimit(manager, builder, "u1", "u2@163.com");
     log("testCriteriaQueryOffsetLimit u4 ", u4[0].money);
 
-    u4 = testCriteriaQueryLike(manager, builder, "u1", "u2.163.com", "u%");
+    u4 = testCriteriaQueryLike(manager, builder, "u1", "u2@163.com", "u%");
     log("testCriteriaQueryLike u4[0] money ", u4[0].money);
     log("testCriteriaQueryLike u4[1] money ", u4[1].money);
     
@@ -368,14 +371,25 @@ void main() {
     u4 = testCriteriaQuery_in(manager, builder, "u1", "u2");
     log("testCriteriaQuery_in u4 length ", u4.length);
 
-    Blog[] blogs = testCriteriaJoin_left(manager, builder, "user1");
+    Blog b1 = new Blog();
+    b1.user = u1;
+    b1.content = "u1-blog1-content";
+    manager.persist(b1);
+    
+    Blog b2 = new Blog();
+    b2.user = u1;
+    b2.content = "u2-blog2-content";
+    manager.persist(b2);
+    
+
+    Blog[] blogs = testCriteriaJoin_left(manager, builder, "u1");
     log("testCriteriaJoin_left blogs length ", blogs.length);
     log(blogs[0].getUser());
     log(blogs[0].user.email);
     log("blogs.user.name1 = ", blogs[0].getUser().email);
     log("blogs.user.name2 = ", blogs[1].getUser().email);
     
-    Blog blog = testEntityFind3(manager, 5);
+    Blog blog = testEntityFind3(manager, b1.id);
     log("   ", blog.user.name);
     log("testEntityFind3 name ", blog.getUser().name);
     log("testEntityFind3  ", blog.user.getBlogs()[0].id);
@@ -387,7 +401,7 @@ void main() {
     log("testEntityFind3  ", blog.user.blogs[0].user.name);
     log("testEntityFind3  ", blog.user.blogs[1].user.name);
 
-    u5 = testEntityFind4(manager, 26810);
+    u5 = testEntityFind4(manager, u1.id);
     u5.getBlogs();
     u5.getBlogs()[0].getUser();
     u5.getBlogs()[1].getUser();
@@ -415,14 +429,28 @@ void main() {
     log("testEntityRemove2 count ", count);
 
 
-    Book book = manager.find!(Book)(1);
+    BookDetail detail = new BookDetail();
+    detail.numberOfPages = 1;
+    manager.persist(detail);
+
+    Book book = new Book();
+    book.name = "book1";
+    book.detail = detail;
+    manager.persist(book);
+
+    book = manager.find!(Book)(book.id);
     assert(book.detail is null, "book.detail is null");
     assert(book.getDetail().numberOfPages, "book.getDetail().numberOfPages");
     
 
-    BookDetail detail = manager.find!(BookDetail)(1);
+    detail = manager.find!(BookDetail)(detail.id);
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
+
+    auto tables = manager.showTables();
+    log(tables);
+    auto columns = manager.descTable("Book");
+    log(columns);
 
     manager.getTransaction().commit();
     // manager.getTransaction().rollback();

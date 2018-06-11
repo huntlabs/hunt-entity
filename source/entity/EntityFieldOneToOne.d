@@ -25,16 +25,16 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         _mode = mode;  
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _isMappedBy = _mode.mappedBy != "";
-        super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? fieldValue : null, owner, EntityFieldType.ONE_TO_ONE);
+        super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner, EntityFieldType.ONE_TO_ONE);
         _primaryKey = primaryKey;
         if (_isMappedBy) {
             _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();
-            _insertValue = _entityInfo.getPrimaryValue().to!string;
         }
         else {
             _joinColumn = columnOrjoin;
+            _insertValue = _entityInfo.getPrimaryValue().to!string;
         }
-    
+
         initJoinData(tableName);
     }
 
