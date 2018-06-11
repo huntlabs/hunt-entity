@@ -125,5 +125,35 @@ class EntityManager {
         _EntitySession.close();
     }
 
+    public string[] showTables() {
+        string[] ret;
+        SqlBuilder builder = _factory.createSqlBuilder();
+        Statement stmt = _db.prepare(builder.showTables().build().toString());
+        ResultSet rs = stmt.query();
+        foreach(row; rs) {
+            foreach(v; row.toStringArray()) {
+                ret ~= v;
+            }
+        }
+        return ret;
+    }
+    public string[] descTable(string tableName) {
+        string[] ret;
+        SqlBuilder builder = _factory.createSqlBuilder();
+        Statement stmt = _db.prepare(builder.descTable(tableName).build().toString());
+        ResultSet rs = stmt.query();
+        foreach(row; rs) {
+            string[string] array = row.toStringArray();
+            ret ~= "Field" in array ? array["Field"] : array["field"];
+        }
+        return ret;
+    }
+
+    public bool createTable(T)(T t) {
+        
+
+        return true;
+    }
+
 }
 
