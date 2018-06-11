@@ -27,6 +27,7 @@ class EntityInfo(T : Object, F : Object = T) {
     private Dialect _dialect;
     private T _data;
     private F _owner;
+    private string _tablePrefix;
 
 
     //auto mixin function
@@ -67,6 +68,7 @@ class EntityInfo(T : Object, F : Object = T) {
             _owner = owner;
         }
         _data.setManager(builder.getManager());
+        _tablePrefix = builder.getManager().getDBPrefix();
         initEntityData();
     }
 
@@ -82,11 +84,13 @@ class EntityInfo(T : Object, F : Object = T) {
     public string[string] getInsertString() {
         string[string] str;
         foreach(info; _fields) {
+
+
             if (info.getFileldName() != _autoIncrementKey) {
                 EntityFieldType fieldType = info.getFileldType();
                 bool exsitValue = false;
                 if (fieldType == EntityFieldType.NORMAL || fieldType == EntityFieldType.MANY_TO_ONE || fieldType == EntityFieldType.ONE_TO_ONE) {
-                    if (info.getFieldValue() != null) {
+                    if (info.getFieldValue() != null && info.getColumnName() != "") {
                         str[info.getFullColumn()] = info.getInsertValue();
                     }
                 }
@@ -181,10 +185,10 @@ string makeInitEntityData(T,F)() {
     str ~= "private void initEntityData() {\n\t\t";
     str ~= "_entityClassName = \"" ~ T.stringof ~"\""~ endTag;
     static if (hasUDA!(T,Table)) {
-        str ~= "_tableName = \"" ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~"\""~ endTag;
+        str ~= "_tableName = _tablePrefix ~ \"" ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~"\""~ endTag;
     }
     else {
-        str ~= "_tableName = \"" ~ T.stringof ~"\""~ endTag;
+        str ~= "_tableName = _tablePrefix ~ \"" ~ T.stringof ~"\""~ endTag;
     }
     foreach(memberName; __traits(derivedMembers, T)) {
         alias memType = typeof(__traits(getMember, T ,memberName));
