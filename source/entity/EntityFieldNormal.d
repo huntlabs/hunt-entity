@@ -35,7 +35,14 @@ class EntityFieldNormal : EntityFieldInfo {
     }
 
     public R deSerialize(R)(string value) {
-        return *(_builder.getDialect().fromSqlValue(_fieldType, Variant(value))).peek!R;
+        // return *(_builder.getDialect().fromSqlValue(_fieldType, Variant(value))).peek!R;
+        static if (is(R==bool)) {
+            if (value == "0")
+                return false;
+            else if(value == "1")
+                return true;
+        }
+        return to!R(value);
     }
 
 }
