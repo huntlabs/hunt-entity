@@ -23,4 +23,12 @@ class Common {
         }
         return copy;
     }
+
+    static bool inArray(T)(T[] ts, T t) {
+        foreach(v; ts) {
+            if(v == t)
+                return true;
+        }
+        return false;
+    }
 }

@@ -55,7 +55,7 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeSetPrimaryValue!(T)());
     
 
-    this(CriteriaBuilder builder, T t = null, F owner = null) {
+    this(CriteriaBuilder builder = null, T t = null, F owner = null) {
         _builder = builder;
         if (t is null)
             _data = new T();
@@ -67,8 +67,10 @@ class EntityInfo(T : Object, F : Object = T) {
         else {
             _owner = owner;
         }
-        _data.setManager(builder.getManager());
-        _tablePrefix = builder.getManager().getDBPrefix();
+        if (builder) {
+            _data.setManager(builder.getManager());
+            _tablePrefix = builder.getManager().getDBPrefix();
+        }
         initEntityData();
     }
 
@@ -125,10 +127,12 @@ string makeSetPrimaryValue(T)() {
     string R;
     string name;
     foreach(memberName; __traits(derivedMembers, T)) {
-        alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
-            R = typeof(__traits(getMember, T ,memberName)).stringof;
-            name = memberName;
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
+                R = typeof(__traits(getMember, T ,memberName)).stringof;
+                name = memberName;
+            }
         }
     }
     str ~= "public void setPrimaryValue(string value) {\n\t\t";
@@ -149,10 +153,12 @@ string makeGetPrimaryValue(T)() {
     string R;
     string name;
     foreach(memberName; __traits(derivedMembers, T)) {
-        alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
-            R = typeof(__traits(getMember, T ,memberName)).stringof;
-            name = memberName;
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
+                R = typeof(__traits(getMember, T ,memberName)).stringof;
+                name = memberName;
+            }
         }
     }
     str ~= "public "~R~" getPrimaryValue() {\n\t\t";
@@ -169,9 +175,11 @@ string makeSetIncreaseKey(T)() {
     string str = "\t";
     str ~= "public void setIncreaseKey(ref T entity, int value) {\n\t\t";
     foreach(memberName; __traits(derivedMembers, T)) {
-        alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!isFunction!(memType) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto))) {
-            str ~= "entity."~memberName~" = value;\n\t";
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto))) {
+                str ~= "entity."~memberName~" = value;\n\t";
+            }
         }
     }
     str ~= "}\n";
@@ -191,65 +199,79 @@ string makeInitEntityData(T,F)() {
         str ~= "_tableName = _tablePrefix ~ \"" ~ T.stringof ~"\""~ endTag;
     }
     foreach(memberName; __traits(derivedMembers, T)) {
-        alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!isFunction!(memType)) {
-            //primary key
-            static if (hasUDA!(__traits(getMember, T ,memberName), PrimaryKey)) {
-                str ~= "_primaryKey = "~memberName.stringof~endTag;
-            }
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType)) {
 
-            //autoincrease key
-            static if (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto)) {
-                str ~= "_autoIncrementKey = "~memberName.stringof~endTag;
-            }
-
-            //columnName
-            string columnName;
-            static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
-                columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
-            }
-            else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
-                columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
-            }
-            else {
-                columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
-            }
-            //value 
-            string value = "_data."~memberName;
-            static if (is(F == memType)) {
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldOwner("~memberName.stringof~", "~columnName~", Variant(_owner), _tableName)"~ endTag;
-            }
-            else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-                string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToOne!("~memType.stringof~", F)(_builder, "~memberName.stringof~", _primaryKey, "~columnName~", _tableName, "~value~", "
-                                ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~", "~owner~")"~ endTag;
-            }
-            else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-                static if (is(T==F)) {
-                    str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", F)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
-                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _owner)"~ endTag;
+                //columnName nullable
+                string nullable;
+                string columnName;
+                static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
+                    columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
+                    nullable = getUDAs!(__traits(getMember, T ,memberName), Column)[0].nullable.to!string;
+                }
+                else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
+                    columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
+                    nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
                 }
                 else {
-                    str ~= "_fields["~memberName.stringof~"] = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", T)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
-                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _data)"~ endTag;
+                    columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
                 }
-            }
-            else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldManyToOne!("~memType.stringof~")(_builder, "~memberName.stringof~", "~columnName~", _tableName, "~value~", "
-                                ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~")"~ endTag;
-            }
-            else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                // str ~= "_fields["~memberName.stringof~"] = new EntityFieldManyToMany("~memberName.stringof~", 
-                //                                                                 "~columnName~", Variant("~value~"), 
-                //                                                                 "~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~")"
-                //                                                                  ~ endTag;
-            }
-            else {
-                string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
-                str ~= "_fields["~memberName.stringof~"] = new EntityFieldNormal(_builder, "~memberName.stringof~", "~columnName~", _tableName, Variant("~value~"), "~fieldType~")" ~ endTag;
-            }
+                
+                //value 
+                string value = "_data."~memberName;
+                string fieldName = "_fields["~memberName.stringof~"]";
+                static if (is(F == memType)) {
+                    str ~= fieldName~" = new EntityFieldOwner("~memberName.stringof~", "~columnName~", Variant(_owner), _tableName)"~ endTag;
+                }
+                else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
+                    string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
+                    str ~= fieldName~" = new EntityFieldOneToOne!("~memType.stringof~", F)(_builder, "~memberName.stringof~", _primaryKey, "~columnName~", _tableName, "~value~", "
+                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~", "~owner~")"~ endTag;
+                }
+                else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
+                    static if (is(T==F)) {
+                        str ~= fieldName~" = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", F)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
+                                        ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _owner)"~ endTag;
+                    }
+                    else {
+                        str ~= fieldName~" = new EntityFieldOneToMany!("~memType.stringof.replace("[]","")~", T)(_builder, "~memberName.stringof~", _primaryKey, _tableName, "
+                                        ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~", _data)"~ endTag;
+                    }
+                }
+                else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
+                    str ~= fieldName~" = new EntityFieldManyToOne!("~memType.stringof~")(_builder, "~memberName.stringof~", "~columnName~", _tableName, "~value~", "
+                                    ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~")"~ endTag;
+                }
+                else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
+                    // str ~= fieldName~" = new EntityFieldManyToMany("~memberName.stringof~", 
+                    //                                                                 "~columnName~", Variant("~value~"), 
+                    //                                                                 "~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~")"
+                    //                                                                  ~ endTag;
+                }
+                else {
+                    string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
+                    str ~= fieldName~" = new EntityFieldNormal(_builder, "~memberName.stringof~", "~columnName~", _tableName, Variant("~value~"), "~fieldType~")" ~ endTag;
+                }
 
+                //nullable
+                if (nullable != "" && nullable != "true")
+                    str ~= fieldName~".setNullable("~nullable~")"~endTag;
+                //primary key
+                static if (hasUDA!(__traits(getMember, T ,memberName), PrimaryKey) || hasUDA!(__traits(getMember, T ,memberName), Id)) {
+                    str ~= "_primaryKey = "~memberName.stringof~endTag;
+                    str ~= fieldName~".setPrimary(true)"~endTag;
+                }
+                //autoincrease key
+                static if (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto)) {
+                    str ~= "_autoIncrementKey = "~memberName.stringof~endTag;
+                    str ~= fieldName~".setAuto(true)"~endTag;
+                    str ~= fieldName~".setNullable(false)"~endTag;
+                }
+
+            }
         }
+            
     }
     str ~= "if (_fields.length == 0)\n\t\t";
     str ~= "\tthrow new EntityException(\"Entity class member cannot be empty : " ~ T.stringof~ "\");\n\t";
@@ -268,32 +290,34 @@ string makeDeSerialize(T,F)() {
     str ~= "return null;"~skip();
     str ~= "}"~skip();
     foreach(memberName; __traits(derivedMembers, T)) {
-        alias memType = typeof(__traits(getMember, T ,memberName));
-        static if (!isFunction!(memType)) {
-            static if (isBasicType!memType || isSomeString!memType) {
-                str ~= "if (data.getData(\""~memberName~"\")) {"~skip(3);
-                str ~= "_data."~memberName~" = (cast(EntityFieldNormal)(this."~memberName~")).deSerialize!("~memType.stringof~")(data.getData(\""~memberName~"\").value);"~skip();
-                str ~= "}"~skip();
-            }
-            else {
-                static if(is(F == memType)) {
-                    str ~= "_data."~memberName~" = _owner;"~skip();
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType)) {
+                static if (isBasicType!memType || isSomeString!memType) {
+                    str ~= "if (data.getData(\""~memberName~"\")) {"~skip(3);
+                    str ~= "(cast(EntityFieldNormal)(this."~memberName~")).deSerialize!("~memType.stringof~")(data.getData(\""~memberName~"\").value, _data."~memberName~");"~skip();
+                    str ~= "}"~skip();
                 }
-                else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-                    string singleType = memType.stringof.replace("[]","");
-                    str ~= "auto "~memberName~" = (cast(EntityFieldOneToMany!("~singleType~",F))(this."~memberName~"));"~skip();
-                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
-                    str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows, startIndex, isFromManyToOne);"~skip();
-                }
-                else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
-                    str ~= "auto "~memberName~" = cast(EntityFieldManyToOne!("~memType.stringof~"))(this."~memberName~");"~skip();
-                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
-                    str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
-                }
-                else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-                    str ~= "auto "~memberName~" = (cast(EntityFieldOneToOne!("~memType.stringof~", F))(this."~memberName~"));"~skip();
-                    str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
-                    str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
+                else {
+                    static if(is(F == memType)) {
+                        str ~= "_data."~memberName~" = _owner;"~skip();
+                    }
+                    else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
+                        string singleType = memType.stringof.replace("[]","");
+                        str ~= "auto "~memberName~" = (cast(EntityFieldOneToMany!("~singleType~",F))(this."~memberName~"));"~skip();
+                        str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
+                        str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows, startIndex, isFromManyToOne);"~skip();
+                    }
+                    else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
+                        str ~= "auto "~memberName~" = cast(EntityFieldManyToOne!("~memType.stringof~"))(this."~memberName~");"~skip();
+                        str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
+                        str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
+                    }
+                    else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
+                        str ~= "auto "~memberName~" = (cast(EntityFieldOneToOne!("~memType.stringof~", F))(this."~memberName~"));"~skip();
+                        str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
+                        str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows[startIndex]);"~skip();
+                    }
                 }
             }
         }

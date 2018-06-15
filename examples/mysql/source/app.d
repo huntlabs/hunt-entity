@@ -301,12 +301,15 @@ User testEntityPersist(EntityManager manager, string name, string email, int mon
 
 void main() {
     
-    DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
-    // DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog?charset=utf-8");
+    // DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
+    DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog2?charset=utf-8");
+    // DatabaseConfig config = new DatabaseConfig("postgresql://postgres:123456@0.0.0.0:5432/huntblog?charset=utf-8");
 
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",config);
-    
-    // entityManagerFactory.setDBPrefix("test_");
+
+    string tablePrefix = "";
+    // string tablePrefix = "test_";
+
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("postgresql",config, tablePrefix);
 
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
@@ -421,7 +424,15 @@ void main() {
     log("testEntityFind4 ",u5.blogs[0].user.blogs[1].id);
     log("testEntityFind4 ",u5.blogs[1].user.blogs[0].content);
     log("testEntityFind4 ",u5.blogs[1].user.blogs[1].content);
-   
+    
+
+    count = manager.remove!(Blog)(b1);
+    log("em.remove b1 count ", count);
+
+    count = manager.remove!(Blog)(b2);
+    log("em.remove b2 count ", count);
+    
+
     count = testCriteriaDelete2(manager, builder, u3[0]);
     log("testCriteriaDelete2 count ", count);
 
@@ -446,11 +457,10 @@ void main() {
     detail = manager.find!(BookDetail)(detail.id);
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
+    
+    manager.remove!(Book)(book);
+    manager.remove!(BookDetail)(detail);
 
-    auto tables = manager.showTables();
-    log(tables);
-    auto columns = manager.descTable("Book");
-    log(columns);
 
     manager.getTransaction().commit();
     // manager.getTransaction().rollback();

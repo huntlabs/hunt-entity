@@ -38,12 +38,12 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     }
 
     private void initJoinData() {
-        _joinData = new JoinSqlBuild(); 
-        _joinData.tableName = _entityInfo.getTableName();
-        _joinData.joinWhere = getTableName() ~ "." ~ _primaryKey ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _joinColumn;
-        _joinData.joinType = JoinType.LEFT;
+        _joinSqlData = new JoinSqlBuild(); 
+        _joinSqlData.tableName = _entityInfo.getTableName();
+        _joinSqlData.joinWhere = getTableName() ~ "." ~ _primaryKey ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _joinColumn;
+        _joinSqlData.joinType = JoinType.LEFT;
         foreach(value; _entityInfo.getFields()) {
-            _joinData.columnNames ~= value.getSelectColumn();
+            _joinSqlData.columnNames ~= value.getSelectColumn();
         }
     }
 
