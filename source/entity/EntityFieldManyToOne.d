@@ -26,16 +26,22 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _builder = builder; 
         _joinColumn = columnName;
         _insertValue = _entityInfo.getPrimaryValue().to!string;
+        _dfieldType = getDlangDataType!(typeof(_entityInfo.getPrimaryValue()));
         initJoinData(tableName, columnName);
     }
 
     private void initJoinData(string tableName, string joinColumn) {
-        _joinData = new JoinSqlBuild(); 
-        _joinData.tableName = _entityInfo.getTableName();
-        _joinData.joinWhere = tableName ~ "." ~ joinColumn ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _entityInfo.getPrimaryKeyString();
-        _joinData.joinType = JoinType.LEFT;
+        _foreignKeyData = new ForeignKeyData();
+        _foreignKeyData.columnName = joinColumn;
+        _foreignKeyData.tableName = _entityInfo.getTableName();
+        _foreignKeyData.primaryKey = _entityInfo.getPrimaryKeyString();
+        
+        _joinSqlData = new JoinSqlBuild(); 
+        _joinSqlData.tableName = _entityInfo.getTableName();
+        _joinSqlData.joinWhere = tableName ~ "." ~ joinColumn ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _entityInfo.getPrimaryKeyString();
+        _joinSqlData.joinType = JoinType.LEFT;
         foreach(value; _entityInfo.getFields()) {
-            _joinData.columnNames ~= value.getSelectColumn();
+            _joinSqlData.columnNames ~= value.getSelectColumn();
         }
     }
 

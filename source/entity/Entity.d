@@ -13,6 +13,7 @@ module entity.Entity;
 
 import entity;
 import std.string;
+import std.traits;
 
 class Entity
 {
@@ -59,6 +60,10 @@ mixin template GetFunction()
 {
     mixin(makeEnableLazyLoad!(typeof(this)));
     // pragma(msg, makeEnableLazyLoad!(typeof(this)));
+    shared static this() {
+        addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
+    }
+
 }
 
 string makeEnableLazyLoad(T)() {
@@ -83,3 +88,12 @@ string makeEnableLazyLoad(T)() {
     }
     return str;
 }  
+
+string getEntityTableName(T)() {
+    static if (hasUDA!(T, Table)) {
+        return getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name;
+    }
+    else {
+        return T.stringof;
+    }
+}

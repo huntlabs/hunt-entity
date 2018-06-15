@@ -22,17 +22,17 @@ class Persistence
 
 	private static EntityManagerFactory[string] _factories;
 
-    public static EntityManagerFactory createEntityManagerFactory(DatabaseOption option)
+    public static EntityManagerFactory createEntityManagerFactory(DatabaseOption option, string tablePrefix = "")
 	{
-		return createEntityManagerFactory(DEFAULT_NAME, option);
+		return createEntityManagerFactory(DEFAULT_NAME, option, tablePrefix);
 	}
 
-    public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option)
+    public static EntityManagerFactory createEntityManagerFactory(string name, DatabaseOption option, string tablePrefix = "")
 	{
 		if (name in _factories)
 			return _factories[name];
 		
-		auto factory = new EntityManagerFactory(name, option);
+		auto factory = new EntityManagerFactory(name, option, tablePrefix);
 		this._factories[name] = factory;
 		if (DEFAULT_NAME == name)
 		{

@@ -77,8 +77,8 @@ class Root(T : Object, F : Object = T)
 
     public Root!(T, F) autoJoin() {
         foreach(value; _entityInfo.getFields()) {
-            if (value.getJoinData() && value.isEnableJoin())
-                _joins ~= value.getJoinData(); 
+            if (value.getJoinSqlData() && value.isEnableJoin())
+                _joins ~= value.getJoinSqlData(); 
         }
         return this;
     }

@@ -47,6 +47,8 @@ public import entity.criteria.CriteriaQuery;
 public import entity.criteria.CriteriaDelete;
 public import entity.criteria.CriteriaBuilder;
 public import entity.criteria.CriteriaUpdate;
+public import entity.EntityCreateTable;
+
 
 import std.variant;
 import std.experimental.logger;

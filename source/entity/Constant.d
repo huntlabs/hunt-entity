@@ -19,11 +19,13 @@ struct Table {
 //@ColumnName
 struct Column {
     string name;
+    bool nullable = true;
 }
 
 //@JoinColumn
 struct JoinColumn {
     string name;
+    bool nullable = true;
 }
 
 
@@ -56,6 +58,7 @@ enum {
     Auto = 0x1,
     AutoIncrement = 0x1,
     PrimaryKey = 0x2,
+    Id = 0x4
 }
 
 enum OrderBy {
@@ -103,6 +106,12 @@ class JoinSqlBuild  {
     string[] columnNames;
 }
 
+class ForeignKeyData {
+    string columnName;
+    string tableName;
+    string primaryKey;
+}
+
 
 class LazyData {
     this(LazyData data) {
@@ -116,3 +125,6 @@ class LazyData {
     string key;
     string value;
 }
+
+
+

@@ -16,33 +16,38 @@ import entity;
 
 class EntityFieldNormal : EntityFieldInfo {
 
-    private DlangDataType _fieldType;
+    
     private CriteriaBuilder _builder;
 
-    public this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, Variant fieldValue, DlangDataType fieldType) {
+    public this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, Variant fieldValue, DlangDataType dfieldType) {
         super(fileldName, columnName, fieldValue, tableName, EntityFieldType.NORMAL);
-        _fieldType = fieldType;
-        _builder = builder;
-        _insertValue = _builder.getDialect().toSqlValueImpl(fieldType, fieldValue); 
+        _dfieldType = dfieldType;
+        if (builder) {
+            _builder = builder;
+            _insertValue = _builder.getDialect().toSqlValueImpl(_dfieldType, fieldValue); 
+        }
     }
     public void assertType(T)() {
-        if (_fieldType.getName() == "string" && getDlangTypeStr!T != "string") {
+        if (_dfieldType.getName() == "string" && getDlangTypeStr!T != "string") {
             throw new EntityException("EntityFieldInfo %s type need been string not %s".format(getFileldName(), typeid(T)));
         }
-        if (_fieldType.getName() != "string" && getDlangTypeStr!T == "string") {
+        if (_dfieldType.getName() != "string" && getDlangTypeStr!T == "string") {
             throw new EntityException("EntityFieldInfo %s type need been number not string".format(getFileldName()));
         }
     }
 
-    public R deSerialize(R)(string value) {
-        // return *(_builder.getDialect().fromSqlValue(_fieldType, Variant(value))).peek!R;
-        static if (is(R==bool)) {
-            if (value == "0")
-                return false;
-            else if(value == "1")
-                return true;
+    public void deSerialize(R)(string value, ref R r) {
+        if (value.length == 1 && cast(byte)(value[0]) == 0) {
+            return;
         }
-        return to!R(value);
+        static if (is(R==bool)) {
+            r = cast(byte)(value[0]) == 1;
+        }
+        else {
+            r = to!R(value);
+        }
     }
+
+    
 
 }

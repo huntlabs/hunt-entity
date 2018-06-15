@@ -33,6 +33,13 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         else {
             _joinColumn = columnOrjoin;
             _insertValue = _entityInfo.getPrimaryValue().to!string;
+            _dfieldType = getDlangDataType!(typeof(_entityInfo.getPrimaryValue()));
+
+            _foreignKeyData = new ForeignKeyData();
+            _foreignKeyData.columnName = columnOrjoin;
+            _foreignKeyData.tableName = _entityInfo.getTableName();
+            _foreignKeyData.primaryKey = _entityInfo.getPrimaryKeyString();
+
         }
 
         initJoinData(tableName);
@@ -45,20 +52,18 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
             return super.getSelectColumn();
     }
 
-    
-
     private void initJoinData(string tableName) {
-        _joinData = new JoinSqlBuild(); 
-        _joinData.tableName = _entityInfo.getTableName();
+        _joinSqlData = new JoinSqlBuild(); 
+        _joinSqlData.tableName = _entityInfo.getTableName();
         if (_isMappedBy) {
-            _joinData.joinWhere = tableName ~ "." ~ _primaryKey ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _joinColumn;
+            _joinSqlData.joinWhere = tableName ~ "." ~ _primaryKey ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _joinColumn;
         }
         else {
-            _joinData.joinWhere = tableName ~ "." ~ _joinColumn ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _entityInfo.getPrimaryKeyString();
+            _joinSqlData.joinWhere = tableName ~ "." ~ _joinColumn ~ " = " ~ _entityInfo.getTableName() ~ "." ~ _entityInfo.getPrimaryKeyString();
         }
-        _joinData.joinType = JoinType.LEFT;
+        _joinSqlData.joinType = JoinType.LEFT;
         foreach(value; _entityInfo.getFields()) {
-            _joinData.columnNames ~= value.getSelectColumn();
+            _joinSqlData.columnNames ~= value.getSelectColumn();
         }
     }
 
