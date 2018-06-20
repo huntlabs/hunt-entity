@@ -298,18 +298,32 @@ User testEntityPersist(EntityManager manager, string name, string email, int mon
 }
 
 
+Blog testEntityFindByClass(EntityManager manager, User user) {
+    CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+    CriteriaQuery!Blog criteriaQuery = criteriaBuilder.createQuery!(Blog);
+    Root!Blog r = criteriaQuery.from().autoJoin();
+    Predicate condition = criteriaBuilder.equal(r.Blog.user, user);
+    TypedQuery!Blog query = manager.createQuery(criteriaQuery.select(r).where(condition));
+    return cast(Blog)(query.getSingleResult());
+}
+
 
 void main() {
     
     // DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
-    DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog2?charset=utf-8");
+    // DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog2?charset=utf-8");
     // DatabaseConfig config = new DatabaseConfig("postgresql://postgres:123456@0.0.0.0:5432/huntblog?charset=utf-8");
 
-
-    string tablePrefix = "";
-    // string tablePrefix = "test_";
-
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("postgresql",config, tablePrefix);
+    EntityOption option = new EntityOption();
+    option.database.driver = "mysql";
+    option.database.host = "10.1.11.167";
+    option.database.port = 3306;
+    option.database.database = "huntblog2";
+    option.database.username = "root";
+    option.database.password = "";
+    // option.database.prefix = "test_";
+    
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
 
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
@@ -387,13 +401,13 @@ void main() {
 
     Blog[] blogs = testCriteriaJoin_left(manager, builder, "u1");
     log("testCriteriaJoin_left blogs length ", blogs.length);
+    log("null = ",blogs[0].user is null);
     log(blogs[0].getUser());
     log(blogs[0].user.email);
     log("blogs.user.name1 = ", blogs[0].getUser().email);
     log("blogs.user.name2 = ", blogs[1].getUser().email);
-    
+
     Blog blog = testEntityFind3(manager, b1.id);
-    log("   ", blog.user.name);
     log("testEntityFind3 name ", blog.getUser().name);
     log("testEntityFind3  ", blog.user.getBlogs()[0].id);
     log("testEntityFind3  ", blog.user.blogs[1].id);
@@ -425,6 +439,7 @@ void main() {
     log("testEntityFind4 ",u5.blogs[1].user.blogs[0].content);
     log("testEntityFind4 ",u5.blogs[1].user.blogs[1].content);
     
+    blog = testEntityFindByClass(manager, blog.user);
 
     count = manager.remove!(Blog)(b1);
     log("em.remove b1 count ", count);
@@ -458,8 +473,13 @@ void main() {
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
     
+    
+
+    
     manager.remove!(Book)(book);
     manager.remove!(BookDetail)(detail);
+
+
 
 
     manager.getTransaction().commit();

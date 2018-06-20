@@ -301,6 +301,7 @@ string makeDeSerialize(T,F)() {
                     str ~= "if (data.getData(\""~memberName~"\")) {"~skip(3);
                     str ~= "(cast(EntityFieldNormal)(this."~memberName~")).deSerialize!("~memType.stringof~")(data.getData(\""~memberName~"\").value, _data."~memberName~");"~skip();
                     str ~= "}"~skip();
+                    // str ~= "log(\""~T.stringof~"._data."~memberName~" = \", _data."~memberName~");\n";
                 }
                 else {
                     static if(is(F == memType)) {
@@ -308,7 +309,7 @@ string makeDeSerialize(T,F)() {
                     }
                     else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
                         string singleType = memType.stringof.replace("[]","");
-                        str ~= "auto "~memberName~" = (cast(EntityFieldOneToMany!("~singleType~",F))(this."~memberName~"));"~skip();
+                        str ~= "auto "~memberName~" = (cast(EntityFieldOneToMany!("~singleType~",T))(this."~memberName~"));"~skip();
                         str ~= "_data.addLazyData(\""~memberName~"\","~memberName~".getLazyData(rows[startIndex]));"~skip();
                         str ~= "_data."~memberName~" = "~memberName~".deSerialize(rows, startIndex, isFromManyToOne);"~skip();
                     }
@@ -325,7 +326,6 @@ string makeDeSerialize(T,F)() {
                 }
             }
         }
-    // str ~= "log(\""~T.stringof~"._data."~memberName~" = \", _data."~memberName~");\n";
     }
     str ~= "return Common.sampleCopy(_data);\n\t";
     str ~= "}\n";
