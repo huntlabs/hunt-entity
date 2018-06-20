@@ -55,27 +55,31 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeSetPrimaryValue!(T)());
     
 
-    this(CriteriaBuilder builder = null, T t = null, F owner = null) {
+    this(CriteriaBuilder builder = null, T t = null, F owner = null)
+    {
         _builder = builder;
+
         if (t is null)
             _data = new T();
         else 
             _data = t;
-        static if (is(T == F)) {
+
+        static if (is(T == F))
+        {
             _owner = _data;
         }
-        else {
+        else
+        {
             _owner = owner;
         }
+
         if (builder) {
             _data.setManager(builder.getManager());
-            _tablePrefix = builder.getManager().getDBPrefix();
+            _tablePrefix = builder.getManager().getPrefix();
         }
+
         initEntityData();
     }
-
-
- 
 
     public EntityFieldInfo getPrimaryField() {
         if (_primaryKey.length > 0) 

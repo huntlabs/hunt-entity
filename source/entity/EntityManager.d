@@ -12,21 +12,22 @@
 module entity.EntityManager;
 
 import entity;
+import entity.EntityOption;
 
 class EntityManager {
 
     public Dialect _dialect;
-    public DatabaseConfig _config;
+    public EntityOption _option;
     public Database _db;
     public string _name;
     private EntityManagerFactory _factory;
     private EntityTransaction _transaction;
     private EntitySession _EntitySession;
 
-    this(EntityManagerFactory factory, string name, DatabaseConfig config, Database db, Dialect dialect) {
+    this(EntityManagerFactory factory, string name, EntityOption option, Database db, Dialect dialect) {
         _factory = factory;
         _name = name;
-        _config = config;
+        _option = option;
         _db = db;
         _dialect = dialect;
         _transaction = new EntityTransaction(this);
@@ -120,7 +121,7 @@ class EntityManager {
     public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
     public EntityTransaction getTransaction() {return _transaction;}
     public Database getDatabase() {return _db;}
-    public string getDBPrefix() {return _factory.getDBPrefix();}
+    public string getPrefix() {return _option.prefix;}
 
     public void close() {
         _EntitySession.close();

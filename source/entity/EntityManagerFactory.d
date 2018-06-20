@@ -12,37 +12,49 @@
 module entity.EntityManagerFactory;
 
 import entity;
+import entity.EntityOption;
+
 class EntityManagerFactory {
 
     public Dialect _dialect;
-    public DatabaseConfig _config;
+    public EntityOption _option;
     public Database _db;
     public string _name;
     private CriteriaBuilder _criteriaBuilder;
-    private string _dbPrefix;
 
-    public this(string name, DatabaseConfig config, string tablePrefix = "") {
+    public this(string name, EntityOption option)
+    {
         _name = name;
-        _config = config;
-        _dbPrefix = tablePrefix;
-        _db = new Database(config);
+        _option = option;
+        
+        auto databaseOptions = new DatabaseOption(_option.database.url);
+        databaseOptions.setMaximumConnection(_option.pool.maxConnection);
+        databaseOptions.setMinimumConnection(_option.pool.minConnection);
+        databaseOptions.setConnectionTimeout(_option.pool.connectionTimeout);
+
+        _db = new Database(databaseOptions);
         _dialect = _db.createDialect();
         _criteriaBuilder = new CriteriaBuilder(this);
         autoCreateTables();
     }
-    public EntityManager createEntityManager() {
-        return new EntityManager(this, _name, _config, _db, _dialect);
+    
+    public EntityManager createEntityManager()
+    {
+        return new EntityManager(this, _name, _option, _db, _dialect);
     }
-    public SqlBuilder createSqlBuilder() {
+
+    public SqlBuilder createSqlBuilder()
+    {
         return _db.createSqlBuilder();
     }
     
-    public void close() {
+    public void close()
+    {
         if (_db)
             _db.close();
+
         _db = null;
     }
-
 
     private string[] showTables() {
         string[] ret;
@@ -54,9 +66,12 @@ class EntityManagerFactory {
                 ret ~= v;
             }
         }
+
         return ret;
     }
-    private string[] descTable(string tableName) {
+
+    private string[] descTable(string tableName)
+    {
         string[] ret;
         SqlBuilder builder = createSqlBuilder();
         Statement stmt = _db.prepare(builder.descTable(tableName).build().toString());
@@ -68,16 +83,16 @@ class EntityManagerFactory {
         return ret;
     }
 
-
-    public void autoCreateTables() {
+    public void autoCreateTables()
+    {
         string[] exsitTables = showTables();
         log("exsitTables= ", exsitTables);
         GetCreateTableHandle[string] flushList;
 
         foreach(k,v; __createTableList) {
-            string check = _dbPrefix~k;
+            string check = _option.prefix~k;
             log(" check = ", check);
-            if (!Common.inArray(exsitTables, _dbPrefix~k)) {
+            if (!Common.inArray(exsitTables, _option.prefix~k)) {
                 flushList[k] = v;
             }
         }
@@ -85,7 +100,7 @@ class EntityManagerFactory {
         string[] alterRows;
         //step1:create base table
         foreach(v;flushList) {
-            string createSql = v(_dialect, _dbPrefix, alterRows);
+            string createSql = v(_dialect, _option.prefix, alterRows);
             _db.execute(createSql);
         }
         
@@ -101,20 +116,24 @@ class EntityManagerFactory {
     public Dialect getDialect() {return _dialect;}
     public Database getDatabase() {return _db;}
     public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
-    public string getDBPrefix() {return _dbPrefix;}
-
 }
 
 alias GetCreateTableHandle = string function(Dialect dialect, string tablePrefix, ref string[] alterRows);
 
-string onCreateTableHandler(T)(Dialect dialect, string tablePrefix, ref string[] alertRows) {
+string onCreateTableHandler(T)(Dialect dialect, string tablePrefix, ref string[] alertRows)
+{
     return (new EntityCreateTable!T).createTable(dialect, tablePrefix, alertRows);
 }
-void addCreateTableHandle(string tableName, GetCreateTableHandle handler) {
+
+void addCreateTableHandle(string tableName, GetCreateTableHandle handler)
+{
     __createTableList[tableName] = handler;
 }
-GetCreateTableHandle getCreateTableHandle(string tableName) {
+
+GetCreateTableHandle getCreateTableHandle(string tableName)
+{
     return __createTableList.get(tableName, null);
 }
+
 private:
 __gshared GetCreateTableHandle[string] __createTableList;
