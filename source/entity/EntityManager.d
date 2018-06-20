@@ -121,12 +121,9 @@ class EntityManager {
     public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
     public EntityTransaction getTransaction() {return _transaction;}
     public Database getDatabase() {return _db;}
-    public string getPrefix() {return _option.prefix;}
+    public string getPrefix() {return _option.database.prefix;}
 
     public void close() {
         _EntitySession.close();
     }
-
-
 }
-

@@ -90,9 +90,9 @@ class EntityManagerFactory {
         GetCreateTableHandle[string] flushList;
 
         foreach(k,v; __createTableList) {
-            string check = _option.prefix~k;
+            string check = _option.database.prefix~k;
             log(" check = ", check);
-            if (!Common.inArray(exsitTables, _option.prefix~k)) {
+            if (!Common.inArray(exsitTables, _option.database.prefix~k)) {
                 flushList[k] = v;
             }
         }
@@ -100,7 +100,7 @@ class EntityManagerFactory {
         string[] alterRows;
         //step1:create base table
         foreach(v;flushList) {
-            string createSql = v(_dialect, _option.prefix, alterRows);
+            string createSql = v(_dialect, _option.database.prefix, alterRows);
             _db.execute(createSql);
         }
         
