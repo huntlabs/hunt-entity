@@ -105,10 +105,22 @@ public class CriteriaBuilder
     }
 
     public Predicate equal(T)(EntityFieldInfo info, T t, bool check = true) {
-        //todo remove check = false
-        if (check)
-            assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
+        static if (isBuiltinType!T) {
+            if (check)
+                assertType!(T)(info);
+            return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
+        }
+        else {
+            Predicate p;
+            if (info.getJoinColumn() != "") {
+                auto entityInfo = new EntityInfo!(T,T)(null, t);
+                p = new Predicate().addValue(info.getJoinColumn(), "=", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
+            }
+            else {
+                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+            }
+            return p;
+        }
     }
 
     public Predicate equal(EntityFieldInfo info) {
@@ -116,8 +128,23 @@ public class CriteriaBuilder
     }
 
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
-        assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), "<>", _factory.getDialect().toSqlValue(t));
+
+        static if (isBuiltinType!T) {
+            if (check)
+                assertType!(T)(info);
+            return new Predicate().addValue(info.getFullColumn(), "<>", _factory.getDialect().toSqlValue(t));
+        }
+        else {
+            Predicate p;
+            if (info.getJoinColumn() != "") {
+                auto entityInfo = new EntityInfo!(T,T)(null, t);
+                p = new Predicate().addValue(info.getJoinColumn(), "<>", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
+            }
+            else {
+                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+            }
+            return p;
+        }
     }
 
     public Predicate notEqual(EntityFieldInfo info){
