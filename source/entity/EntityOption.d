@@ -23,12 +23,12 @@ class EntityOption
         string password = "";
         string charset = "utf8";
         string prefix = "";
-        
+
         string url()
         {
-            string s = format("%s://%s:%s@%s:%d/%s?prefix=%s&charset=%s",
-                    driver, username, password, host, port, database, prefix, charset);
-            return s;
+            import std.format;
+
+            return format("%s://%s:%s@%s:%d/%s?prefix=%s&charset=%s", driver, username, password, host, port, database, prefix, charset);
         }
     }
 

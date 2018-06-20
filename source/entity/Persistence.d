@@ -25,7 +25,7 @@ class Persistence
 
     public static EntityManagerFactory createEntityManagerFactory(EntityOption option)
 	{
-		return createEntityManagerFactory(DEFAULT_NAME, option, tablePrefix);
+		return createEntityManagerFactory(DEFAULT_NAME, option);
 	}
 
     public static EntityManagerFactory createEntityManagerFactory(string name, EntityOption option)
