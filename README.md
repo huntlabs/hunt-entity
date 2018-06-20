@@ -30,8 +30,15 @@ class User : Entity
 
 void main()
 {
-    DatabaseOption options = new DatabaseOption("mysql://root:123456@localhost:3306/huntblog?charset=utf-8");
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default", options);
+    auto option = new EntityOption;
+
+    option.database.driver = "postgresql";
+    option.database.host = "localhost";
+    option.database.username = "postgres";
+    option.database.password = "123456";
+    option.database.database = "test";
+
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default", option);
     EntityManager em = entityManagerFactory.createEntityManager();
 
     // begin transaction
