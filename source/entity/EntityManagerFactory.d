@@ -91,7 +91,6 @@ class EntityManagerFactory {
 
         foreach(k,v; __createTableList) {
             string check = _option.database.prefix~k;
-            log(" check = ", check);
             if (!Common.inArray(exsitTables, _option.database.prefix~k)) {
                 flushList[k] = v;
             }
