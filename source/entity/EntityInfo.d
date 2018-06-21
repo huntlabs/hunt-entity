@@ -53,7 +53,7 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());
-    
+
 
     this(CriteriaBuilder builder = null, T t = null, F owner = null)
     {
@@ -143,8 +143,26 @@ string makeSetPrimaryValue(T)() {
 
 
 string makeImport(T)() {
-    return `
-    import `~moduleName!T~`;`;
+    string str;
+    foreach(memberName; __traits(derivedMembers, T)) {
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType)) {
+                static if (isArray!memType && !isSomeString!memType) {
+    str ~= `
+    import `~moduleName!(ForeachType!memType)~`;`;
+                }
+                else static if (!isBuiltinType!memType){
+    str ~= `
+    import `~moduleName!memType~`;`;          
+                }
+                
+            }
+        }
+    }
+    // return `
+    // import `~moduleName!T~`;`;
+    return str;
 }
 
 
@@ -176,7 +194,12 @@ string makeSetIncreaseKey(T)() {
             }
         }
     }
-    return `
+    if (name == "")
+        return `
+    public void setIncreaseKey(ref T entity, int value) {
+    }`;
+    else
+        return `
     public void setIncreaseKey(ref T entity, int value) {
         entity.`~name~` = value;
     }`;

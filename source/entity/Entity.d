@@ -22,9 +22,9 @@ mixin template MakeEntity()
     mixin(makeLazyLoadList!(typeof(this)));
     mixin(makeLazyLoadSingle!(typeof(this)));
     mixin(makeGetFunction!(typeof(this)));
-    shared static this() {
-        addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
-    }
+    // shared static this() {
+        // addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
+    // }
 }
 
 
@@ -82,16 +82,21 @@ string makeGetFunction(T)() {
             static if (!isFunction!(memType)) {
                 static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne) || hasUDA!(__traits(getMember, T ,memberName), OneToMany) ||
                             hasUDA!(__traits(getMember, T ,memberName), ManyToOne) || hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                    str ~= "\n\tpublic "~memType.stringof~" get"~capitalize(memberName)~"() {\n\t\t";
+    str ~= `
+    public `~memType.stringof~` get`~capitalize(memberName)~`() {`;
                     static if (isArray!memType) {
-                        str ~= "if ("~memberName~".length == 0)\n\t\t\t";
-                        str ~= memberName~" = lazyLoadList!("~memType.stringof.replace("[]","")~")(getLazyData(\""~memberName~"\"));\n\t\t";
+        str ~= `
+        if (`~memberName~`.length == 0)
+            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"));`;
                     }
                     else {
-                        str ~= "if ("~memberName~" is null)\n\t\t\t";
-                        str ~= memberName~" = lazyLoadSingle!("~memType.stringof~")(getLazyData(\""~memberName~"\"));\n\t\t";
+        str ~= `
+        if (`~memberName~` is null)
+            `~memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
                     }
-                    str ~= "return "~memberName~";\n\t}";
+        str ~= `
+        return `~memberName~`;
+    }`;
                 }
             }
         }
