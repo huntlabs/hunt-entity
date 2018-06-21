@@ -53,7 +53,7 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());
-    
+
 
     this(CriteriaBuilder builder = null, T t = null, F owner = null)
     {
@@ -176,7 +176,10 @@ string makeSetIncreaseKey(T)() {
             }
         }
     }
-    return `
+    if (name == "")
+        return "";
+    else
+        return `
     public void setIncreaseKey(ref T entity, int value) {
         entity.`~name~` = value;
     }`;

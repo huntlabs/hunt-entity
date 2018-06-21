@@ -31,4 +31,11 @@ class Common {
         }
         return false;
     }
+
+    static string quoteStr(string s) {
+        if (s == "length")
+            return s;
+        return "\""~s~"\"";
+    }
+
 }
