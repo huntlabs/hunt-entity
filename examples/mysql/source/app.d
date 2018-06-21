@@ -6,8 +6,8 @@ import entity;
 import std.stdio;
 
 @Table("Book")
-class Book : Entity{
-    mixin GetFunction;
+class Book {
+    mixin MakeEntity;
 
     @AutoIncrement @PrimaryKey 
     long id;
@@ -22,8 +22,8 @@ class Book : Entity{
 }
 
 @Table("BookDetail")
-class BookDetail : Entity{
-    mixin GetFunction;
+class BookDetail {
+    mixin MakeEntity;
 
     @AutoIncrement @PrimaryKey 
     long id;
@@ -32,8 +32,6 @@ class BookDetail : Entity{
 
     @OneToOne(FetchType.LAZY, "detail")
     Book book;
-
-
 }
 
 
@@ -41,9 +39,9 @@ class BookDetail : Entity{
 
 
 @Table("blog")
-class Blog  : Entity{
+class Blog  {
 
-    mixin GetFunction;
+    mixin MakeEntity;
 
     @AutoIncrement @PrimaryKey 
     int id;
@@ -61,8 +59,8 @@ class Blog  : Entity{
 
 
 @Table("user")
-class User : Entity{
-    mixin GetFunction;
+class User {
+    mixin MakeEntity;
 
     @AutoIncrement @PrimaryKey 
     int id;

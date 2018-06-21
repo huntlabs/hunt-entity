@@ -6,5 +6,11 @@
 	},
 	"targetType": "executable",
 	"description": "A mysql example application for entity.",
-	"copyright": "Copyright © 2017, HuntLabs.cn"
+	"copyright": "Copyright © 2017, HuntLabs.cn",
+	"configurations": [{
+		"name": "default",
+		"subConfigurations": {
+			"entity": "mysql"
+		}
+	}]
 }
