@@ -5,75 +5,10 @@ import entity;
 
 import std.stdio;
 
-@Table("Book")
-class Book {
-    mixin MakeEntity;
-
-    @AutoIncrement @PrimaryKey 
-    long id;
-
-    string name;
-    
-    @OneToOne(FetchType.LAZY)
-    @JoinColumn("book_detail")
-    BookDetail detail;
-
-
-}
-
-@Table("BookDetail")
-class BookDetail {
-    mixin MakeEntity;
-
-    @AutoIncrement @PrimaryKey 
-    long id;
-
-    long numberOfPages;
-
-    @OneToOne(FetchType.LAZY, "detail")
-    Book book;
-}
-
-
-
-
-
-@Table("blog")
-class Blog  {
-
-    mixin MakeEntity;
-
-    @AutoIncrement @PrimaryKey 
-    int id;
-
-    string title;
-    string content;
-
-    @ManyToOne(FetchType.EAGER)
-    @JoinColumn("uid")
-    User user;
-
-    
-
-}
-
-
-@Table("user")
-class User {
-    mixin MakeEntity;
-
-    @AutoIncrement @PrimaryKey 
-    int id;
-
-    string name;
-    double money;
-    string email;
-    bool status;
-
-    @OneToMany("user", FetchType.LAZY)
-    Blog[] blogs;
-
-}
+import SqlStruct.User;
+import SqlStruct.Blog;
+import SqlStruct.Book;
+import SqlStruct.BookDetail;
 
 
 
@@ -322,7 +257,7 @@ void main() {
     // option.database.prefix = "test_";
     
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
-
+    entityManagerFactory.createTables!(User,Blog,Book,BookDetail);
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
     manager.getTransaction().begin();
@@ -463,7 +398,7 @@ void main() {
     manager.persist(book);
 
     book = manager.find!(Book)(book.id);
-    assert(book.detail is null, "book.detail is null");
+    assert(book.detail !is null, "book.detail is null");
     assert(book.getDetail().numberOfPages, "book.getDetail().numberOfPages");
     
 
@@ -471,11 +406,9 @@ void main() {
     assert(detail.book is null, "detail.book is null ");
     assert(detail.getBook().id, "detail.getBook().id ");
     
-    
-
-    
     manager.remove!(Book)(book);
     manager.remove!(BookDetail)(detail);
+
 
 
 
