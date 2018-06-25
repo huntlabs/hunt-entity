@@ -23,7 +23,7 @@ mixin template MakeEntity()
     mixin(makeLazyLoadSingle!(typeof(this)));
     mixin(makeGetFunction!(typeof(this)));
     // shared static this() {
-        // addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
+    //     addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
     // }
 }
 
@@ -103,11 +103,4 @@ string makeGetFunction(T)() {
     }
     return str;
 }  
-string getEntityTableName(T)() {
-    static if (hasUDA!(T, Table)) {
-        return getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name;
-    }
-    else {
-        return T.stringof;
-    }
-}
+

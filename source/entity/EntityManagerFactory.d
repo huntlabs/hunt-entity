@@ -21,6 +21,7 @@ class EntityManagerFactory {
     public Database _db;
     public string _name;
     private CriteriaBuilder _criteriaBuilder;
+    private string[] _exitTables;
 
     public this(string name, EntityOption option)
     {
@@ -35,6 +36,7 @@ class EntityManagerFactory {
         _db = new Database(databaseOptions);
         _dialect = _db.createDialect();
         _criteriaBuilder = new CriteriaBuilder(this);
+        _exitTables = showTables();
         autoCreateTables();
     }
     
@@ -83,16 +85,25 @@ class EntityManagerFactory {
         return ret;
     }
 
+    public static void prepareEntity(T...)() {
+        foreach(V; T) {
+            addCreateTableHandle(getEntityTableName!V, &onCreateTableHandler!V);
+        }
+    }
+
+    public void createTables(T...)() {
+        prepareEntity!(T);
+        autoCreateTables();
+    }
+
     public void autoCreateTables()
     {
-        string[] exsitTables = showTables();
-        log("exsitTables= ", exsitTables);
         GetCreateTableHandle[string] flushList;
-
         foreach(k,v; __createTableList) {
             string check = _option.database.prefix~k;
-            if (!Common.inArray(exsitTables, _option.database.prefix~k)) {
+            if (!Common.inArray(_exitTables, _option.database.prefix~k)) {
                 flushList[k] = v;
+                log("create new table ", _option.database.prefix~k);
             }
         }
 
@@ -108,8 +119,6 @@ class EntityManagerFactory {
             log(v);
             _db.execute(v);
         }
-        
-
     }
 
     public Dialect getDialect() {return _dialect;}
@@ -117,22 +126,29 @@ class EntityManagerFactory {
     public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
 }
 
-alias GetCreateTableHandle = string function(Dialect dialect, string tablePrefix, ref string[] alterRows);
 
+
+alias GetCreateTableHandle = string function(Dialect dialect, string tablePrefix, ref string[] alterRows);
 string onCreateTableHandler(T)(Dialect dialect, string tablePrefix, ref string[] alertRows)
 {
     return (new EntityCreateTable!T).createTable(dialect, tablePrefix, alertRows);
 }
-
 void addCreateTableHandle(string tableName, GetCreateTableHandle handler)
 {
-    __createTableList[tableName] = handler;
+    if (tableName !in __createTableList)
+        __createTableList[tableName] = handler;
 }
-
 GetCreateTableHandle getCreateTableHandle(string tableName)
 {
     return __createTableList.get(tableName, null);
 }
-
+string getEntityTableName(T)() {
+    static if (hasUDA!(T, Table)) {
+        return getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name;
+    }
+    else {
+        return T.stringof;
+    }
+}
 private:
 __gshared GetCreateTableHandle[string] __createTableList;
