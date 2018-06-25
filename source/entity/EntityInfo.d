@@ -160,9 +160,9 @@ string makeImport(T)() {
             }
         }
     }
+    return str;
     // return `
     // import `~moduleName!T~`;`;
-    return str;
 }
 
 
@@ -321,8 +321,9 @@ string makeDeSerialize(T,F)() {
             static if (!isFunction!(memType)) {
                 static if (isBasicType!memType || isSomeString!memType) {
         str ~=`
-        if (data.getData("`~memberName~`")) {
-            (cast(EntityFieldNormal)(this.`~memberName~`)).deSerialize!(`~memType.stringof~`)(data.getData("`~memberName~`").value, _data.`~memberName~`);
+        auto `~memberName~` = cast(EntityFieldNormal)(this.`~memberName~`);
+        if (data.getData(`~memberName~`.getColumnName())) {
+            `~memberName~`.deSerialize!(`~memType.stringof~`)(data.getData(`~memberName~`.getColumnName()).value, _data.`~memberName~`);
         }`;
                 }
                 else {
