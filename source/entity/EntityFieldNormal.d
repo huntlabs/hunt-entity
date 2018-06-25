@@ -37,6 +37,9 @@ class EntityFieldNormal : EntityFieldInfo {
     }
 
     public void deSerialize(R)(string value, ref R r) {
+        if (value.length == 0) {
+            return;
+        }
         if (value.length == 1 && cast(byte)(value[0]) == 0) {
             return;
         }
