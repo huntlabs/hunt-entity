@@ -12,13 +12,15 @@
 module entity.EntityInfo;
 
 import entity;
-import std.conv;
+import entity.DefaultEntityManagerFactory;
 
+import std.conv;
 
 
 class EntityInfo(T : Object, F : Object = T) {
     
     private EntityFieldInfo[string] _fields;
+    private string _factoryName = defaultEntityManagerFactoryName();
     private string _tableName;
     private string _entityClassName;
     private string _autoIncrementKey;
@@ -29,14 +31,12 @@ class EntityInfo(T : Object, F : Object = T) {
     private F _owner;
     private string _tablePrefix;
 
-
     //auto mixin function
     // private void initEntityData(T t){}
     // public T deSerialize(Row row) {}
     // public void setIncreaseKey(ref T entity, int value) {}
     // public R getPrimaryValue() {}
     // public void setPrimaryValue(ref T entity, int value) {}
-
 
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
@@ -46,14 +46,12 @@ class EntityInfo(T : Object, F : Object = T) {
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
 
-
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
     mixin(makeDeSerialize!(T,F)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());
-
 
     this(CriteriaBuilder builder = null, T t = null, F owner = null)
     {
@@ -111,14 +109,14 @@ class EntityInfo(T : Object, F : Object = T) {
         return info;
     }
 
-    public string getEntityClassName() {return _entityClassName;}
-    public string getTableName() {return _tableName;}
-    public string getAutoIncrementKey() {return _autoIncrementKey;}
-    public EntityFieldInfo[string] getFields() {return _fields;}
-    public string getPrimaryKeyString() {return _primaryKey;}
-    public EntityFieldInfo getSingleField(string name) {return _fields.get(name,null);}
+    public string getFactoryName() { return _factoryName; };
+    public string getEntityClassName() { return _entityClassName; }
+    public string getTableName() { return _tableName; }
+    public string getAutoIncrementKey() { return _autoIncrementKey; }
+    public EntityFieldInfo[string] getFields() { return _fields; }
+    public string getPrimaryKeyString() { return _primaryKey; }
+    public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
 }
-
 
 string makeSetPrimaryValue(T)() {
     string R;
@@ -216,6 +214,12 @@ string makeInitEntityData(T,F)() {
         str ~= `
         _tableName = _tablePrefix ~ "` ~ T.stringof ~ `"`;
     }
+
+    static if (hasUDA!(T, Factory))
+    {
+        str ~= "_factoryName = " ~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name ~ ";\n";
+    }
+
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));

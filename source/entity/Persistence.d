@@ -19,13 +19,11 @@ import entity.EntityOption;
 
 class Persistence
 {
-	private static string DEFAULT_NAME = "default";
-
 	private static EntityManagerFactory[string] _factories;
 
     public static EntityManagerFactory createEntityManagerFactory(EntityOption option)
 	{
-		return createEntityManagerFactory(DEFAULT_NAME, option);
+		return createEntityManagerFactory(defaultEntityManagerFactoryName(), option);
 	}
 
     public static EntityManagerFactory createEntityManagerFactory(string name, EntityOption option)
@@ -35,14 +33,14 @@ class Persistence
 		
 		auto factory = new EntityManagerFactory(name, option);
 		this._factories[name] = factory;
-		if (DEFAULT_NAME == name)
+		if (defaultEntityManagerFactoryName() == name)
 		{
 			setDefaultEntityManagerFactory(factory);
 		}
 		return factory;
 	}
 
-    public static EntityManagerFactory getEntityManagerFactory(string name = DEFAULT_NAME)
+    public static EntityManagerFactory getEntityManagerFactory(string name = defaultEntityManagerFactoryName())
 	{
 		return this._factories[name];
 	}

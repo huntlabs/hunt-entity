@@ -11,6 +11,12 @@
  
 module entity.Constant;
 
+//@Factory
+struct Factory
+{
+    string name;
+}
+
 //@TableName
 struct Table {
     string name;
