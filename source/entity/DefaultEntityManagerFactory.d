@@ -15,7 +15,7 @@ import entity.EntityManagerFactory;
 
 __gshared private EntityManagerFactory _defaultEntityManagerFactory;
 
-@property EntityManagerFactory defaultEntityManagerFactoryName()
+@property string defaultEntityManagerFactoryName()
 {
     return "default";
 }
