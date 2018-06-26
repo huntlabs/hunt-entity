@@ -20,7 +20,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 {
     protected EntityManager _manager;
 
-    this(EntityManager manager) {
+    this(EntityManager manager = null) {
         _manager = manager;
     }
 
@@ -30,40 +30,51 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public long count()
     {
-        CriteriaBuilder builder = _manager.getCriteriaBuilder();
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();
         criteriaQuery.select(builder.count(root));
         
-        Long result = cast(Long)(_manager.createQuery(criteriaQuery).getSingleResult());
+        Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
         
         return result.longValue();
     }
 
     public void remove(T entity)
     {
-        _manager.remove!T(entity);
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        em.remove!T(entity);
     }
 
     public void removeAll()
     {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
         foreach (entity; findAll())
         {
-            _manager.remove!T(entity);
+            em.remove!T(entity);
         }
     }
     
     public void removeAll(T[] entities)
     {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
         foreach (entity; entities)
         {
-            _manager.remove!T(entity);
+            em.remove!T(entity);
         }
     }
 
     public void removeById(ID id)
     {
-        _manager.remove!T(id);
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        em.remove!T(id);
         
     }
     
@@ -75,10 +86,12 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] findAll()
     {
-        CriteriaBuilder builder = _manager.getCriteriaBuilder();
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(T);
         Root!T root = criteriaQuery.from().autoJoin();
-        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery.select(root));
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery.select(root));
         return typedQuery.getResultList();
     }
 
@@ -97,19 +110,23 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T findById(ID id)
     {
-        T result = _manager.find!T(id);
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        T result = em.find!T(id);
         return result;
     }
 
     public T save(T entity)
     {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
         if (mixin(GenerateFindById!T()) is null)
         {
-            _manager.persist(entity);
+            em.persist(entity);
         }
         else
         {
-            _manager.merge!T(entity);
+            em.merge!T(entity);
         }
         return entity;
     }
@@ -127,5 +144,5 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
 string GenerateFindById(T)()
 {
-    return "_manager.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
+    return "em.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
 }
