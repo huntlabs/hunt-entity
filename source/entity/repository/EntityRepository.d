@@ -25,8 +25,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
     static string initObjects()
     {
-        return `        auto em = this.createEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();    
+        return `
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
+        CriteriaBuilder builder = _manager.getCriteriaBuilder();    
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();`;
     }
@@ -41,9 +43,9 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         criteriaQuery.select(builder.count(root)).where(specification.toPredicate(
                 root , criteriaQuery , builder));
         
-        Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
+        Long result = cast(Long)(_manager.createQuery(criteriaQuery).getSingleResult());
 
-        em.close();
+        
 
         return result.longValue();
     }
@@ -64,10 +66,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         //all
         criteriaQuery.select(root);
 
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        em.close();
+        
 
         return res;
     }
@@ -80,10 +82,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         criteriaQuery.select(root).where(specification.toPredicate(
                 root , criteriaQuery , builder));
 
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        em.close();
+        
 
         return res;
     }
@@ -100,10 +102,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         criteriaQuery.select(root).where(specification.toPredicate(
             root , criteriaQuery , builder));
 
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        em.close();
+        
 
         return res;
     }
@@ -120,13 +122,13 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         criteriaQuery.select(root);
 
         //page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getPageSize());
 
         auto res = typedQuery.getResultList();
         auto page = new Page!T(res, pageable, super.count());
 
-        em.close();
+        
 
         return page;
     }
@@ -144,12 +146,12 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
             root , criteriaQuery , builder));
                 
         //page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
             .setMaxResults(pageable.getPageSize());
         auto res = typedQuery.getResultList();
         auto page = new Page!T(res, pageable, count(specification));
 
-        em.close();
+        
 
         return page;
     }

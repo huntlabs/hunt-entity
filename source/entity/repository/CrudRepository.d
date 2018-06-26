@@ -18,87 +18,97 @@ public import entity.repository.Repository;
 
 class CrudRepository(T, ID) : Repository!(T, ID)
 {
-    EntityManager createEntityManager()
-    {
-            return defaultEntityManagerFactory().createEntityManager();
+    protected EntityManager _manager;
+
+    this() {
+        _manager = defaultEntityManagerFactory().createEntityManager();
+    }
+    ~ this() {
+        if (_manager !is null)
+            _manager.close();
+        _manager = null;
+    }
+    public void close() {
+        if (_manager !is null)
+            _manager.close();
+        _manager = null;
     }
 
     public long count()
     {
-        auto em = this.createEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         
+        CriteriaBuilder builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();
         criteriaQuery.select(builder.count(root));
         
-        Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
-        em.close();
+        Long result = cast(Long)(_manager.createQuery(criteriaQuery).getSingleResult());
+        
         return result.longValue();
     }
 
     public void remove(T entity)
     {
-        auto em = this.createEntityManager();
-        em.remove!T(entity);
-        em.close();
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
+        _manager.remove!T(entity);
     }
 
     public void removeAll()
     {
-        auto em = this.createEntityManager();
-
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         foreach (entity; findAll())
         {
-            em.remove!T(entity);
+            _manager.remove!T(entity);
         }
-
-        em.close();
     }
     
     public void removeAll(T[] entities)
     {
-        auto em = this.createEntityManager();
-
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         foreach (entity; entities)
         {
-            em.remove!T(entity);
+            _manager.remove!T(entity);
         }
-        
-        em.close();
     }
 
     public void removeById(ID id)
     {
-        auto em = this.createEntityManager();
-        em.remove!T(id);
-        em.close();
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
+        _manager.remove!T(id);
+        
     }
     
     public bool existsById(ID id)
     {
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         T entity = this.findById(id);
-        
         return (entity !is null);
     }
 
     public T[] findAll()
     {
-        auto em = this.createEntityManager();
-        CriteriaBuilder builder = em.getCriteriaBuilder();
-
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
+        CriteriaBuilder builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(T);
-
         Root!T root = criteriaQuery.from().autoJoin();
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery.select(root));
-
+        TypedQuery!T typedQuery = _manager.createQuery(criteriaQuery.select(root));
         return typedQuery.getResultList();
     }
 
     public T[] findAllById(ID[] ids)
     {
-        T[] entities;
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
 
+        T[] entities;
         foreach (id; ids)
         {
             T entity = this.findById(id);
@@ -111,45 +121,41 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T findById(ID id)
     {
-        auto em = this.createEntityManager();
-        T result = em.find!T(id);
-        em.close();
-
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
+        T result = _manager.find!T(id);
         return result;
     }
 
     public T save(T entity)
     {
-        auto em = this.createEntityManager();
-
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         if (mixin(GenerateFindById!T()) is null)
         {
-            em.persist(entity);
+            _manager.persist(entity);
         }
         else
         {
-            em.merge!T(entity);
+            _manager.merge!T(entity);
         }
-
-        em.close();
-
         return entity;
     }
 
     public T[] saveAll(T[] entities)
     {
+        if (_manager is null)
+            throw new EntityException("EntityManager has been close!!!");
         T[] resultList;
-
         foreach (entity; entities)
         {
             resultList ~= this.save(entity);
         }
-
         return resultList;
     }
 }
 
 string GenerateFindById(T)()
 {
-    return "em.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
+    return "_manager.find!T(entity." ~ getSymbolsByUDA!(T, PrimaryKey)[0].stringof ~ ")";
 }
