@@ -90,14 +90,12 @@ class EntityInfo(T : Object, F : Object = T) {
     public string[string] getInsertString() {
         string[string] str;
         foreach(info; _fields) {
-
-
             if (info.getFileldName() != _autoIncrementKey) {
                 EntityFieldType fieldType = info.getFileldType();
                 bool exsitValue = false;
                 if (fieldType == EntityFieldType.NORMAL || fieldType == EntityFieldType.MANY_TO_ONE || fieldType == EntityFieldType.ONE_TO_ONE) {
-                    if (info.getFieldValue() != null && info.getColumnName() != "") {
-                        str[info.getFullColumn()] = info.getInsertValue();
+                    if (info.getColumnName() != "") {
+                        str[info.getFullColumn()] = info.getStringValue();
                     }
                 }
             }

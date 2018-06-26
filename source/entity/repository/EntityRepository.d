@@ -26,8 +26,6 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
     static string initObjects()
     {
         return `
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         CriteriaBuilder builder = _manager.getCriteriaBuilder();    
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();`;

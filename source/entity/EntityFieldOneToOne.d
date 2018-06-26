@@ -32,7 +32,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         }
         else {
             _joinColumn = columnOrjoin;
-            _insertValue = _entityInfo.getPrimaryValue().to!string;
+            _stringValue = _entityInfo.getPrimaryValue().to!string;
             _dfieldType = getDlangDataType!(typeof(_entityInfo.getPrimaryValue()));
 
             _foreignKeyData = new ForeignKeyData();
