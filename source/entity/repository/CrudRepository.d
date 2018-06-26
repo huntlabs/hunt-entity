@@ -21,7 +21,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     protected EntityManager _manager;
 
     this() {
-        _manager = defaultEntityManagerFactory().createEntityManager();
+        createManager();
     }
     ~ this() {
         if (_manager !is null)
@@ -33,6 +33,16 @@ class CrudRepository(T, ID) : Repository!(T, ID)
             _manager.close();
         _manager = null;
     }
+
+    public EntityManager getManager() {
+        return _manager;
+    }
+    public void createManager() {
+        if (_manager !is null)
+            _manager.close();
+        _manager = defaultEntityManagerFactory().createEntityManager();
+    }
+
 
     public long count()
     {
