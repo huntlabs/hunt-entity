@@ -19,6 +19,9 @@ public import entity.domain;
 
 class EntityRepository (T, ID) : CrudRepository!(T, ID)
 {
+    this(EntityManager manager = null) {
+        super(manager);
+    }
     static string tableName()
     {
         return getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
