@@ -25,7 +25,7 @@ class EntityFieldInfo : EntityExpression
     protected JoinSqlBuild _joinSqlData;
     private EntityFieldType _fieldType;
     protected bool _enableJoin = true;
-    protected string _insertValue;
+    protected string _stringValue;
     protected DlangDataType _dfieldType;
 
     private bool _nullable = true;
@@ -67,7 +67,7 @@ class EntityFieldInfo : EntityExpression
     public JoinSqlBuild getJoinSqlData() {return _joinSqlData;}
     public EntityFieldType getFileldType() {return _fieldType;}
     public bool isEnableJoin() {return _enableJoin;}
-    public string getInsertValue() {return _insertValue;}
+    public string getStringValue() {return _stringValue;}
     public DlangDataType getDlangType() {return _dfieldType;}
 
  

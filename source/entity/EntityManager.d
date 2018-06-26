@@ -89,7 +89,7 @@ class EntityManager {
         Root!T r = criteriaUpdate.from(entity);
         Predicate condition = criteriaBuilder.equal(r.getPrimaryField());
         foreach(k,v; r.getEntityInfo().getFields()) {
-            if (k != r.getEntityInfo().getPrimaryKeyString() && v.getFileldType() == EntityFieldType.NORMAL) {
+            if (k != r.getEntityInfo().getPrimaryKeyString() && v.getColumnName() != "") {
                 criteriaUpdate.set(v);    
             }
         }

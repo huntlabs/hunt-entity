@@ -24,7 +24,10 @@ class EntityFieldNormal : EntityFieldInfo {
         _dfieldType = dfieldType;
         if (builder) {
             _builder = builder;
-            _insertValue = _builder.getDialect().toSqlValueImpl(_dfieldType, fieldValue); 
+            _stringValue = _builder.getDialect().toSqlValueImpl(_dfieldType, fieldValue); 
+            if (dfieldType.getName() == "double" && _stringValue == "nan") {
+                _stringValue = "0";
+            } 
         }
     }
     public void assertType(T)() {

@@ -124,7 +124,7 @@ public class CriteriaBuilder
     }
 
     public Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "=", info.getStringValue());
     }
 
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
@@ -148,7 +148,7 @@ public class CriteriaBuilder
     }
 
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<>", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<>", info.getStringValue());
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
@@ -157,7 +157,7 @@ public class CriteriaBuilder
     }
 
     public Predicate gt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), ">", info.getStringValue());
     }
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
@@ -166,7 +166,7 @@ public class CriteriaBuilder
     }
 
     public Predicate ge(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), ">=", info.getStringValue());
     }
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
@@ -175,7 +175,7 @@ public class CriteriaBuilder
     }
 
     public Predicate lt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<", info.getStringValue());
     }
 
     public Predicate le(T)(EntityFieldInfo info, T t){
@@ -184,7 +184,7 @@ public class CriteriaBuilder
     }
 
     public Predicate le(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<=", _factory.getDialect().toSqlValue(info.getFieldValue()));
+        return new Predicate().addValue(info.getFullColumn(), "<=", info.getStringValue());
     }
 
     public Predicate like(EntityFieldInfo info, string pattern) {

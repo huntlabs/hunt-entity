@@ -20,35 +20,16 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 {
     protected EntityManager _manager;
 
-    this() {
-        createManager();
-    }
-    ~ this() {
-        if (_manager !is null)
-            _manager.close();
-        _manager = null;
-    }
-    public void close() {
-        if (_manager !is null)
-            _manager.close();
-        _manager = null;
+    this(EntityManager manager) {
+        _manager = manager;
     }
 
     public EntityManager getManager() {
         return _manager;
     }
-    public void createManager() {
-        if (_manager !is null)
-            _manager.close();
-        _manager = defaultEntityManagerFactory().createEntityManager();
-    }
-
 
     public long count()
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
-        
         CriteriaBuilder builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();
@@ -61,15 +42,11 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public void remove(T entity)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         _manager.remove!T(entity);
     }
 
     public void removeAll()
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         foreach (entity; findAll())
         {
             _manager.remove!T(entity);
@@ -78,8 +55,6 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     
     public void removeAll(T[] entities)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         foreach (entity; entities)
         {
             _manager.remove!T(entity);
@@ -88,24 +63,18 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public void removeById(ID id)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         _manager.remove!T(id);
         
     }
     
     public bool existsById(ID id)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         T entity = this.findById(id);
         return (entity !is null);
     }
 
     public T[] findAll()
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         CriteriaBuilder builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(T);
         Root!T root = criteriaQuery.from().autoJoin();
@@ -115,9 +84,6 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] findAllById(ID[] ids)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
-
         T[] entities;
         foreach (id; ids)
         {
@@ -131,16 +97,12 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T findById(ID id)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         T result = _manager.find!T(id);
         return result;
     }
 
     public T save(T entity)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         if (mixin(GenerateFindById!T()) is null)
         {
             _manager.persist(entity);
@@ -154,8 +116,6 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] saveAll(T[] entities)
     {
-        if (_manager is null)
-            throw new EntityException("EntityManager has been close!!!");
         T[] resultList;
         foreach (entity; entities)
         {
