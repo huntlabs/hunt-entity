@@ -24,13 +24,20 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         _manager = manager;
     }
 
-    public EntityManager getManager() {
-        return _manager;
+    public EntityInfo!T getInfo()
+    {
+        return new EntityInfo!T;
+    }
+
+    public EntityManager createEntityManager()
+    {
+        auto entityInfo = getInfo();
+        return Persistence.createEntityManagerFactory(entityInfo.getFactoryName()).createEntityManager();
     }
 
     public long count()
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
 
         CriteriaBuilder builder = em.getCriteriaBuilder();

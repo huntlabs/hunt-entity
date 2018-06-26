@@ -22,17 +22,18 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
     this(EntityManager manager = null) {
         super(manager);
     }
+
     static string tableName()
     {
-        return getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
+        return getInfo().getTableName();
     }
 
     static string initObjects()
     {
         return `
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
-        CriteriaBuilder builder = _manager.getCriteriaBuilder();    
+        CriteriaBuilder builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();`;
     }
