@@ -411,10 +411,13 @@ void main() {
         manager.remove!(Book)(book);
         manager.remove!(BookDetail)(detail);
 
+
+
         manager.getTransaction().commit();
     }
     catch(Exception e) {
         manager.getTransaction().rollback();
+        log(e);
     }
 
     manager.close();

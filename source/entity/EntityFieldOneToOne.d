@@ -34,8 +34,11 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
             _joinColumn = columnOrjoin;
 
             _columnFieldData = new ColumnFieldData();
-            _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
             _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
+            if (_columnFieldData.valueType == "string")
+                _columnFieldData.value = "'"~_entityInfo.getPrimaryValue().to!string~"'";
+            else
+                _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
 
             _foreignKeyData = new ForeignKeyData();
             _foreignKeyData.columnName = columnOrjoin;

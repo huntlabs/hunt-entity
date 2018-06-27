@@ -24,7 +24,7 @@ class EntityFieldNormal(T) : EntityFieldInfo {
         _columnFieldData.valueType = typeof(value).stringof;
         
         static if (isSomeString!T) {
-            _columnFieldData.value = "\""~value~"\"";
+            _columnFieldData.value = "'"~value~"'";
         }
         else static if (is(T == double)) {
             if (isNaN(value))
