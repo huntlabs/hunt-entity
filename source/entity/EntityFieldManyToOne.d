@@ -24,8 +24,11 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _joinColumn = columnName;
         _columnFieldData = new ColumnFieldData();
-        _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
         _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
+        if (_columnFieldData.valueType == "string")
+            _columnFieldData.value = "'"~_entityInfo.getPrimaryValue().to!string~"'";
+        else
+            _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
 
         initJoinData(tableName, columnName);
     }
