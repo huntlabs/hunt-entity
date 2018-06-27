@@ -25,7 +25,7 @@ class EntityInfo(T : Object, F : Object = T) {
     private string _entityClassName;
     private string _autoIncrementKey;
     private string _primaryKey;
-    private CriteriaBuilder _builder;
+    private EntityManager _manager;
     private Dialect _dialect;
     private T _data;
     private F _owner;
@@ -53,29 +53,25 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());
 
-    this(CriteriaBuilder builder = null, T t = null, F owner = null)
+    this(EntityManager manager = null, T t = null, F owner = null)
     {
-        _builder = builder;
-
-        if (t is null)
+        if (t is null) {
             _data = new T();
-        else 
+        }
+        else {
             _data = t;
-
-        static if (is(T == F))
-        {
+        }
+        static if (is(T == F)){
             _owner = _data;
         }
-        else
-        {
+        else{
             _owner = owner;
         }
-
-        if (builder) {
-            _data.setManager(builder.getManager());
-            _tablePrefix = builder.getManager().getPrefix();
+        _manager = manager;
+        if (_manager) {
+            _data.setManager(_manager);
+            _tablePrefix = _manager.getPrefix();
         }
-
         initEntityData();
     }
 
@@ -89,12 +85,8 @@ class EntityInfo(T : Object, F : Object = T) {
         string[string] str;
         foreach(info; _fields) {
             if (info.getFileldName() != _autoIncrementKey) {
-                EntityFieldType fieldType = info.getFileldType();
-                bool exsitValue = false;
-                if (fieldType == EntityFieldType.NORMAL || fieldType == EntityFieldType.MANY_TO_ONE || fieldType == EntityFieldType.ONE_TO_ONE) {
-                    if (info.getColumnName() != "") {
-                        str[info.getFullColumn()] = info.getStringValue();
-                    }
+                if (info.getColumnName() != "") {
+                    str[info.getFullColumn()] = info.getColumnFieldData().value;
                 }
             }
         }
@@ -117,6 +109,10 @@ class EntityInfo(T : Object, F : Object = T) {
     public string getPrimaryKeyString() { return _primaryKey; }
     public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
 }
+
+
+
+
 
 string makeSetPrimaryValue(T)() {
     string R;
@@ -217,7 +213,8 @@ string makeInitEntityData(T,F)() {
 
     static if (hasUDA!(T, Factory))
     {
-        str ~= "_factoryName = " ~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name ~ ";\n";
+        str ~= `
+        _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
     }
 
     foreach(memberName; __traits(derivedMembers, T)) {
@@ -243,38 +240,38 @@ string makeInitEntityData(T,F)() {
                 string fieldName = "_fields["~memberName.stringof~"]";
                 static if (is(F == memType)) {
         str ~= `
-        `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, `~columnName~`, Variant(_owner), _tableName);`;
+        `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, `~columnName~`, _tableName);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                     string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
         str ~= `
-        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, F)(_builder, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
+        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, F)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
                                     ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~`, `~owner~`);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
                     static if (is(T==F)) {
         str ~= `
-        `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, F)(_builder, `~memberName.stringof~`, _primaryKey, _tableName, `
+        `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, F)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
                                         ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~`, _owner);`;
                     }
                     else {
         str ~= `
-        `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, T)(_builder, `~memberName.stringof~`, _primaryKey, _tableName, `
+        `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, T)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
                                         ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~`, _data);`;
                     }
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
         str ~= `
-        `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_builder, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`, `
+        `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`, `
                                     ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~`);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
                     //TODO                                                                 
                 }
                 else {
-                    string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
+                    // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
         str ~= `
-        `~fieldName~` = new EntityFieldNormal(_builder, `~memberName.stringof~`, `~columnName~`, _tableName, Variant(`~value~`), `~fieldType~`);`;
+        `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
                 }
 
                 //nullable
@@ -323,7 +320,7 @@ string makeDeSerialize(T,F)() {
             static if (!isFunction!(memType)) {
                 static if (isBasicType!memType || isSomeString!memType) {
         str ~=`
-        auto `~memberName~` = cast(EntityFieldNormal)(this.`~memberName~`);
+        auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
         if (data.getData(`~memberName~`.getColumnName())) {
             `~memberName~`.deSerialize!(`~memType.stringof~`)(data.getData(`~memberName~`.getColumnName()).value, _data.`~memberName~`);
         }`;

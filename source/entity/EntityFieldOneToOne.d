@@ -21,19 +21,21 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
 
 
-    this(CriteriaBuilder builder, string fileldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
+    this(EntityManager manager, string fileldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
         _mode = mode;  
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _isMappedBy = _mode.mappedBy != "";
-        super(builder, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner, EntityFieldType.ONE_TO_ONE);
+        super(manager, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner);
         _primaryKey = primaryKey;
         if (_isMappedBy) {
             _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();
         }
         else {
             _joinColumn = columnOrjoin;
-            _stringValue = _entityInfo.getPrimaryValue().to!string;
-            _dfieldType = getDlangDataType!(typeof(_entityInfo.getPrimaryValue()));
+
+            _columnFieldData = new ColumnFieldData();
+            _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+            _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
 
             _foreignKeyData = new ForeignKeyData();
             _foreignKeyData.columnName = columnOrjoin;

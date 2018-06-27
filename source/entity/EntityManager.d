@@ -37,7 +37,7 @@ class EntityManager {
 
     public void persist(T)(ref T entity) {
         SqlBuilder builder = _factory.createSqlBuilder();
-        EntityInfo!T info = new EntityInfo!(T)(getCriteriaBuilder(), entity);
+        EntityInfo!T info = new EntityInfo!(T)(this, entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
             builder.setAutoIncrease(info.getAutoIncrementKey());

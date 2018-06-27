@@ -124,7 +124,7 @@ public class CriteriaBuilder
     }
 
     public Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFullColumn(), "=", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().value);
     }
 
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
@@ -148,7 +148,7 @@ public class CriteriaBuilder
     }
 
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<>", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().value);
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
@@ -157,7 +157,7 @@ public class CriteriaBuilder
     }
 
     public Predicate gt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().value);
     }
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
@@ -166,7 +166,7 @@ public class CriteriaBuilder
     }
 
     public Predicate ge(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">=", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().value);
     }
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
@@ -175,7 +175,7 @@ public class CriteriaBuilder
     }
 
     public Predicate lt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().value);
     }
 
     public Predicate le(T)(EntityFieldInfo info, T t){
@@ -184,7 +184,7 @@ public class CriteriaBuilder
     }
 
     public Predicate le(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<=", info.getStringValue());
+        return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().value);
     }
 
     public Predicate like(EntityFieldInfo info, string pattern) {
@@ -210,9 +210,19 @@ public class CriteriaBuilder
     }
 
     public void assertType(T)(EntityFieldInfo info) {
-        if (cast(EntityFieldNormal)info !is null)
-            (cast(EntityFieldNormal)info).assertType!T;
-        else 
+        if (info.getColumnFieldData()) {
+            static if (is(T == string)) {
+                if (info.getColumnFieldData().valueType != "string") {
+                    throw new EntityException("EntityFieldInfo %s type need been string not %s".format(info.getFileldName(), info.getColumnFieldData().valueType));
+                }
+            }else {
+                if (info.getColumnFieldData().valueType == "string") {
+                    throw new EntityException("EntityFieldInfo %s type need been number not string".format(info.getFileldName()));
+                }
+            }
+        }
+        else {
             throw new EntityException("EntityFieldInfo %s is object can not be Predicate".format(info.getFileldName()));
+        }   
     }
 }

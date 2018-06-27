@@ -11,31 +11,32 @@
  
 module entity.EntityFieldNormal;
 
-
 import entity;
+import std.math;
 
-class EntityFieldNormal : EntityFieldInfo {
 
-    
-    private CriteriaBuilder _builder;
+class EntityFieldNormal(T) : EntityFieldInfo {
 
-    public this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, Variant fieldValue, DlangDataType dfieldType) {
-        super(fileldName, columnName, fieldValue, tableName, EntityFieldType.NORMAL);
-        _dfieldType = dfieldType;
-        if (builder) {
-            _builder = builder;
-            _stringValue = _builder.getDialect().toSqlValueImpl(_dfieldType, fieldValue); 
-            if (dfieldType.getName() == "double" && _stringValue == "nan") {
-                _stringValue = "0";
-            } 
+    public this(string fileldName, string columnName, string tableName, T value) {
+        super(fileldName, columnName, tableName);
+
+        _columnFieldData = new ColumnFieldData();
+        _columnFieldData.valueType = typeof(value).stringof;
+        
+        static if (isSomeString!T) {
+            _columnFieldData.value = "\""~value~"\"";
         }
-    }
-    public void assertType(T)() {
-        if (_dfieldType.getName() == "string" && getDlangTypeStr!T != "string") {
-            throw new EntityException("EntityFieldInfo %s type need been string not %s".format(getFileldName(), typeid(T)));
+        else static if (is(T == double)) {
+            if (isNaN(value))
+                _columnFieldData.value = "0";
+            else 
+                _columnFieldData.value = "%s".format(value);
         }
-        if (_dfieldType.getName() != "string" && getDlangTypeStr!T == "string") {
-            throw new EntityException("EntityFieldInfo %s type need been number not string".format(getFileldName()));
+        else static if (is(T == bool)) {
+            _columnFieldData.value = value ? "1" : "0";
+        }
+        else {
+            _columnFieldData.value = "%s".format(value);
         }
     }
 
@@ -53,7 +54,5 @@ class EntityFieldNormal : EntityFieldInfo {
             r = to!R(value);
         }
     }
-
-    
 
 }

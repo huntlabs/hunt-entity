@@ -6,8 +6,8 @@ import entity;
 
 class EntityFieldOwner : EntityFieldInfo {
     
-    public this(string fileldName, string columnName, Variant fieldValue, string tableName, EntityFieldType fieldType = EntityFieldType.DEFAULT) {
-        super(fileldName, columnName, fieldValue, tableName, EntityFieldType.OWNER);
+    public this(string fileldName, string columnName, string tableName) {
+        super(fileldName, columnName, tableName);
         _joinColumn = columnName;
     }
 

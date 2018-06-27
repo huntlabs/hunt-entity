@@ -20,11 +20,12 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     private string _joinColumn;
     private string _findString;
     private T[][string] _decodeCache;
+    
 
 
 
-    this(CriteriaBuilder builder, string fileldName, string primaryKey, string tableName, OneToMany mode, F owner) {
-        super(builder, fileldName, "", tableName, null, owner, EntityFieldType.ONE_TO_MANY);
+    this(EntityManager manager, string fileldName, string primaryKey, string tableName, OneToMany mode, F owner) {
+        super(manager, fileldName, "", tableName, null, owner);
         init(primaryKey, mode, owner);
     }
 
@@ -113,7 +114,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
 
         T[] ret;
         T singleRet;
-        auto stmt = _builder.getManager().getSession().prepare(_findString~key);
+        auto stmt = _manager.getSession().prepare(_findString~key);
 		auto res = stmt.query();
         long count = -1;
         foreach(value; res) {
