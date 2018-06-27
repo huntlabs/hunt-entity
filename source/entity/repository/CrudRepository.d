@@ -29,7 +29,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return new EntityInfo!T;
     }
 
-    public EntityManager getManager() {
+    public EntityManager getEntityManager() {
         return _manager;
     }
 
