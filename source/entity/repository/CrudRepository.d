@@ -32,7 +32,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     public EntityManager createEntityManager()
     {
         auto entityInfo = getInfo();
-        return Persistence.createEntityManagerFactory(entityInfo.getFactoryName()).createEntityManager();
+        return Persistence.getEntityManagerFactory(entityInfo.getFactoryName()).createEntityManager();
     }
 
     public long count()

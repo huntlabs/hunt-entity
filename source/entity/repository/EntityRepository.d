@@ -23,7 +23,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         super(manager);
     }
 
-    static string tableName()
+    string tableName()
     {
         return getInfo().getTableName();
     }
