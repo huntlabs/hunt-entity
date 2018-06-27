@@ -17,16 +17,16 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
 
     private ManyToOne _mode;
     private string _findSqlStr;
-    private CriteriaBuilder _builder;
 
-    this(CriteriaBuilder builder, string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
-        super(builder, fileldName, columnName, tableName, fieldValue, null, EntityFieldType.MANY_TO_ONE);
+    this(EntityManager manager, string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
+        super(manager, fileldName, columnName, tableName, fieldValue, null);
         _mode = mode;      
         _enableJoin = _mode.fetch == FetchType.EAGER;    
-        _builder = builder; 
         _joinColumn = columnName;
-        _stringValue = _entityInfo.getPrimaryValue().to!string;
-        _dfieldType = getDlangDataType!(typeof(_entityInfo.getPrimaryValue()));
+        _columnFieldData = new ColumnFieldData();
+        _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+        _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
+
         initJoinData(tableName, columnName);
     }
 

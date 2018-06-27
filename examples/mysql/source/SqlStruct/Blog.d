@@ -16,7 +16,7 @@ class Blog  {
     string title;
     string content;
 
-    @ManyToOne()
+    @ManyToOne(FetchType.LAZY)
     @JoinColumn("uid")
     User user;
         

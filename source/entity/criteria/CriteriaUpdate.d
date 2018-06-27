@@ -34,7 +34,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
 
     public CriteriaUpdate!(T,F) set(EntityFieldInfo field) {
-        _sqlBuidler.set(field.getFullColumn(), field.getStringValue());
+        _sqlBuidler.set(field.getFullColumn(), field.getColumnFieldData().value);
         return this;
     }    
 }

@@ -23,7 +23,7 @@ class Root(T : Object, F : Object = T)
 
     public this(CriteriaBuilder builder, T t = null, F owner = null) {
         _builder = builder;
-        _entityInfo = new EntityInfo!(T,F)(_builder, t, owner);
+        _entityInfo = new EntityInfo!(T,F)(_builder.getManager(), t, owner);
     }
 
     public string getEntityClassName() {

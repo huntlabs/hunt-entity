@@ -242,10 +242,6 @@ Blog testEntityFindByClass(EntityManager manager, User user) {
 
 
 void main() {
-    
-    // DatabaseConfig config = new DatabaseConfig("mysql://dev:111111@10.1.11.31:3306/blog?charset=utf-8");
-    // DatabaseConfig config = new DatabaseConfig("mysql://root:@10.1.11.167:3306/huntblog2?charset=utf-8");
-    // DatabaseConfig config = new DatabaseConfig("postgresql://postgres:123456@0.0.0.0:5432/huntblog?charset=utf-8");
 
     EntityOption option = new EntityOption();
     option.database.driver = "mysql";
@@ -254,167 +250,173 @@ void main() {
     option.database.database = "huntblog2";
     option.database.username = "root";
     option.database.password = "";
-    // option.database.prefix = "test_";
+    //can add table prefix "test_" means table name is "test_user";
+    option.database.prefix = "";
+
     
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
+
+    //active create tables;
     entityManagerFactory.createTables!(User,Blog,Book,BookDetail);
+
     EntityManager manager = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = manager.getCriteriaBuilder();
+    
+    //transaction begin
     manager.getTransaction().begin();
+    try {
+        User u1 = testEntityPersist(manager, "u1", "u1@163.com", 999);
+        assert(u1.id != 0, "testEntityPersist error");
+        
+        u1 = testEntityFind1(manager, u1.id);
+        assert(u1.name == "u1", "testEntityFind1 error");
 
-    User u1 = testEntityPersist(manager, "u1", "u1@163.com", 999);
-    log("testEntityPersist u1 id ", u1.id);
-    
-    u1 = testEntityFind1(manager, u1.id);
-    log("testEntityFind1 name ", u1.name);
+        u1 = testEntityFind2(manager, u1);
+        assert(u1.email == "u1@163.com", "testEntityFind2 error");
 
-    u1 = testEntityFind2(manager, u1);
-    log("testEntityFind2 email ", u1.email);
+        int count ;
+        count = testEntityMerge(manager, u1, 888);
+        assert(u1.money == 888 && count == 1, "testEntityMerge error");
 
-    int count ;
-    count = testEntityMerge(manager, u1, 888);
-    log("testEntityMerge count ", count);
+        u1 = testCriteriaQuery1(manager, builder, u1.id);
+        assert(u1.name == "u1", "testCriteriaQuery1 error");
 
-    User u2 = testEntityPersist(manager, "u2", "u2@163.com", 1001);
-    log("testEntityPersist u2 id ", u2.id);
+        u1 = testCriteriaQuery2(manager, builder, u1);
+        assert(u1.name == "u1", "testCriteriaQuery2 error");
 
-    u2 = testCriteriaQuery1(manager, builder, u2.id);
-    log("testCriteriaQuery1 name ", u2.name);
+        User[] u2 = testCriteriaQueryAnd(manager, builder, "u1", "u1@163.com");
+        assert(u2.length == 1, "testCriteriaQueryAnd error");
 
-    u2 = testCriteriaQuery2(manager, builder, u2);
-    log("testCriteriaQuery2 name ", u2.name);
+        count = testCriteriaUpdate(manager, builder, u2[0].id, cast(int)(u2[0].money+100));
+        assert(count == 1, "testCriteriaUpdate error");
 
-    User[] u3 = testCriteriaQueryAnd(manager, builder, "u2", "u2@163.com");
-    log("testCriteriaQueryAnd u3 length ", u3.length);
+        User u3 = testEntityPersist(manager, "u2", "u2@163.com", 1001);
 
-    count = testCriteriaUpdate(manager, builder, u3[0].id, cast(int)(u3[0].money+100));
-    log("testCriteriaUpdate count ", count);
+        u2 = testCriteriaQueryOr(manager, builder, "u1", "u2@163.com");
+        assert(u2.length == 2, "testCriteriaQueryOr error");
 
-    
-    User[] u4 = testCriteriaQueryOr(manager, builder, "u1", "u2@163.com");
-    log("testCriteriaQueryOr u4 length ", u4.length);
+        u2 = testCriteriaQueryOrderBy(manager, builder, "u1", "u2@163.com");
+        assert(u2[0].money == 988, "testCriteriaQueryOrderBy error");
 
-    u4 = testCriteriaQueryOrderBy(manager, builder, "u1", "u2@163.com");
-    log("testCriteriaQueryOrderBy u4 ", u4[0].money);
-
-    u4 = testCriteriaQueryOffsetLimit(manager, builder, "u1", "u2@163.com");
-    log("testCriteriaQueryOffsetLimit u4 ", u4[0].money);
-
-    u4 = testCriteriaQueryLike(manager, builder, "u1", "u2@163.com", "u%");
-    log("testCriteriaQueryLike u4[0] money ", u4[0].money);
-    log("testCriteriaQueryLike u4[1] money ", u4[1].money);
-    
-    u4 = testCriteriaQuery_Distinct_GroupBy_Having(manager, builder);
-    log("testCriteriaQuery_Distinct_GroupBy_Having u4 length ", u4.length);
+        u2 = testCriteriaQueryOffsetLimit(manager, builder, "u1", "u2@163.com");
+        assert(u2[0].money == 1001, "testCriteriaQueryOffsetLimit error");
 
 
-    User u5 = testCriteriaQuery_multiselect_max_min_avg_sum(manager, builder, "u1");
-    log("testCriteriaQuery_multiselect_max_min_avg_sum u5 name = %s,money = %s,id = %s ".format(u5.name, u5.money, u5.id));
+        u2 = testCriteriaQueryLike(manager, builder, "u1", "u2@163.com", "u%");
+        assert(u2[0].money == 988, "testCriteriaQueryLike error");
+        assert(u2[1].money == 1001, "testCriteriaQueryLike error");
 
-    count = cast(int)testCriteriaQuery_count(manager, builder);
-    log("testCriteriaQuery_count u5 length ", count);
-
-    u4 = testCriteriaQuery_between(manager, builder, 100, 200);
-    log("testCriteriaQuery_between u4 length ", u4.length);
+        u2 = testCriteriaQuery_Distinct_GroupBy_Having(manager, builder);
+        assert(u2.length == 2, "testCriteriaQuery_Distinct_GroupBy_Having error");
 
 
-    u4 = testCriteriaQuery_in(manager, builder, "u1", "u2");
-    log("testCriteriaQuery_in u4 length ", u4.length);
+        u1 = testCriteriaQuery_multiselect_max_min_avg_sum(manager, builder, "u1");
+        assert(u1.money == 988+1001, "testCriteriaQuery_multiselect_max_min_avg_sum error");
 
-    Blog b1 = new Blog();
-    b1.user = u1;
-    b1.content = "u1-blog1-content";
-    manager.persist(b1);
-    
-    Blog b2 = new Blog();
-    b2.user = u1;
-    b2.content = "u2-blog2-content";
-    manager.persist(b2);
-    
+        count = cast(int)testCriteriaQuery_count(manager, builder);
+        assert(count == 2, "testCriteriaQuery_count error");
 
-    Blog[] blogs = testCriteriaJoin_left(manager, builder, "u1");
-    log("testCriteriaJoin_left blogs length ", blogs.length);
-    log("null = ",blogs[0].user is null);
-    log(blogs[0].getUser());
-    log(blogs[0].user.email);
-    log("blogs.user.name1 = ", blogs[0].getUser().email);
-    log("blogs.user.name2 = ", blogs[1].getUser().email);
-
-    Blog blog = testEntityFind3(manager, b1.id);
-    log("testEntityFind3 name ", blog.getUser().name);
-    log("testEntityFind3  ", blog.user.getBlogs()[0].id);
-    log("testEntityFind3  ", blog.user.blogs[1].id);
-    log("testEntityFind3  ", blog.user.blogs[0].content);
-    log("testEntityFind3  ", blog.user.blogs[1].content);
-    log("testEntityFind3  ", blog.user.blogs[0].getUser().id);
-    log("testEntityFind3  ", blog.user.blogs[1].user.id);
-    log("testEntityFind3  ", blog.user.blogs[0].user.name);
-    log("testEntityFind3  ", blog.user.blogs[1].user.name);
-
-    u5 = testEntityFind4(manager, u1.id);
-    u5.getBlogs();
-    u5.getBlogs()[0].getUser();
-    u5.getBlogs()[1].getUser();
-    log("testEntityFind4 user.blogs.length ", u5.blogs.length);
-    log("testEntityFind4 ",u5.id);
-    log("testEntityFind4 ",u5.name);
-    log("testEntityFind4 ",u5.blogs[0].id);
-    log("testEntityFind4 ",u5.blogs[1].id);
-    log("testEntityFind4 ",u5.blogs[0].content);
-    log("testEntityFind4 ",u5.blogs[1].content);
-
-    log("testEntityFind4 ",u5.blogs[0].user.id);
-    log("testEntityFind4 ",u5.blogs[1].user.id);
-    log("testEntityFind4 ",u5.blogs[0].user.name);
-    log("testEntityFind4 ",u5.blogs[1].user.name);
-    log("testEntityFind4 ",u5.blogs[0].user.blogs[0].id);
-    log("testEntityFind4 ",u5.blogs[0].user.blogs[1].id);
-    log("testEntityFind4 ",u5.blogs[1].user.blogs[0].content);
-    log("testEntityFind4 ",u5.blogs[1].user.blogs[1].content);
-    
-    blog = testEntityFindByClass(manager, blog.user);
-
-    count = manager.remove!(Blog)(b1);
-    log("em.remove b1 count ", count);
-
-    count = manager.remove!(Blog)(b2);
-    log("em.remove b2 count ", count);
-    
-
-    count = testCriteriaDelete2(manager, builder, u3[0]);
-    log("testCriteriaDelete2 count ", count);
-
-    count = testEntityRemove2(manager, u1.id);
-    log("testEntityRemove2 count ", count);
+        u2 = testCriteriaQuery_between(manager, builder, 900, 1000);
+        assert(u2[0].name == "u1", "testCriteriaQuery_between error");
 
 
-    BookDetail detail = new BookDetail();
-    detail.numberOfPages = 1;
-    manager.persist(detail);
-
-    Book book = new Book();
-    book.name = "book1";
-    book.detail = detail;
-    manager.persist(book);
-
-    book = manager.find!(Book)(book.id);
-    assert(book.detail !is null, "book.detail is null");
-    assert(book.getDetail().numberOfPages, "book.getDetail().numberOfPages");
-    
-
-    detail = manager.find!(BookDetail)(detail.id);
-    assert(detail.book is null, "detail.book is null ");
-    assert(detail.getBook().id, "detail.getBook().id ");
-    
-    manager.remove!(Book)(book);
-    manager.remove!(BookDetail)(detail);
+        u2 = testCriteriaQuery_in(manager, builder, "u1", "u2");
+        assert(u2.length == 2, "testCriteriaQuery_in error");
 
 
+        Blog b1 = new Blog();
+        b1.user = u1;
+        b1.content = "u1-blog1-content";
+        manager.persist(b1);
+        
+        Blog b2 = new Blog();
+        b2.user = u1;
+        b2.content = "u2-blog2-content";
+        manager.persist(b2);
+        
+
+        Blog[] blogs = testCriteriaJoin_left(manager, builder, "u1");
+        assert(blogs.length == 2, "testCriteriaJoin_left error");
+        assert(blogs[0].user is null, "testCriteriaJoin_left error");
+        //class blog.user set been FetchType.LAZY, should active use getXXX function to load the lazy data.
+        assert(blogs[0].getUser().email == "u1@163.com", "testCriteriaJoin_left error");
+        assert(blogs[1].getUser().email, "testCriteriaJoin_left error");
 
 
+        Blog blog = testEntityFind3(manager, b1.id);
+        assert(blog.getUser().name == "u1", "testEntityFind3 error");
+        assert(blog.user.getBlogs()[0].id == b1.id, "testEntityFind3 error");
+        assert(blog.user.blogs[1].id == b2.id, "testEntityFind3 error");
+        assert(blog.user.blogs[0].content == "u1-blog1-content", "testEntityFind3 error");
+        assert(blog.user.blogs[1].content == "u2-blog2-content", "testEntityFind3 error");
+        assert(blog.user.blogs[0].getUser().id == u1.id, "testEntityFind3 error");
+        assert(blog.user.blogs[0].user.name == "u1", "testEntityFind3 error");
 
-    manager.getTransaction().commit();
-    // manager.getTransaction().rollback();
+
+        u1 = testEntityFind4(manager, u1.id);
+        u1.getBlogs();
+        u1.getBlogs()[0].getUser();
+        u1.getBlogs()[1].getUser();
+
+        assert(u1.name == "u1", "testEntityFind4 error");
+        assert(u1.blogs[0].id == b1.id, "testEntityFind4 error");
+        assert(u1.blogs[1].id == b2.id, "testEntityFind4 error");
+        assert(u1.blogs[0].content == b1.content, "testEntityFind4 error");
+        assert(u1.blogs[1].content == b2.content, "testEntityFind4 error");
+
+        assert(u1.blogs[0].user.blogs[0].id == b1.id, "testEntityFind4 error");
+        assert(u1.blogs[0].user.blogs[1].id == b2.id, "testEntityFind4 error");
+        assert(u1.blogs[1].user.blogs[0].content == b1.content, "testEntityFind4 error");
+        assert(u1.blogs[1].user.blogs[1].content == b2.content, "testEntityFind4 error");
+
+        assert(blog.getUser().name == "u1", "testEntityFind4 error");
+        assert(blog.getUser().name == "u1", "testEntityFind4 error");
+        
+        blog = testEntityFindByClass(manager, blog.user);
+        assert(blog.getUser().name == "u1", "testEntityFindByClass error");
+
+
+        count = manager.remove!(Blog)(b1);
+        assert(count == 1, "manager.remove error");
+
+        count = manager.remove!(Blog)(b2);
+        assert(count == 1, "manager.remove error");
+
+
+        count = testCriteriaDelete2(manager, builder, u3);
+        assert(count == 1, "testCriteriaDelete2 error");
+
+        count = testEntityRemove2(manager, u1.id);
+        assert(count == 1, "testEntityRemove2 count ");
+
+
+        BookDetail detail = new BookDetail();
+        detail.numberOfPages = 1;
+        manager.persist(detail);
+
+        Book book = new Book();
+        book.name = "book1";
+        book.detail = detail;
+        manager.persist(book);
+
+        book = manager.find!(Book)(book.id);
+        assert(book.detail !is null, "book.detail is null");
+        assert(book.getDetail().numberOfPages, "book.getDetail().numberOfPages");
+        
+
+        detail = manager.find!(BookDetail)(detail.id);
+        assert(detail.book is null, "detail.book is null ");
+        assert(detail.getBook().id, "detail.getBook().id ");
+        
+        manager.remove!(Book)(book);
+        manager.remove!(BookDetail)(detail);
+
+        manager.getTransaction().commit();
+    }
+    catch(Exception e) {
+        manager.getTransaction().rollback();
+    }
+
     manager.close();
     entityManagerFactory.close();
 

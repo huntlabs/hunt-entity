@@ -27,13 +27,13 @@ import std.digest.md;
         str ~= "CREATE TABLE "~tablePrefix~_entityInfo.getTableName()~" (";
         bool first = true;
         foreach(field ; _entityInfo.getFields()) {
-            if (field.getColumnName() != "" && field.getDlangType()) {
+            if (field.getColumnName() != "" && field.getColumnFieldData()) {
                 ColumnDefinitionInfo info;
                 info.isId = field.getPrimary();
                 info.name = field.getColumnName();
                 info.isAuto = field.getAuto();
                 info.isNullable = field.getNullable();
-                info.dType = field.getDlangType().getName();
+                info.dType = field.getColumnFieldData().valueType;
                 if (first)
                     first = false;
                 else 
