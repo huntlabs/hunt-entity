@@ -16,10 +16,10 @@ import entity;
 import entity.DefaultEntityManagerFactory;
 import entity.EntityOption;
 
+private __gshared static EntityManagerFactory[string] _factories;
 
 class Persistence
 {
-	private static EntityManagerFactory[string] _factories;
 
     public static EntityManagerFactory createEntityManagerFactory(EntityOption option)
 	{
@@ -32,7 +32,7 @@ class Persistence
 			return _factories[name];
 		
 		auto factory = new EntityManagerFactory(name, option);
-		this._factories[name] = factory;
+		_factories[name] = factory;
 		if (defaultEntityManagerFactoryName() == name)
 		{
 			setDefaultEntityManagerFactory(factory);
@@ -42,6 +42,6 @@ class Persistence
 
     public static EntityManagerFactory getEntityManagerFactory(string name = defaultEntityManagerFactoryName())
 	{
-		return this._factories[name];
+		return _factories[name];
 	}
 }

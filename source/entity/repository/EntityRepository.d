@@ -33,7 +33,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         return `
         auto em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
-        CriteriaBuilder builder = _manager.getCriteriaBuilder();
+        CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();`;
     }
