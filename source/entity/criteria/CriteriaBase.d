@@ -29,6 +29,7 @@ class CriteriaBase(T : Object, F : Object = T)
     public Root!(T,F) from(T t = null, F owner = null) {
         _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner); 
         _sqlBuidler.from(_root.getTableName());
+        _root.autoJoin();
         return _root;
     }
 

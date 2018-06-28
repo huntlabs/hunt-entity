@@ -52,11 +52,11 @@ class EntityManager {
         Root!T r;
         Predicate condition;
         static if (is(P == T)) {
-            r = criteriaQuery.from(primaryKeyOrT).autoJoin();
+            r = criteriaQuery.from(primaryKeyOrT);
             condition = criteriaBuilder.equal(r.getPrimaryField());
         }
         else {
-            r = criteriaQuery.from().autoJoin();
+            r = criteriaQuery.from();
             condition = criteriaBuilder.equal(r.getPrimaryField(), primaryKeyOrT);
         }
         TypedQuery!T query = createQuery(criteriaQuery.select(r).where(condition));
