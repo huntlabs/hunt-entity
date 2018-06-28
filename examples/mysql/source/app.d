@@ -234,7 +234,7 @@ User testEntityPersist(EntityManager manager, string name, string email, int mon
 Blog testEntityFindByClass(EntityManager manager, User user) {
     CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
     CriteriaQuery!Blog criteriaQuery = criteriaBuilder.createQuery!(Blog);
-    Root!Blog r = criteriaQuery.from().autoJoin();
+    Root!Blog r = criteriaQuery.from();
     Predicate condition = criteriaBuilder.equal(r.Blog.user, user);
     TypedQuery!Blog query = manager.createQuery(criteriaQuery.select(r).where(condition));
     return cast(Blog)(query.getSingleResult());

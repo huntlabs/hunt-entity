@@ -51,7 +51,7 @@ string makeLazyLoadList(T)() {
     private R[] lazyLoadList(R)(LazyData data) {
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
-        auto r = criteriaQuery.from(null, this).autoJoin();
+        auto r = criteriaQuery.from(null, this);
         auto p = builder.equal(r.get(data.key), data.value, false);
         auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
         auto ret = query.getResultList();
@@ -66,7 +66,7 @@ string makeLazyLoadSingle(T)() {
     private R lazyLoadSingle(R)(LazyData data) {
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
-        auto r = criteriaQuery.from(null, this).autoJoin();
+        auto r = criteriaQuery.from(null, this);
         auto p = builder.equal(r.get(data.key), data.value, false);
         auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
         R ret = cast(R)(query.getSingleResult());

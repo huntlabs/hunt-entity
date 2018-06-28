@@ -101,7 +101,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         scope(exit) {if (!_manager) em.close();}
         CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(T);
-        Root!T root = criteriaQuery.from().autoJoin();
+        Root!T root = criteriaQuery.from();
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery.select(root));
         return typedQuery.getResultList();
     }
