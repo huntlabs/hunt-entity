@@ -115,7 +115,6 @@ class CrudRepository(T, ID) : Repository!(T, ID)
             if (entity !is null)
                 entities ~= entity;
         }
-
         return entities;
     }
 
@@ -144,13 +143,61 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] saveAll(T[] entities)
     {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
         T[] resultList;
         foreach (entity; entities)
         {
-            resultList ~= this.save(entity);
+            if (mixin(GenerateFindById!T()) is null)
+            {
+                resultList ~= em.persist(entity);
+            }
+            else
+            {
+                resultList ~= em.merge!T(entity);
+            }
         }
         return resultList;
     }
+
+    public T insert(T entity)
+    {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        em.persist(entity);
+        return entity;
+    }
+    public T[] insertAll(T[] entities)
+    {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        T[] resultList;
+        foreach (entity; entities)
+        {
+            resultList ~= em.persist(entity);
+        }
+        return resultList;
+    }
+
+    public T update(T entity)
+    {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        em.merge!T(entity);
+        return entity;
+    }
+    public T[] updateAll(T[] entities)
+    {
+        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+        T[] resultList;
+        foreach (entity; entities)
+        {
+            resultList ~= em.merge!T(entity);
+        }
+        return resultList;
+    }
+
 }
 
 string GenerateFindById(T)()

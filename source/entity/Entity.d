@@ -22,6 +22,14 @@ mixin template MakeEntity()
     mixin(makeLazyLoadList!(typeof(this)));
     mixin(makeLazyLoadSingle!(typeof(this)));
     mixin(makeGetFunction!(typeof(this)));
+
+    /*  
+     *   NOTE: annotation following code forbid auto create tables function when the EntityFactory construct for the reason when 
+     *   the Entity model import other Entity model cause the dlang bug like "object.Error@src/rt/minfo.d(371): Cyclic dependency between 
+     *   module SqlStruct.User and SqlStruct.Blog".
+     *   if you want use the auto create tables function, you can open the following code and put all Entity model into one d file or 
+     *   use EntityManagerFactory.createTables!(User,Blog) after EntityManagerFactory construct.
+     */
     // shared static this() {
     //     addCreateTableHandle(getEntityTableName!(typeof(this)), &onCreateTableHandler!(typeof(this)));
     // }
