@@ -35,7 +35,7 @@ class EntityManager {
     }
 
 
-    public void persist(T)(ref T entity) {
+    public T persist(T)(ref T entity) {
         SqlBuilder builder = _factory.createSqlBuilder();
         EntityInfo!T info = new EntityInfo!(T)(this, entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
@@ -44,6 +44,7 @@ class EntityManager {
         auto stmt = _EntitySession.prepare(builder.build().toString);
         int r = stmt.execute();
         info.setIncreaseKey(entity, stmt.lastInsertId);
+        return entity;
     }
 
     public T find(T,P)(P primaryKeyOrT) {

@@ -154,7 +154,8 @@ class CrudRepository(T, ID) : Repository!(T, ID)
             }
             else
             {
-                resultList ~= em.merge!T(entity);
+                em.merge!T(entity);
+                resultList ~= entity;
             }
         }
         return resultList;
@@ -193,7 +194,8 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         T[] resultList;
         foreach (entity; entities)
         {
-            resultList ~= em.merge!T(entity);
+            em.merge!T(entity);
+            resultList ~= entity;
         }
         return resultList;
     }
