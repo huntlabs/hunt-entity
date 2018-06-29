@@ -27,11 +27,6 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         writeln((EntityName!T));
     }
 
-    string tableName()
-    {
-        return getInfo().getTableName();
-    }
-
     static string initObjects()
     {
         return `
@@ -87,7 +82,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy( o.getColumn() , o.getOrderType());
 
         //all
         criteriaQuery.select(root);
@@ -137,7 +132,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy( o.getColumn() , o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(condition.toPredicate());
@@ -156,7 +151,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy(o.getColumn() , o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(specification.toPredicate(
@@ -176,7 +171,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~ "." ~ o.getColumn() , o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy(o.getColumn() , o.getOrderType());
 
         //all
         criteriaQuery.select(root);
@@ -200,7 +195,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn(), o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy(o.getColumn(), o.getOrderType());
 
 
         //condition
@@ -223,7 +218,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(tableName ~"." ~ o.getColumn(), o.getOrderType());
+            criteriaQuery.getSqlBuilder().orderBy( o.getColumn(), o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(specification.toPredicate(
@@ -263,7 +258,7 @@ private:
         return str;
     }
     
-/*
+
 version(unittest)
 {
 	@Table("p_menu")
@@ -290,23 +285,23 @@ unittest{
 	{
 		
             //data
-            /*
-        (1, 'User', 0, 'user.edit', 0, 'fe-box', 0),
-        (2, 'Role', 0, 'role.edit', 0, 'fe-box', 0),
-        (3, 'Module', 0, 'module.edit', 0, 'fe-box', 0),
-        (4, 'Permission', 0, 'permission.edit', 0, 'fe-box', 0),
-        (5, 'Menu', 0, 'menu.edit', 0, 'fe-box', 0),
-        (6, 'Manage User', 1, 'user.edit', 0, '0', 0),
-        (7, 'Add User', 1, 'user.add', 0, '0', 0),
-        (8, 'Manage Role', 2, 'role.edit', 0, '0', 0),
-        (9, 'Add Role', 2, 'role.add', 0, '0', 0),
-        (10, 'Manage Module', 3, 'module.edit', 0, '0', 0),
-        (11, 'Add Module', 3, 'module.add', 0, '0', 0),
-        (12, 'Manage Permission', 4, 'permission.edit', 0, '0', 0),
-        (13, 'Add Permission', 4, 'permission.add', 0, '0', 0),
-        (14, 'Manage Menu', 5, 'menu.edit', 0, '0', 0),
-        (15, 'Add Menu', 5, 'menu.add', 0, '0', 0);
-            */
+            
+ //       (1, 'User', 0, 'user.edit', 0, 'fe-box', 0),
+ //       (2, 'Role', 0, 'role.edit', 0, 'fe-box', 0),
+ //       (3, 'Module', 0, 'module.edit', 0, 'fe-box', 0),
+ //       (4, 'Permission', 0, 'permission.edit', 0, 'fe-box', 0),
+ //       (5, 'Menu', 0, 'menu.edit', 0, 'fe-box', 0),
+ //       (6, 'Manage User', 1, 'user.edit', 0, '0', 0),
+ //       (7, 'Add User', 1, 'user.add', 0, '0', 0),
+ //       (8, 'Manage Role', 2, 'role.edit', 0, '0', 0),
+ //       (9, 'Add Role', 2, 'role.add', 0, '0', 0),
+ //       (10, 'Manage Module', 3, 'module.edit', 0, '0', 0),
+ //       (11, 'Add Module', 3, 'module.add', 0, '0', 0),
+ //       (12, 'Manage Permission', 4, 'permission.edit', 0, '0', 0),
+ //       (13, 'Add Permission', 4, 'permission.add', 0, '0', 0),
+ //       (14, 'Manage Menu', 5, 'menu.edit', 0, '0', 0),
+ //       (15, 'Add Menu', 5, 'menu.add', 0, '0', 0);
+            
 
         auto option = new EntityOption;
 
@@ -325,7 +320,7 @@ unittest{
 		auto rep = new EntityRepository!(Menu , int)(em);
 		
 		//sort
-		auto menus1 = rep.findAll(new Sort("ID" , OrderBy.DESC));
+		auto menus1 = rep.findAll(new Sort(rep.Menu.ID , OrderBy.DESC));
 		assert(menus1.length == 15);
 		assert(menus1[0].ID == 15 && menus1[$ - 1].ID == 1);
 		
@@ -344,18 +339,18 @@ unittest{
 		assert(menus2[0].ID == 6);
 		
 		//sort specification
-		auto menus3 = rep.findAll(new MySpecification , new Sort("ID" ,OrderBy.DESC));
+		auto menus3 = rep.findAll(new MySpecification , new Sort(rep.Menu.ID ,OrderBy.DESC));
 		assert(menus3[0].ID == 15 && menus3[$ - 1].ID == 6);
 
 		//page
-		auto pages1 = rep.findAll(new Pageable(0 , 10 , "ID" , OrderBy.DESC));
+		auto pages1 = rep.findAll(new Pageable(0 , 10 , rep.Menu.ID , OrderBy.DESC));
 		assert(pages1.getTotalPages() == 2);
 		assert(pages1.getContent.length == 10);
 		assert(pages1.getContent[0].ID == 15 && pages1.getContent[$-1].ID == 6);
 		assert(pages1.getTotalElements() == 15);
 
 		//page specification
-		auto pages2 = rep.findAll(new MySpecification , new Pageable(1 , 5 , "ID" , OrderBy.DESC));
+		auto pages2 = rep.findAll(new MySpecification , new Pageable(1 , 5 , rep.Menu.ID , OrderBy.DESC));
 		assert(pages2.getTotalPages() == 2);
 		assert(pages2.getContent.length == 5);
 		assert(pages2.getContent[0].ID == 10 && pages1.getContent[$-1].ID == 6);
@@ -374,4 +369,4 @@ unittest{
 
 
 	test_entity_repository();
-}*/
+}
