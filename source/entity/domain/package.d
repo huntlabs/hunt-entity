@@ -15,3 +15,7 @@ public import entity.domain.Sort;
 public import entity.domain.Page;
 public import entity.domain.Pageable;
 public import entity.domain.Specification;
+
+public import entity.domain.Condition;
+
+public import entity.domain.Member;
