@@ -258,7 +258,7 @@ private:
         return str;
     }
     
-
+/*
 version(unittest)
 {
 	@Table("p_menu")
@@ -369,4 +369,4 @@ unittest{
 
 
 	test_entity_repository();
-}
+}*/
