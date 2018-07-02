@@ -19,12 +19,10 @@ public import entity.domain;
 
 class EntityRepository (T, ID) : CrudRepository!(T, ID)
 {
+    ///for inner repeate name.
+    alias INNER = T;
     this(EntityManager manager = null) {
         super(manager);
-        
-        import std.stdio;
-
-        writeln((EntityName!T));
     }
 
     static string initObjects()
