@@ -233,30 +233,21 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         return page;
     }
 
-    mixin(EntityName!T);
-
-private:
-    Member!T createMember()
+    @property Member!T Field()
     {
         auto em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
         return new Member!T(em);
     }
+
+private:
+
     Member!T _member;
  
 }
 
-private:
-    string EntityName(T)()
-    {
-        string str;
-        str ~= "@property Member!T "~ T.stringof~"(){";
-        str ~= " if (_member is null) _member = createMember(); ";
-        str ~= " return _member;}";
-        return str;
-    }
-    
 /*
+
 version(unittest)
 {
 	@Table("p_menu")
@@ -318,7 +309,7 @@ unittest{
 		auto rep = new EntityRepository!(Menu , int)(em);
 		
 		//sort
-		auto menus1 = rep.findAll(new Sort(rep.Menu.ID , OrderBy.DESC));
+		auto menus1 = rep.findAll(new Sort(rep.Field.ID , OrderBy.DESC));
 		assert(menus1.length == 15);
 		assert(menus1[0].ID == 15 && menus1[$ - 1].ID == 1);
 		
@@ -337,30 +328,30 @@ unittest{
 		assert(menus2[0].ID == 6);
 		
 		//sort specification
-		auto menus3 = rep.findAll(new MySpecification , new Sort(rep.Menu.ID ,OrderBy.DESC));
+		auto menus3 = rep.findAll(new MySpecification , new Sort(rep.Field.ID ,OrderBy.DESC));
 		assert(menus3[0].ID == 15 && menus3[$ - 1].ID == 6);
 
 		//page
-		auto pages1 = rep.findAll(new Pageable(0 , 10 , rep.Menu.ID , OrderBy.DESC));
+		auto pages1 = rep.findAll(new Pageable(0 , 10 , rep.Field.ID , OrderBy.DESC));
 		assert(pages1.getTotalPages() == 2);
 		assert(pages1.getContent.length == 10);
 		assert(pages1.getContent[0].ID == 15 && pages1.getContent[$-1].ID == 6);
 		assert(pages1.getTotalElements() == 15);
 
 		//page specification
-		auto pages2 = rep.findAll(new MySpecification , new Pageable(1 , 5 , rep.Menu.ID , OrderBy.DESC));
+		auto pages2 = rep.findAll(new MySpecification , new Pageable(1 , 5 , rep.Field.ID , OrderBy.DESC));
 		assert(pages2.getTotalPages() == 2);
 		assert(pages2.getContent.length == 5);
 		assert(pages2.getContent[0].ID == 10 && pages1.getContent[$-1].ID == 6);
 		assert(pages2.getTotalElements() == 10);
 
         ///where name == "User"   
-        auto condition = new Condition(`%s = '%s'` , rep.Menu.name , "User");
+        auto condition = new Condition(`%s = '%s'` , rep.Field.name , "User");
         auto menu4 = rep.find(condition);
         assert(menu4.ID == 1);
 
         ///count
-        assert(rep.count(new Condition(`%s > %d` , rep.Menu.ID , 0)) == 15);
+        assert(rep.count(new Condition(`%s > %d` , rep.Field.ID , 0)) == 15);
 
 
     }
