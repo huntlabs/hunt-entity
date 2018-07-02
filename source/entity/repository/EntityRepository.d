@@ -19,8 +19,6 @@ public import entity.domain;
 
 class EntityRepository (T, ID) : CrudRepository!(T, ID)
 {
-    ///for inner repeate name.
-    alias INNER = T;
     this(EntityManager manager = null) {
         super(manager);
     }
@@ -246,8 +244,8 @@ private:
  
 }
 
-/*
 
+/*
 version(unittest)
 {
 	@Table("p_menu")
@@ -258,8 +256,10 @@ version(unittest)
 		@PrimaryKey
 		@AutoIncrement
 		int 		ID;
-		
+
+		@Column("name")
 		string 		name;
+        @JoinColumn("up_menu_id")
 		int 		up_menu_id;
 		string 		perident;
 		int			index;

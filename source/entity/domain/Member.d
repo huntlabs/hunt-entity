@@ -25,7 +25,7 @@ class Member(T)
         }
         else static if(hasUDA!(__traits(getMember , T , name) ,JoinColumn))
         {
-            return _tableName ~ "." ~ getUDAs!(__traits(getMember , T , JoinColumn) ,Column)[0].name;
+            return _tableName ~ "." ~ getUDAs!(__traits(getMember , T , name) ,JoinColumn)[0].name;
         }
         else 
         {
