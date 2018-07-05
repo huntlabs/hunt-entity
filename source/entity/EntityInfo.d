@@ -41,7 +41,7 @@ class EntityInfo(T : Object, F : Object = T) {
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
     // pragma(msg,makeInitEntityData!(T,F));
-    // pragma(msg,makeDeSerialize!(T,F));
+     pragma(msg,makeDeSerialize!(T,F));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
@@ -307,6 +307,7 @@ string makeInitEntityData(T,F)() {
 string makeDeSerialize(T,F)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
+        T _data = new T();
         RowData data = rows[startIndex].getAllRowData(_tableName);
         if (data is null)
             return null;
