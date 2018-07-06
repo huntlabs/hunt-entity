@@ -245,7 +245,7 @@ string makeInitEntityData(T,F)() {
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                     string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
         str ~= `
-        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, F)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
+        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
                                     ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~`, `~owner~`);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
