@@ -13,9 +13,7 @@ module entity;
 
 public import database;
 
-
 public import entity.utils.Common;
-
 
 public import entity.Query;
 public import entity.Entity;
@@ -51,6 +49,4 @@ public import entity.criteria.CriteriaBuilder;
 public import entity.criteria.CriteriaUpdate;
 public import entity.EntityCreateTable;
 
-
-import std.variant;
-import std.experimental.logger;
+public import entity.repository;
