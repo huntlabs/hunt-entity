@@ -36,7 +36,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
     alias count =  CrudRepository!(T, ID).count;
     alias findAll = CrudRepository!(T, ID).findAll;
-
+   
     long count(Condition condition)
     {
         mixin(initObjects);
@@ -62,7 +62,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
     T find(Condition condition)
     {
         auto list = findAll(condition);
-        if(list !is null)
+        if(list.length > 0)
             return list[0];
         return null;
     }
