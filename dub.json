@@ -10,46 +10,30 @@
     "configurations": [
         {
             "name": "default",
-            "targetType": "library",
-            "versions": [
-                "USE_MYSQL"
-            ],
+            "targetType": "library",    
             "subConfigurations": {
-                "database": "mysql",
-                "dbal": "mysql"
+                "database": "default"
             }
         },
         {
             "name": "mysql",
             "targetType": "library",
-            "versions": [
-                "USE_MYSQL"
-            ],
             "subConfigurations": {
-                "database": "mysql",
-                "dbal": "mysql"
+                "database": "mysql"
             }
         },
         {
             "name": "postgresql",
             "targetType": "library",
-            "versions": [
-                "USE_POSTGRESQL"
-            ],
             "subConfigurations": {
-                "database": "postgresql",
-                "dbal": "postgresql"
+                "database": "postgresql"
             }
         },
         {
             "name": "sqlite",
             "targetType": "library",
-            "versions": [
-                "USE_SQLITE"
-            ],
             "subConfigurations": {
-                "database": "sqlite",
-                "dbal": "sqlite"
+                "database": "sqlite"
             }
         }
     ]
