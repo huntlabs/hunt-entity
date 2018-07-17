@@ -16,6 +16,13 @@
             }
         },
         {
+            "name": "full",
+            "targetType": "library",    
+            "subConfigurations": {
+                "database": "full"
+            }
+        },
+        {
             "name": "mysql",
             "targetType": "library",
             "subConfigurations": {
