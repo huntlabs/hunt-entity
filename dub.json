@@ -17,7 +17,7 @@
             "name": "default",
             "targetType": "library",    
             "subConfigurations": {
-                "database": "default"
+                "database": "mysql"
             }
         },
         {
