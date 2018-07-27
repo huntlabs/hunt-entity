@@ -35,8 +35,8 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
             _columnFieldData = new ColumnFieldData();
             _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
-            if (_columnFieldData.valueType == "string")
-                _columnFieldData.value = "'"~_entityInfo.getPrimaryValue().to!string~"'";
+            if (_columnFieldData.valueType == "string" && manager !is null)
+                _columnFieldData.value = manager.getDatabase().escapeLiteral(_entityInfo.getPrimaryValue().to!string);
             else
                 _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
 

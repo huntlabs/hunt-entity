@@ -41,7 +41,7 @@ class EntityInfo(T : Object, F : Object = T) {
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
     // pragma(msg,makeInitEntityData!(T,F));
-     pragma(msg,makeDeSerialize!(T,F));
+    // pragma(msg,makeDeSerialize!(T,F));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
@@ -271,7 +271,7 @@ string makeInitEntityData(T,F)() {
                 else {
                     // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
         str ~= `
-        `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
+        `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager,`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
                 }
 
                 //nullable
