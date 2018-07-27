@@ -113,7 +113,7 @@ public class CriteriaBuilder
         else {
             Predicate p;
             if (info.getJoinColumn() != "") {
-                auto entityInfo = new EntityInfo!(T,T)(null, t);
+                auto entityInfo = new EntityInfo!(T,T)(_manager, t);
                 p = new Predicate().addValue(info.getJoinColumn(), "=", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
             }
             else {
@@ -137,7 +137,7 @@ public class CriteriaBuilder
         else {
             Predicate p;
             if (info.getJoinColumn() != "") {
-                auto entityInfo = new EntityInfo!(T,T)(null, t);
+                auto entityInfo = new EntityInfo!(T,T)(_manager, t);
                 p = new Predicate().addValue(info.getJoinColumn(), "<>", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
             }
             else {

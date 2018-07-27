@@ -34,9 +34,8 @@ class TypedQuery(T : Object, F : Object = T) {
 
     public T[] getResultList() {
         Object[] ret = _getResultList();
-        if (cast(T[])ret is null) {
-            T[] t;
-            return t;
+        if (ret.length == 0) {
+            return null;
         }
         return cast(T[])ret;
     }

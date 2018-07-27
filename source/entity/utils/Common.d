@@ -8,7 +8,7 @@ import entity.Constant;
 
 class Common {
     static T sampleCopy(T)(T t) {
-        T copy = new T;
+        T copy = new T();
         foreach(memberName; __traits(derivedMembers, T)) {
             static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public")  {
                 alias memType = typeof(__traits(getMember, T ,memberName));

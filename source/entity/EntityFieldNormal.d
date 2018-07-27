@@ -17,14 +17,17 @@ import std.math;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 
-    public this(string fileldName, string columnName, string tableName, T value) {
+    public this(EntityManager manager ,string fileldName, string columnName, string tableName, T value) {
         super(fileldName, columnName, tableName);
 
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(value).stringof;
         
         static if (isSomeString!T) {
-            _columnFieldData.value = "'"~value~"'";
+            if( manager !is null)
+                _columnFieldData.value = manager.getDatabase().escapeLiteral(value);
+            else
+                _columnFieldData.value = value;
         }
         else static if (is(T == double)) {
             if (isNaN(value))
