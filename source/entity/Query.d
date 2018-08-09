@@ -19,11 +19,25 @@ class Query(T) {
     private string _sqlSting;
     private CriteriaBase!T _criteria;
     private EntityManager _manager;
+    private string _eql;
 
     this(CriteriaBase!T criteria, EntityManager manager) {
         _criteria = criteria;
         _manager = manager;
         _sqlSting = criteria.toString();
+    }
+
+    this(string eql, EntityManager em)
+    {
+        _manager = em;
+        _eqlString = eql;
+
+        this.parseEql();
+    }
+
+    private void parseEql()
+    {
+        //
     }
 
     public int executeUpdate() {

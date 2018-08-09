@@ -97,15 +97,17 @@ class EntityManager {
         return createQuery(criteriaUpdate.where(condition)).executeUpdate();
     }
 
-
-    public void flush() {
+    public void flush()
+    {
         //TODO 将受控态的实体数据同步到数据库中
     }
-    
 
-
+    public Query!(T) createQuery(string $eql)
+    {
+        return Query!T(eql, this);
+    }
     
-    public TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
+    public Query!(T) createQuery(T,F)(CriteriaQuery!(T,F) query) {
         return new TypedQuery!(T,F)(query, this);
     }
 
