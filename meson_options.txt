@@ -1,0 +1,7 @@
+# Build options for Hunt-Database
+
+option('drivers',
+    type: 'array',
+    choices : ['postgres', 'mysql', 'sqlite', 'multi'],
+    description: 'Enabled database drivers to build libraries for.'
+)
