@@ -2,7 +2,7 @@
 module SqlStruct.Blog;
 import SqlStruct.User;
 
-import entity;
+import hunt.entity;
 
 
 @Table("blog")

@@ -1,7 +1,7 @@
 
 
 
-import entity;
+import hunt.entity;
 
 import std.stdio;
 
