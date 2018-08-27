@@ -6,7 +6,7 @@ module hunt.entity.EntityCreateTable;
 import hunt.entity.EntityInfo;
 import hunt.entity.Constant;
 
-import database;
+import hunt.database;
 import std.digest.md;
 
 

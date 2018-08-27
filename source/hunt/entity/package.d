@@ -11,7 +11,7 @@
  
 module hunt.entity;
 
-public import database;
+public import hunt.database;
 
 public import hunt.entity.utils.Common;
 
