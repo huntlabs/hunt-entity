@@ -1,5 +1,5 @@
 {
-    "name": "entity",
+    "name": "hunt-entity",
     "authors": ["HuntLabs.cn"],
     "dependencies": {
         "database": "~>0.1.5"
