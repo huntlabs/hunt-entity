@@ -20,7 +20,7 @@ obj/
 [Rr]elease*/
 _ReSharper*/
 Unittest/*
-libentity.a
+libhunt-entity.a
 mysql-example
 
 # Ignore generated files

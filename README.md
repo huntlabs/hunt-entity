@@ -13,7 +13,7 @@
 
 ## Simple code
 ```D
-import entity;
+import hunt.entity;
 
 @Table("user")
 class User : Entity

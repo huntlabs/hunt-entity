@@ -2,7 +2,7 @@
 
 module SqlStruct.Book;
 
-import entity;
+import hunt.entity;
 
 import SqlStruct.BookDetail;
 
