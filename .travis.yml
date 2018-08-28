@@ -1,7 +1,35 @@
 language: d
 sudo: false
+
 os:
  - linux
+
 d:
   - dmd
   - ldc
+
+addons:
+  apt:
+    packages:
+    - pkg-config
+    - libpq-dev
+    - libsqlite3-dev
+    - libmysqlclient-dev
+
+before_install:
+  - pyenv global system 3.6
+  - pip3 install 'meson>=0.46'
+
+install:
+  - mkdir .ntmp && curl -L https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip -o .ntmp/ninja-linux.zip
+  - unzip .ntmp/ninja-linux.zip -d .ntmp
+
+before_script:
+  - export PATH=$PATH:$PWD/.ntmp
+
+script:
+  - meson build && ninja -j8 -C build
+  - ninja -j8 -C build test -v
+  - dub --help | tail -n 1
+  - dub build --compiler=$DC
+  - dub test --compiler=$DC
