@@ -102,7 +102,7 @@ class EntityManager {
         //TODO 将受控态的实体数据同步到数据库中
     }
 
-    public Query!(T) createQuery(string $eql)
+    public Query!(T) createQuery(T)(string eql)
     {
         return Query!T(eql, this);
     }

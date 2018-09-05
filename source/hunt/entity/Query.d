@@ -30,7 +30,7 @@ class Query(T) {
     this(string eql, EntityManager em)
     {
         _manager = em;
-        _eqlString = eql;
+        _eql = eql;
 
         this.parseEql();
     }
