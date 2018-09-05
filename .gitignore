@@ -1,5 +1,7 @@
 #ignore thumbnails created by windows
 Thumbs.db
+#ignore .DS_Store for macOS
+.DS_Store
 #Ignore files build by Visual Studio
 *.user
 *.aps
