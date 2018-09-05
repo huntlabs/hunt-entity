@@ -16,7 +16,6 @@ import std.digest.md;
     this() {
         import std.stdio;
         _entityInfo = new EntityInfo!T();
-        writeln(" error for manager ~~~~");
     }
 
     public string createTable(Dialect dialect, string tablePrefix, ref string[] alertRows) {
