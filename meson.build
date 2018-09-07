@@ -2,7 +2,7 @@ project('hunt-entity', 'd',
     meson_version: '>=0.46',
     license: 'Apache-2.0',
 
-    version: '1.6.0'
+    version: '1.6.2'
 )
 
 project_soversion = '0'
