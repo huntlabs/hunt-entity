@@ -107,7 +107,7 @@ class EntityManager {
         return Query!T(eql, this);
     }
     
-    public Query!(T) createQuery(T,F)(CriteriaQuery!(T,F) query) {
+    public TypedQuery!(T) createQuery(T,F)(CriteriaQuery!(T,F) query) {
         return new TypedQuery!(T,F)(query, this);
     }
 

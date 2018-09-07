@@ -50,3 +50,4 @@ public import hunt.entity.criteria.CriteriaUpdate;
 public import hunt.entity.EntityCreateTable;
 
 public import hunt.entity.repository;
+public import hunt.entity.domain;
