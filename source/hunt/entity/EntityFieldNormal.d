@@ -36,7 +36,14 @@ class EntityFieldNormal(T) : EntityFieldInfo {
                 _columnFieldData.value = "%s".format(value);
         }
         else static if (is(T == bool)) {
-            _columnFieldData.value = value ? "1" : "0";
+            if(manager.getDatabase().getOption().isPgsql())
+            {
+                _columnFieldData.value = value ? "'1'":"'0'";
+            }
+            else
+            {
+                _columnFieldData.value = value ? "1" : "0";
+            }
         }
         else {
             _columnFieldData.value = "%s".format(value);
@@ -51,7 +58,10 @@ class EntityFieldNormal(T) : EntityFieldInfo {
             return;
         }
         static if (is(R==bool)) {
-            r = cast(byte)(value[0]) == 1;
+            if( value[0] == 1 || value[0] == 't')
+                r = true;
+            else 
+                r = false;
         }
         else {
             r = to!R(value);

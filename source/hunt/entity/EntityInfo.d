@@ -86,7 +86,10 @@ class EntityInfo(T : Object, F : Object = T) {
         foreach(info; _fields) {
             if (info.getFileldName() != _autoIncrementKey) {
                 if (info.getColumnName() != "") {
-                    str[info.getFullColumn()] = info.getColumnFieldData().value;
+                    if(!_manager.getDatabase().getOption().isPgsql())
+                        str[info.getFullColumn()] = info.getColumnFieldData().value;
+                    else
+                        str[info.getColumnName()] = info.getColumnFieldData().value;
                 }
             }
         }

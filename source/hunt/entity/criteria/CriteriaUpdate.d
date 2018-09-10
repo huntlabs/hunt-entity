@@ -29,12 +29,18 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
     public CriteriaUpdate!(T,F) set(P)(EntityFieldInfo field, P p) {
         _criteriaBuilder.assertType!(P)(field);
-        _sqlBuidler.set(field.getFullColumn(), _criteriaBuilder.getDialect().toSqlValue(p));
+        if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
+            _sqlBuidler.set(field.getFullColumn(), _criteriaBuilder.getDialect().toSqlValue(p));
+        else
+            _sqlBuidler.set(field.getColumnName(), _criteriaBuilder.getDialect().toSqlValue(p));
         return this;
     }
 
     public CriteriaUpdate!(T,F) set(EntityFieldInfo field) {
-        _sqlBuidler.set(field.getFullColumn(), field.getColumnFieldData().value);
+         if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
+            _sqlBuidler.set(field.getFullColumn(), field.getColumnFieldData().value);
+         else
+            _sqlBuidler.set(field.getColumnName() , field.getColumnFieldData().value);
         return this;
     }    
 }
