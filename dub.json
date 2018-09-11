@@ -21,6 +21,10 @@
             }
         },
         {
+            "name": "empty",
+            "targetType": "library" 
+        },
+        {
             "name": "full",
             "targetType": "library",    
             "subConfigurations": {
