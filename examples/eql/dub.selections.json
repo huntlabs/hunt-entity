@@ -1,0 +1,9 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"hunt": {"path":"../../../hunt"},
+		"hunt-database": {"path": "../../../hunt-database"},
+		"hunt-entity": {"path":"../../"},
+		"hunt-sql": {"path":"../../../hunt-sql"}
+	}
+}

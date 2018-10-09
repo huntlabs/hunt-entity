@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+eql.so
+eql.dylib
+eql.dll
+eql.a
+eql.lib
+eql-test-*
+*.exe
+*.o
+*.obj
+*.lst

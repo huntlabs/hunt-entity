@@ -14,6 +14,7 @@ module hunt.entity.EntityInfo;
 import hunt.entity;
 import hunt.entity.DefaultEntityManagerFactory;
 
+import hunt.logging;
 import std.conv;
 
 
@@ -310,8 +311,11 @@ string makeInitEntityData(T,F)() {
 string makeDeSerialize(T,F)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
+           logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
+
         T _data = new T();
         RowData data = rows[startIndex].getAllRowData(_tableName);
+        logDebug("rows[0] : ",data);
         if (data is null)
             return null;
         if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {

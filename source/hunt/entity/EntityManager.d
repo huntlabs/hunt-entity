@@ -13,7 +13,9 @@ module hunt.entity.EntityManager;
 
 import hunt.entity;
 import hunt.entity.EntityOption;
-
+import hunt.entity.eql;
+import hunt.logging;
+ 
 class EntityManager {
 
     public Dialect _dialect;
@@ -102,11 +104,11 @@ class EntityManager {
         //TODO 将受控态的实体数据同步到数据库中
     }
 
-    public Query!(T) createQuery(T)(string eql)
+    public EqlQuery!(T) createEqlQuery(T...)(string eql)
     {
-        return Query!T(eql, this);
+        return new EqlQuery!(T)(eql, this);
     }
-    
+
     public TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
         return new TypedQuery!(T,F)(query, this);
     }

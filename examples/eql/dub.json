@@ -1,0 +1,13 @@
+{
+	"name": "eql",
+	"authors": [
+		"gaoxincheng"
+	],
+	"targetType": "executable",
+	"dependencies": {
+		"hunt-entity": {"path":"../../"}
+	},
+	"description": "test for eql",
+	"copyright": "Copyright © 2018, Huntlabs.cn",
+	"license": "Apache-2.0"
+}
