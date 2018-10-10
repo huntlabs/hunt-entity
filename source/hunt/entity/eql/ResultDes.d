@@ -20,7 +20,7 @@ import std.conv;
 
 class ResultDes(T : Object) {
     
-    pragma(msg,makeDeSerialize!(T));
+    // pragma(msg,makeDeSerialize!(T));
 
     mixin(makeDeSerialize!(T)());
 }
@@ -28,7 +28,7 @@ class ResultDes(T : Object) {
 string makeDeSerialize(T)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-           logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
+        //    logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
 
         T _data = new T();
         RowData data = rows[startIndex].getAllRowData("");

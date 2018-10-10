@@ -23,7 +23,6 @@ class EqlQuery(T...) {
 
     alias ResultObj = T[0];
 
-    private string _sqlSting;
     private EntityManager _manager;
     private ResultDes!(ResultObj) _resultDes;
 
@@ -65,10 +64,10 @@ class EqlQuery(T...) {
             static if (isAggregateType!(ObjType) && hasUDA!(ObjType,Table))
             {
                 auto entInfo = new EntityInfo!(ObjType)(_manager);
-                foreach(k,v ; entInfo.getFields)
-                {
-                    logDebug("Fields : (%s , %s )".format(k,v.getColumnName()));
-                }
+                // foreach(k,v ; entInfo.getFields)
+                // {
+                //     logDebug("Fields : (%s , %s )".format(k,v.getColumnName()));
+                // }
                 _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
                 _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
             }
@@ -79,6 +78,15 @@ class EqlQuery(T...) {
             
         }
         _eqlParser.parse();
+    }
+
+
+    public void setParameter(R = string)(int idx , R param)
+    {
+        if(_eqlParser !is null)
+        {
+            _eqlParser.setParameter!R(idx,param);
+        }
     }
 
     public int executeUpdate() {
@@ -114,17 +122,25 @@ class EqlQuery(T...) {
 
         foreach(k,v; rows) {
 
-            Object t = _resultDes.deSerialize(rows, count, cast(int)k);
-
-            if (t is null) {
-                if (count != -1) {
-                    ret ~= new Long(count);
+            try
+            {
+                Object t = _resultDes.deSerialize(rows, count, cast(int)k);
+                if (t is null) {
+                    if (count != -1) {
+                        ret ~= new Long(count);
+                    }
+                    else {
+                        throw new EntityException("getResultList has an null data");
+                    }
                 }
-                else {
-                    throw new EntityException("getResultList has an null data");
-                }
+                ret ~= t;
             }
-            ret ~= t;
+            catch(Exception e)
+            {
+                throw new EntityException(e.msg);
+            }
+
+            
         }
 		return ret;
     }

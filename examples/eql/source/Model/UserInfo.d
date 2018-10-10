@@ -11,31 +11,8 @@ class UInfo  {
     @AutoIncrement @PrimaryKey 
     int id;
 
-    int UserId;
-    string UserName;
 
-    @Column("NickName")
+    @Column("nickname")
     string nickName;
-    string Gender;
-    string BirthDay;
-    string Avatar;
-    int Height;
-    int Weight;
-    string UserType;
-        
-}
-
-@Table("FriendRelation")
-class FrdRlt
-{
-    mixin MakeEntity;
-
-    @AutoIncrement @PrimaryKey 
-    int id;
-
-    int MasterId;
-    int SlaverId;
-    int DelFlag;
-    int AppId;
-    int Time;
+    int age;
 }
