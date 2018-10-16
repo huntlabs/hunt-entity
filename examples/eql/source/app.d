@@ -13,48 +13,9 @@ import core.runtime;
 import std.conv;
 
 
-
-class Result
+void test_select(EntityManager em)
 {
-	string nickname;
-	int create_time;
-}
-
-void main()
-{
-	writeln("Edit source/app.d to start your project.");
-
-	EntityOption option = new EntityOption();
-    option.database.driver = "mysql";
-    option.database.host = "10.1.11.171";
-    option.database.port = 3306;
-    option.database.database = "eql_test";
-    option.database.username = "root";
-    option.database.password = "123456";
-
-    
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
-    EntityManager em = entityManagerFactory.createEntityManager();
-
-	// auto query = em.createEqlQuery!(Result,UInfo,LoginInfo)(" select a.nickName as nickname , b.create_time from UInfo a left join LoginInfo b on a.id = b.uid where a.id in (1,2);");
-	// Result[] results = query.getResultList();
-	// foreach(d ; results)
-	// {
-	// 	logDebug("( %s , %s ) ".format(d.nickname,d.create_time));
-	// }
-
-	// auto update = em.createEqlQuery!(UInfo)(" update UInfo u set u.age = ? where id = ? "); // update UInfo u set u.age = :1 where id = :2
-	// update.setParameter(2,2);
-	// update.setParameter(1,5);
-	// logDebug(" update result : ",update.executeUpdate());
-	
-	// auto query1 = em.createEqlQuery!(LoginInfo)(" select a.*  from LoginInfo a ;");
-	// LoginInfo[] infos = query1.getResultList();
-	// foreach(d ; infos)
-	// {
-	// 	logDebug("( %s , %s , %s ) ".format(d.uid,d.create_time,d.update_time));
-	// }
-
+	/// select statement
 	auto query1 = em.createEqlQuery!(UInfo)(" select a from UInfo a ;");
 	foreach(d ; query1.getResultList())
 	{
@@ -81,6 +42,49 @@ void main()
 
 	foreach(d ; query4.getResultList())
 	{
-		logDebug("Mix( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
+		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
 	}
+}
+
+
+void test_update(EntityManager em)
+{
+	/// update statement
+	auto update = em.createEqlQuery!(UInfo)(" update UInfo u set u.age = ? where u.id = ? "); // update UInfo u set u.age = :1 where u.id = :2
+	update.setParameter(2,2);
+	update.setParameter(1,5);
+	logDebug(" update result : ",update.exec());
+}
+
+
+void test_delete(EntityManager em)
+{
+	/// delete statement
+	auto del = em.createEqlQuery!(UInfo)(" delete UInfo u where u.id = ? "); 
+	del.setParameter(1,3);
+	logDebug(" del result : ",del.exec());
+}
+
+void main()
+{
+	writeln("Edit source/app.d to start your project.");
+
+	EntityOption option = new EntityOption();
+    option.database.driver = "mysql";
+    option.database.host = "10.1.11.171";
+    option.database.port = 3306;
+    option.database.database = "eql_test";
+    option.database.username = "root";
+    option.database.password = "123456";
+
+    
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
+    EntityManager em = entityManagerFactory.createEntityManager();
+
+	test_select(em);
+
+	test_update(em);
+
+	test_delete(em);
+	
 }

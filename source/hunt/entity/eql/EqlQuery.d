@@ -109,7 +109,7 @@ class EqlQuery(T...) {
         }
     }
 
-    public int executeUpdate() {
+    public int exec() {
         auto stmt = _manager.getSession().prepare(_eqlParser.getNativeSql); 
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
@@ -165,7 +165,7 @@ class EqlQuery(T...) {
 		return ret;
     }
 
-    private ResultSet getNativeResult()
+    public ResultSet getNativeResult()
     {
         auto stmt = _manager.getSession().prepare(_eqlParser.getNativeSql);
 		return stmt.query();

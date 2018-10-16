@@ -13,10 +13,10 @@ class LoginInfo
     @AutoIncrement @PrimaryKey 
     int id;
 
-    // int uid;
     int create_time;
     int update_time;
     
+    // int uid;
     @JoinColumn("uid")
     UInfo uinfo;
 }
