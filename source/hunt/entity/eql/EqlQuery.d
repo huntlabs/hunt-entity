@@ -17,6 +17,7 @@ import hunt.logging;
 import hunt.container;
 import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
+import hunt.entity.eql.EqlInfo;
 import std.exception;
 
 class EqlQuery(T...) {
@@ -63,17 +64,36 @@ class EqlQuery(T...) {
         {
             static if (isAggregateType!(ObjType) && hasUDA!(ObjType,Table))
             {
-                auto entInfo = new EntityInfo!(ObjType)(_manager);
-                // foreach(k,v ; entInfo.getFields)
-                // {
-                //     logDebug("Fields : (%s , %s )".format(k,v.getColumnName()));
-                // }
+                auto entInfo = new EqlInfo!(ObjType)(_manager);
+             
                 _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
                 _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
+                if(entInfo.getJoinCond() !is null)
+                    _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
+                // logDebug("( %s , %s ) ".format(ObjType.stringof,ResultObj.stringof));
+                if(ObjType.stringof == ResultObj.stringof)
+                {
+                    _resultDes.setFields(entInfo.getFields);
+                }
             }
             else
             {
                 // throw new Exception(" not support type : " ~ ObjType.stringof);
+            }
+
+            foreach(memberName; __traits(derivedMembers, ObjType)) {
+                static if (__traits(getProtection, __traits(getMember, ObjType, memberName)) == "public") {
+                    alias memType = typeof(__traits(getMember, ObjType ,memberName));
+                    static if (is(memType == class)) {
+                        auto sub_en = new EqlInfo!(memType)(_manager);
+                        _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
+                        _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
+                        _eqlParser._objType[memberName] = sub_en.getEntityClassName();
+                        if(sub_en.getJoinCond() !is null)
+                            _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond();
+                        //  logDebug("( %s , %s ) ".format(memberName,sub_en.getJoinCond()));
+                    }
+                }
             }
             
         }

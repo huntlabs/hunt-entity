@@ -20,31 +20,123 @@ import std.conv;
 
 class ResultDes(T : Object) {
     
-    // pragma(msg,makeDeSerialize!(T));
+    private string _tableName;
+    private string _clsName;
 
+    private EntityFieldInfo[string] _fields;
+
+    this()
+    {
+        initEntityData();
+    }
+
+    public void setFields(EntityFieldInfo[string] fields)
+    {
+        _fields = fields;
+    }
+
+
+    // pragma(msg,makeDeSerialize!(T));
+    // pragma(msg,makeInitEntityData!(T));
+
+
+    mixin(makeImport!(T)());
+    mixin(makeInitEntityData!(T)());
     mixin(makeDeSerialize!(T)());
+
+    string getTableName()
+    {
+        return _tableName;
+    }
+
+    string formatSelectItem(string col)
+    {
+        return _tableName ~ "__as__" ~ col;
+    }
+
+}
+
+string makeImport(T)() {
+    string str;
+    foreach(memberName; __traits(derivedMembers, T)) {
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (!isFunction!(memType)) {
+                static if (isArray!memType && !isSomeString!memType) {
+    str ~= `
+    import `~moduleName!(ForeachType!memType)~`;`;
+                }
+                else static if (!isBuiltinType!memType){
+    str ~= `
+    import `~moduleName!memType~`;`;          
+                }
+                
+            }
+        }
+    }
+    return str;
+}
+
+string makeInitEntityData(T)() {
+    string str = `
+    private void initEntityData() {
+        _clsName = "`~T.stringof~`";`;
+    static if (hasUDA!(T,Table)) {
+        str ~= `
+        _tableName = "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
+    }
+    else {
+        str ~= `
+        _tableName = "` ~ T.stringof ~ `"`;
+    }
+    str ~= `
+        }
+    `;
+    return str;
 }
 
 string makeDeSerialize(T)() {
     string str = `
-    public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-        //    logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
+    public T deSerialize(Row[] rows, ref long count, int startIndex = 0) {
+        //    logDebug("deSerialize rows : %s , count : %s , index  : %s , table : %s ".format(rows,count,startIndex,_tableName));
 
         T _data = new T();
-        RowData data = rows[startIndex].getAllRowData("");
-        //logDebug("rows[0] : ",data);
-        if (data is null)
-            return null;
+        RowData data = rows[startIndex].getAllRowData(_tableName);
+        // logDebug("rows[0] : ",data);
+        
+        // if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
+        //     count = data.getData("countfor"~_tableName~"_").value.to!long;
+        //     return null;
+        // }
         `;
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
             static if (!isFunction!(memType)) {
                 static if (isBasicType!memType || isSomeString!memType) {
-        str ~=`
-            if (data.getData(`~memberName.stringof~`)){
-                _data.`~memberName ~ ` = data.getData(`~ memberName.stringof ~`).value.to!`~memType.stringof ~ `;
-        }`;
+                    static if(hasUDA!(__traits(getMember, T ,memberName), Column))
+                    {
+                        string columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
+                        str ~=`
+                            if ((data !is null ) && data.getData((`~columnName~`))){
+                                _data.`~memberName ~ ` = data.getData((`~ columnName ~`)).value.to!`~memType.stringof ~ `;
+                        }
+                        `;
+                    }
+                    else {
+                                str ~=`
+                            if ((data !is null ) && data.getData((`~memberName.stringof~`))){
+                                _data.`~memberName ~ ` = data.getData((`~ memberName.stringof ~`)).value.to!`~memType.stringof ~ `;
+                        }
+                        `;
+                    }
+                }
+                else static if(is(memType == class))
+                {
+                    str ~= `
+                        auto `~memberName~ ` = new ResultDes!(`~memType.stringof~`)();
+                        _data.`~memberName~ ` = `~memberName~`.deSerialize(rows,count,startIndex);
+                    `;
                 }
             }
         }

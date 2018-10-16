@@ -1,6 +1,7 @@
 module Model.LoginInfo;
 
 import hunt.entity;
+import Model.UserInfo;
 
 
 
@@ -12,7 +13,10 @@ class LoginInfo
     @AutoIncrement @PrimaryKey 
     int id;
 
-    int uid;
+    // int uid;
     int create_time;
     int update_time;
+    
+    @JoinColumn("uid")
+    UInfo uinfo;
 }
