@@ -32,6 +32,7 @@ struct Column {
 struct JoinColumn {
     string name;
     bool nullable = true;
+    string referencedColumnName;
 }
 
 

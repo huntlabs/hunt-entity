@@ -2,6 +2,7 @@ module Model.LoginInfo;
 
 import hunt.entity;
 import Model.UserInfo;
+import Model.AppInfo;
 
 
 
@@ -17,6 +18,9 @@ class LoginInfo
     int update_time;
     
     // int uid;
-    @JoinColumn("uid")
+    @JoinColumn("uid",true)
     UInfo uinfo;
+
+    @JoinColumn("appid")
+    AppInfo app;
 }

@@ -32,8 +32,8 @@ class EntityExpression
         _selectColumn = _fullColumn ~ " AS " ~ _columnAs;
     }
 
-    public string getColumnName() {return _columnName;}
     public string getFullColumn() {return _fullColumn;}
+    public string getColumnName() {return _columnName;}
     public string getColumnAs() {return _selectColumn;}
     public string getTableName() {return _tableName;}
 

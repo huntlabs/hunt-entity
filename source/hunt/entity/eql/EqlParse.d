@@ -20,6 +20,10 @@ import std.algorithm.sorting;
 import hunt.entity.eql.EqlInfo;
 import std.regex;
 
+void eql_throw(string type, string message) {
+	throw new Exception("[EQL PARSE EXCEPTION." ~ type ~ "] " ~ message);
+}
+
 class EqlParse
 {
     alias EntityField = EntityFieldInfo[string];
@@ -33,7 +37,7 @@ class EqlParse
     private EntityField[string] _tableFields;   //类名 与 表字段
     private EqlObject[string] _eqlObj;
     public  string[string] _objType;
-    public  string[string] _joinConds;
+    private  Object[string] _joinConds;
 
     private Object[int] _params;
 
@@ -45,7 +49,7 @@ class EqlParse
         _schemaVistor = SQLUtils.createSchemaStatVisitor(_dbtype);
     }
 
-    void parse()
+    public void parse()
     {
         _stmtList = SQLUtils.parseStatements(_eql, _dbtype);
 
@@ -55,10 +59,47 @@ class EqlParse
             stmt.accept(_schemaVistor);
         }
 
+        if(_stmtList.size == 0)
+            eql_throw("Statement", " statement error : " ~ _eql);
+
         init();
     }
 
-    void init()
+    public void putJoinCond(Object[string] conds)
+    {
+        foreach(k , v; conds) {
+            _joinConds[k] = v;
+        }
+    }
+
+    /// a.id  --- > Class.id , a is instance of Class
+    string convertExprAlias(SQLPropertyExpr expr)
+    {
+        string originStr = SQLUtils.toSQLString(expr) ;
+        auto objName = expr.getOwnernName();
+        auto subPropertyName = expr.getName();
+        auto aliasMap = _aliasVistor.getAliasMap();
+        string clsName;
+        foreach(obj , v ; aliasMap)
+        {
+            if(obj == objName)
+            {
+                auto exprTab = (cast(SQLExprTableSource)v).getExpr();
+                if(cast(SQLIdentifierExpr)exprTab !is null)
+                {
+                    expr.setOwner(exprTab);
+                }
+                else if(cast(SQLPropertyExpr)exprTab !is null)
+                {
+                    expr.setOwner(SQLUtils.toSQLExpr(convertExprAlias(cast(SQLPropertyExpr)exprTab)));
+                }
+            }
+        }
+        // logDebug("get last type : ( %s , %s )".format(originStr,SQLUtils.toSQLString(expr)));
+        return SQLUtils.toSQLString(expr);
+    }
+
+    private void init()
     {
         auto aliasMap = _aliasVistor.getAliasMap();
         foreach(objName , v ; aliasMap)
@@ -71,8 +112,9 @@ class EqlParse
             }
             else if(cast(SQLPropertyExpr)expr !is null)
             {
-                clsName = (cast(SQLPropertyExpr)expr).getName();
-                clsName = _objType.get(clsName,clsName);
+                
+                // clsName = (cast(SQLPropertyExpr)expr);
+                clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr)expr),null);
             }
             auto obj = new EqlObject(objName , clsName);
             _eqlObj[objName] = obj;
@@ -94,7 +136,9 @@ class EqlParse
 
         // logDebug("EQL Conds : %s".format(_joinConds));
 
-        /// select item
+        // logDebug("EQL objType : %s".format(_objType));
+
+
         if(cast(SQLSelectStatement)(_stmtList.get(0)) !is null)
         {
             logDebug("EQL do_select_parse");
@@ -110,15 +154,16 @@ class EqlParse
             logDebug("EQL do_delete_parse");
             do_delete_parse();
         }
+        else
+        {
+            eql_throw("Statement", " unknown sql statement");
+        }
 
 
         // logDebug("init eql : %s".format(_eql));
     }
 
-    
-
-
-    void do_select_parse()
+    private void do_select_parse()
     {
         auto queryBlock = (cast(SQLSelectStatement)(_stmtList.get(0))).getSelect().getQueryBlock();
         auto select_copy = queryBlock.clone();
@@ -131,12 +176,13 @@ class EqlParse
                 auto eqlObj = _eqlObj.get( (cast(SQLIdentifierExpr)expr).getName(),null);
                 if(eqlObj !is null)
                 {
-                    auto fields = _tableFields.get(eqlObj.className(),null);
+                    auto clsName = eqlObj.className();
+                    auto fields = _tableFields.get(clsName,null);
                     if(fields !is null)
                     {
                         foreach(clsFiled , entFiled ; fields)
                         {
-                            if(!(clsFiled in _objType))
+                            if(!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
                                 select_copy.addSelectItem(new SQLIdentifierExpr(entFiled.getSelectColumn()));
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
                         }
@@ -168,111 +214,7 @@ class EqlParse
 
         ///from
         auto fromExpr = select_copy.getFrom();
-        if(cast(SQLJoinTableSource)fromExpr !is null)
-        {
-            auto joinExpr = cast(SQLJoinTableSource)fromExpr;
-            auto leftExpr = cast(SQLExprTableSource)(joinExpr.getLeft());
-            auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
-            if(cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(leftExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        leftExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(leftExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    leftExpr.setExpr(tableName);
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            if(cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(rightExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        rightExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(rightExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    rightExpr.setExpr(tableName);
-                }
-                 auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            leftExpr.setAlias("");
-            rightExpr.setAlias("");
-        }
-        else
-        {
-            auto expr = cast(SQLExprTableSource)(fromExpr);
-            if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(expr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        expr.setExpr(tableName);
-                    }
-                }
-                
-            }
-            else if(cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(expr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    expr.setExpr(tableName);
-                }
-            }
-            expr.setAlias("");
-        }
+        parseFromTable(fromExpr);
 
         ///where 
         auto whereCond = select_copy.getWhere();
@@ -299,10 +241,10 @@ class EqlParse
 
     }
 
-    void do_update_parse()
+    private void do_update_parse()
     {
         auto updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
-
+        /// update item
         foreach(updateItem; updateBlock.getItems()) {
             // logDebug("clone selcet : ( %s , %s ) ".format(SQLUtils.toSQLString(selectItem.getExpr()),selectItem.computeAlias()));
             auto expr = updateItem.getColumn();
@@ -335,113 +277,8 @@ class EqlParse
 
         ///from
         auto fromExpr = updateBlock.getTableSource();
-            // logDebug("update From : %s".format(SQLUtils.toSQLString(fromExpr)));
-
-        if(cast(SQLJoinTableSource)fromExpr !is null)
-        {
-            auto joinExpr = cast(SQLJoinTableSource)fromExpr;
-            auto leftExpr = cast(SQLExprTableSource)(joinExpr.getLeft());
-            auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
-            if(cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(leftExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        leftExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(leftExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    leftExpr.setExpr(tableName);
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            if(cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(rightExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        rightExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(rightExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    rightExpr.setExpr(tableName);
-                }
-                 auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            leftExpr.setAlias("");
-            rightExpr.setAlias("");
-        }
-        else
-        {
-            auto expr = cast(SQLExprTableSource)(fromExpr);
-            if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(expr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        expr.setExpr(tableName);
-                    }
-                }
-                
-            }
-            else if(cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(expr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    expr.setExpr(tableName);
-                }
-            }
-            expr.setAlias("");
-        }
+        // logDebug("update From : %s".format(SQLUtils.toSQLString(fromExpr)));
+        parseFromTable(fromExpr);
 
         ///where 
         auto whereCond = updateBlock.getWhere();
@@ -455,120 +292,16 @@ class EqlParse
         _eql = SQLUtils.toSQLString(updateBlock);
     }
 
-    void do_delete_parse()
+    private void do_delete_parse()
     {
         auto delBlock = cast(SQLDeleteStatement)(_stmtList.get(0));
 
         
         ///from
         auto fromExpr = delBlock.getTableSource();
-            // logDebug("delete From : %s".format(SQLUtils.toSQLString(fromExpr)));
+        // logDebug("delete From : %s".format(SQLUtils.toSQLString(fromExpr)));
 
-        if(cast(SQLJoinTableSource)fromExpr !is null)
-        {
-            auto joinExpr = cast(SQLJoinTableSource)fromExpr;
-            auto leftExpr = cast(SQLExprTableSource)(joinExpr.getLeft());
-            auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
-            if(cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(leftExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        leftExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(leftExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    leftExpr.setExpr(tableName);
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            if(cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(rightExpr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        rightExpr.setExpr(tableName);
-                    }
-                }
-                auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-            else if(cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(rightExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    rightExpr.setExpr(tableName);
-                }
-                 auto joinCond = _joinConds.get(clsName,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-
-                if(joinCond !is null)
-                {
-                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond));
-                }
-            }
-
-            leftExpr.setAlias("");
-            rightExpr.setAlias("");
-        }
-        else
-        {
-            auto expr = cast(SQLExprTableSource)(fromExpr);
-            if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = _objType.get((cast(SQLPropertyExpr)(expr.getExpr())).getName(),null);
-                if(clsName !is null)
-                {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
-                    {
-                        expr.setExpr(tableName);
-                    }
-                }
-                
-            }
-            else if(cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
-            {
-                auto clsName = (cast(SQLIdentifierExpr)(expr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
-                {
-                    expr.setExpr(tableName);
-                }
-            }
-            expr.setAlias("");
-        }
+        parseFromTable(fromExpr);
 
         ///where 
         auto whereCond = delBlock.getWhere();
@@ -583,7 +316,7 @@ class EqlParse
     }
 
     /// a.id --> Table.col
-    string convertAttrExpr(string attrExpr)
+    private string convertAttrExpr(string attrExpr)
     {
         string res = attrExpr;
         auto conds = matchAll(attrExpr, regex("([^\\s]+)\\.([^\\s]+)"));
@@ -609,8 +342,123 @@ class EqlParse
         }
         return res;
     }
-    
-    void setParameter(R)(int idx , R param)
+
+    /// remove alias & a.xx -- > Table
+    private void parseFromTable(SQLTableSource fromExpr)
+    {
+        logDebug(" From table : %s".format(SQLUtils.toSQLString(fromExpr)));
+        if(cast(SQLJoinTableSource)fromExpr !is null)
+        {
+            auto joinExpr = cast(SQLJoinTableSource)fromExpr;
+            auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
+            
+            if(cast(SQLJoinTableSource)(joinExpr.getLeft()) !is null)
+            {
+                auto subExpr = cast(SQLJoinTableSource)(joinExpr.getLeft());
+                parseFromTable(subExpr);
+            }
+            else if(cast(SQLExprTableSource)(joinExpr.getLeft()) !is null)
+            {
+                auto leftExpr = cast(SQLExprTableSource)(joinExpr.getLeft());
+
+                if(cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
+                {
+                    auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(leftExpr.getExpr()));
+                    auto clsName = _objType.get(convertStr,null);
+                    if(clsName !is null)
+                    {
+                        auto tableName = _clsNameToTbName.get(clsName,null);
+                        if(tableName !is null)
+                        {
+                            leftExpr.setExpr(tableName);
+                        }
+                    }
+                    auto joinCond = _joinConds.get(convertStr,null);
+                        // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+                    if(joinCond !is null)
+                    {
+                        joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond.toString()));
+                    }
+                }
+                else if(cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
+                {
+                    auto clsName = (cast(SQLIdentifierExpr)(leftExpr.getExpr())).getName();
+                    auto tableName = _clsNameToTbName.get(clsName,null);
+                    if(tableName !is null)
+                    {
+                        leftExpr.setExpr(tableName);
+                    }
+                }
+                leftExpr.setAlias("");
+            }
+
+            
+            if(rightExpr is null)
+                return;
+            if(cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
+            {
+                auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(rightExpr.getExpr()));
+                auto clsName = _objType.get(convertStr,null);
+                if(clsName !is null)
+                {
+                    auto tableName = _clsNameToTbName.get(clsName,null);
+                    if(tableName !is null)
+                    {
+                        rightExpr.setExpr(tableName);
+                    }
+                }
+                auto joinCond = _joinConds.get(convertStr,null);
+                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+
+                if(joinCond !is null)
+                {
+                    joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond.toString()));
+                }
+            }
+            else if(cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
+            {
+                auto clsName = (cast(SQLIdentifierExpr)(rightExpr.getExpr())).getName();
+                auto tableName = _clsNameToTbName.get(clsName,null);
+                if(tableName !is null)
+                {
+                    rightExpr.setExpr(tableName);
+                }
+            }
+
+            rightExpr.setAlias("");
+        }
+        else
+        {
+            auto expr = cast(SQLExprTableSource)(fromExpr);
+            if(expr is null)
+                return;
+            if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
+            {
+                auto clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr)(expr.getExpr())),null);
+                if(clsName !is null)
+                {
+                    auto tableName = _clsNameToTbName.get(clsName,null);
+                    if(tableName !is null)
+                    {
+                        expr.setExpr(tableName);
+                    }
+                }
+                
+            }
+            else if(cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
+            {
+                auto clsName = (cast(SQLIdentifierExpr)(expr.getExpr())).getName();
+                auto tableName = _clsNameToTbName.get(clsName,null);
+                if(tableName !is null)
+                {
+                    expr.setExpr(tableName);
+                }
+            }
+            expr.setAlias("");
+        }
+    }
+
+    public void setParameter(R)(int idx , R param)
     {
         static if (is(R == int) || is(R == uint))
         {
@@ -646,23 +494,23 @@ class EqlParse
         }
     }
 
-    void putClsTbName(string clsName, string tableName)
+    public void putClsTbName(string clsName, string tableName)
     {
         _clsNameToTbName[clsName] = tableName;
     }
 
-    void putFields(string table, EntityField ef)
+    public void putFields(string table, EntityField ef)
     {
         _tableFields[table] = ef;
     }
 
 
-    string getTableName(string clsName)
+    public string getTableName(string clsName)
     {
         return _clsNameToTbName.get(clsName,null);
     }
 
-    string getNativeSql()
+    public string getNativeSql()
     {
         string sql = _eql;
      

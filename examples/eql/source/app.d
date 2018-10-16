@@ -12,9 +12,14 @@ import core.stdc.stdlib;
 import core.runtime;
 import std.conv;
 
+enum DO_TEST = `
+    logInfo("BEGIN ----------------" ~ __FUNCTION__ ~ "--------------------");
+    scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
+    scope(failure) logError("END   ----------------" ~ __FUNCTION__ ~ "----------FAIL----------");`;
 
 void test_select(EntityManager em)
 {
+	mixin(DO_TEST);
 	/// select statement
 	auto query1 = em.createEqlQuery!(UInfo)(" select a from UInfo a ;");
 	foreach(d ; query1.getResultList())
@@ -44,11 +49,20 @@ void test_select(EntityManager em)
 	{
 		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
 	}
+
+	auto query5 = em.createEqlQuery!(LoginInfo)(" select a, b ,c from LoginInfo a left join a.uinfo b left join a.app c ;");
+	foreach(d ; query5.getResultList())
+	{
+		logDebug("LoginInfo.UInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
+		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id,d.app.name,d.app.desc));
+		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id,d.create_time,d.update_time));
+	}
 }
 
 
 void test_update(EntityManager em)
 {
+	mixin(DO_TEST);
 	/// update statement
 	auto update = em.createEqlQuery!(UInfo)(" update UInfo u set u.age = ? where u.id = ? "); // update UInfo u set u.age = :1 where u.id = :2
 	update.setParameter(2,2);
@@ -59,6 +73,7 @@ void test_update(EntityManager em)
 
 void test_delete(EntityManager em)
 {
+	mixin(DO_TEST);
 	/// delete statement
 	auto del = em.createEqlQuery!(UInfo)(" delete UInfo u where u.id = ? "); 
 	del.setParameter(1,3);

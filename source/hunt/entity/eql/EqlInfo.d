@@ -66,7 +66,7 @@ class EqlInfo(T : Object, F : Object = T) {
     private F _owner;
     private string _tablePrefix;
 
-    private Object _joinCond;
+    private Object[string] _joinConds;
     //auto mixin function
     // private void initEntityData(T t){}
     // public T deSerialize(Row row) {}
@@ -147,8 +147,12 @@ class EqlInfo(T : Object, F : Object = T) {
     public EntityFieldInfo[string] getFields() { return _fields; }
     public string getPrimaryKeyString() { return _primaryKey; }
     public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
-    public string getJoinCond() { 
-        return _joinCond !is null ? _joinCond.toString() : null;
+    public string getJoinCond(string member) { 
+        auto cond =  _joinConds.get(member,null);
+        return cond !is null ? cond.toString() : null;
+    }
+    public Object[string] getJoinConds() { 
+        return _joinConds;
     }
 }
 
@@ -266,12 +270,14 @@ string makeInitEntityData(T,F)() {
                 //columnName nullable
                 string nullable;
                 string columnName;
+                string referencedColumnName;
                 static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), Column)[0].nullable.to!string;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
+                    referencedColumnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].referencedColumnName~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
                 }
                 else {
@@ -321,7 +327,11 @@ string makeInitEntityData(T,F)() {
                 static if(is(memType == class))
                 {
                     str ~= `
-                     _joinCond = new JoinCond!(`~memType.stringof~`)(_manager,_entityClassName,`~memberName.stringof~`, `~columnName~`, _tableName, ` ~value~ `);`;
+                    {
+                        auto joinCond = new JoinCond!(`~memType.stringof~`)(_manager,_entityClassName,`~memberName.stringof~`, `~columnName~`,`~referencedColumnName~`, _tableName, ` ~value~ `);
+                        _joinConds[_entityClassName ~ "." ~ `~memberName.stringof~`] = joinCond;
+                    }
+                     `;
                 }
             }
 
@@ -418,10 +428,13 @@ class JoinCond(T : Object)
 {
     private string _joinCond;
     private EqlInfo!T _eqlInfo;
-    this(EntityManager manager, string leftTable,string fileldName, string joinCol, string tableName,T vale)
+    this(EntityManager manager, string leftTable,string fileldName, string joinCol, string referencedColumnName ,string tableName,T vale)
     {
         _eqlInfo = new EqlInfo!T(manager);
-        _joinCond = tableName ~ "." ~ joinCol ~ " = " ~ _eqlInfo.getTableName() ~ "." ~ _eqlInfo.getPrimaryKeyString();
+        if(referencedColumnName.length == 0)
+            _joinCond = tableName ~ "." ~ joinCol ~ " = " ~ _eqlInfo.getTableName() ~ "." ~ _eqlInfo.getPrimaryKeyString();
+        else
+            _joinCond = tableName ~ "." ~ joinCol ~ " = " ~ _eqlInfo.getTableName() ~ "." ~ referencedColumnName;
     }
 
     override string toString()

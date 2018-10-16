@@ -68,9 +68,10 @@ class EqlQuery(T...) {
              
                 _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
                 _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
-                if(entInfo.getJoinCond() !is null)
-                    _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
+                // if(entInfo.getJoinCond() !is null)
+                //     _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
                 // logDebug("( %s , %s ) ".format(ObjType.stringof,ResultObj.stringof));
+                _eqlParser.putJoinCond(entInfo.getJoinConds());
                 if(ObjType.stringof == ResultObj.stringof)
                 {
                     _resultDes.setFields(entInfo.getFields);
@@ -88,10 +89,10 @@ class EqlQuery(T...) {
                         auto sub_en = new EqlInfo!(memType)(_manager);
                         _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
                         _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
-                        _eqlParser._objType[memberName] = sub_en.getEntityClassName();
-                        if(sub_en.getJoinCond() !is null)
-                            _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond();
-                        //  logDebug("( %s , %s ) ".format(memberName,sub_en.getJoinCond()));
+                        _eqlParser._objType[ObjType.stringof ~ "." ~ memberName] = sub_en.getEntityClassName();
+                        // if(sub_en.getJoinCond(memberName.stringof) !is null)
+                        //     _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond(memberName.stringof);
+                        //  logDebug("joinCond (  %s , %s ) ".format(memberName,sub_en.getJoinCond(memberName.stringof)));
                     }
                 }
             }
