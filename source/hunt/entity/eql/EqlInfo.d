@@ -67,12 +67,7 @@ class EqlInfo(T : Object, F : Object = T) {
     private string _tablePrefix;
 
     private Object[string] _joinConds;
-    //auto mixin function
-    // private void initEntityData(T t){}
-    // public T deSerialize(Row row) {}
-    // public void setIncreaseKey(ref T entity, int value) {}
-    // public R getPrimaryValue() {}
-    // public void setPrimaryValue(ref T entity, int value) {}
+
 
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());

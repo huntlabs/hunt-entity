@@ -49,7 +49,7 @@ void test_select(EntityManager em)
 
 	}
 
-	auto query4 = em.createEqlQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc;");
+	auto query4 = em.createEqlQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
 	query4.setParameter(1,2);
 	query4.setParameter(2,1);
 	foreach(d ; query4.getResultList())
@@ -71,6 +71,9 @@ void test_select(EntityManager em)
 	{
 		logDebug("UInfo( %s , %s , %s ) ".format(d.id,d.nickName,d.age));
 	}
+
+	auto query7 = em.createEqlQuery!(UInfo)(" select a.nickName as name ,count(*) as num from UInfo a group by a.nickName;");
+	logDebug("UInfo( %s ) ".format(query7.getNativeResult()));
 }
 
 

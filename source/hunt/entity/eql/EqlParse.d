@@ -66,40 +66,6 @@ class EqlParse
         init();
     }
 
-    public void putJoinCond(Object[string] conds)
-    {
-        foreach(k , v; conds) {
-            _joinConds[k] = v;
-        }
-    }
-
-    /// a.id  --- > Class.id , a is instance of Class
-    string convertExprAlias(SQLPropertyExpr expr)
-    {
-        string originStr = SQLUtils.toSQLString(expr) ;
-        auto objName = expr.getOwnernName();
-        auto subPropertyName = expr.getName();
-        auto aliasMap = _aliasVistor.getAliasMap();
-        string clsName;
-        foreach(obj , v ; aliasMap)
-        {
-            if(obj == objName)
-            {
-                auto exprTab = (cast(SQLExprTableSource)v).getExpr();
-                if(cast(SQLIdentifierExpr)exprTab !is null)
-                {
-                    expr.setOwner(exprTab);
-                }
-                else if(cast(SQLPropertyExpr)exprTab !is null)
-                {
-                    expr.setOwner(SQLUtils.toSQLExpr(convertExprAlias(cast(SQLPropertyExpr)exprTab)));
-                }
-            }
-        }
-        // logDebug("get last type : ( %s , %s )".format(originStr,SQLUtils.toSQLString(expr)));
-        return SQLUtils.toSQLString(expr);
-    }
-
     private void init()
     {
         auto aliasMap = _aliasVistor.getAliasMap();
@@ -174,8 +140,8 @@ class EqlParse
         auto queryBlock = (cast(SQLSelectStatement)(_stmtList.get(0))).getSelect().getQueryBlock();
         auto select_copy = queryBlock.clone();
         select_copy.getSelectList().clear();
+        /// select item
         foreach(selectItem; queryBlock.getSelectList()) {
-            // logDebug("clone selcet : ( %s , %s ) ".format(SQLUtils.toSQLString(selectItem.getExpr()),selectItem.computeAlias()));
             auto expr = selectItem.getExpr();
             if(cast(SQLIdentifierExpr)expr !is null)
             {
@@ -189,13 +155,13 @@ class EqlParse
                         foreach(clsFiled , entFiled ; fields)
                         {
                             if(!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
-                                select_copy.addSelectItem(new SQLIdentifierExpr(entFiled.getSelectColumn()));
+                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null ? entFiled.getSelectColumn() : entFiled.getFullColumn()),selectItem.getAlias());
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
                         }
                     }
                 }
             }
-            if(cast(SQLPropertyExpr)expr !is null)
+            else if(cast(SQLPropertyExpr)expr !is null)
             {
                 auto eqlObj = _eqlObj.get( (cast(SQLPropertyExpr)expr).getOwnernName(),null);
                 auto clsFieldName = (cast(SQLPropertyExpr)expr).getName();
@@ -208,13 +174,17 @@ class EqlParse
                         {
                             if(clsFiled == clsFieldName)
                             {
-                                select_copy.addSelectItem(new SQLIdentifierExpr(entFiled.getSelectColumn()));
+                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null ? entFiled.getSelectColumn() : entFiled.getFullColumn()),selectItem.getAlias());
                                 break;
                             }
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
                         }
                     }
                 }
+            }
+            else
+            {
+                select_copy.addSelectItem(selectItem);
             }
         }
 
@@ -241,6 +211,24 @@ class EqlParse
                 // logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(),SQLUtils.toSQLExpr(convertAttrExpr(exprStr)));
             }
+        }
+
+        /// group by 
+        auto groupBy = select_copy.getGroupBy();
+        if(groupBy !is null)
+        {
+            groupBy.getItems().clear();
+            foreach(item ; queryBlock.getGroupBy().getItems())
+            {
+                // logDebug("group item : %s".format(SQLUtils.toSQLString(item)));
+                groupBy.addItem(SQLUtils.toSQLExpr(convertAttrExpr(SQLUtils.toSQLString(item))));
+            }
+            auto having = groupBy.getHaving();
+            if(having !is null)
+            {
+                groupBy.setHaving(SQLUtils.toSQLExpr(convertAttrExpr(SQLUtils.toSQLString(having))));
+            }
+            select_copy.setGroupBy(groupBy);
         }
 
         _eql = SQLUtils.toSQLString(select_copy);
@@ -321,6 +309,33 @@ class EqlParse
         _eql = SQLUtils.toSQLString(delBlock);
     }
 
+    /// a.id  --- > Class.id , a is instance of Class
+    string convertExprAlias(SQLPropertyExpr expr)
+    {
+        string originStr = SQLUtils.toSQLString(expr) ;
+        auto objName = expr.getOwnernName();
+        auto subPropertyName = expr.getName();
+        auto aliasMap = _aliasVistor.getAliasMap();
+        string clsName;
+        foreach(obj , v ; aliasMap)
+        {
+            if(obj == objName)
+            {
+                auto exprTab = (cast(SQLExprTableSource)v).getExpr();
+                if(cast(SQLIdentifierExpr)exprTab !is null)
+                {
+                    expr.setOwner(exprTab);
+                }
+                else if(cast(SQLPropertyExpr)exprTab !is null)
+                {
+                    expr.setOwner(SQLUtils.toSQLExpr(convertExprAlias(cast(SQLPropertyExpr)exprTab)));
+                }
+            }
+        }
+        // logDebug("get last type : ( %s , %s )".format(originStr,SQLUtils.toSQLString(expr)));
+        return SQLUtils.toSQLString(expr);
+    }
+
     /// a.id --> Table.col
     private string convertAttrExpr(string attrExpr)
     {
@@ -332,14 +347,14 @@ class EqlParse
             auto eqlObj = _eqlObj.get(cond.captures[1],null);
             if(eqlObj !is null)
             {
-                newCond = newCond.replace(cond.captures[1],eqlObj.tableName());
+                newCond = newCond.replace(cond.captures[1]~".",eqlObj.tableName()~".");
                 auto fields = _tableFields.get(eqlObj.className(),null);
                 if(fields !is null)
                 {
                     foreach(clsFiled , entFiled ; fields)
                     {
                         if(clsFiled == cond.captures[2])
-                            newCond = newCond.replace(cond.captures[2],entFiled.getColumnName());
+                            newCond = newCond.replace("."~cond.captures[2],"."~entFiled.getColumnName());
                        
                     }
                 }
@@ -523,6 +538,12 @@ class EqlParse
         _tableFields[table] = ef;
     }
 
+    public void putJoinCond(Object[string] conds)
+    {
+        foreach(k , v; conds) {
+            _joinConds[k] = v;
+        }
+    }
 
     public string getTableName(string clsName)
     {
@@ -540,7 +561,7 @@ class EqlParse
         {
             params.add(_params[e]);
         }
-        sql = SQLUtils.format(sql, DBType.ORACLE.name,params);
+        sql = SQLUtils.format(sql, _dbtype,params);
 
         // logDebug("native sql : %s".format(sql));
         return sql;
