@@ -3,6 +3,8 @@ import std.stdio;
 import hunt.entity;
 import Model.UserInfo;
 import Model.LoginInfo;
+import Model.AppInfo;
+
 
 import hunt.logging;
 import std.traits;
@@ -16,6 +18,12 @@ enum DO_TEST = `
     logInfo("BEGIN ----------------" ~ __FUNCTION__ ~ "--------------------");
     scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
     scope(failure) logError("END   ----------------" ~ __FUNCTION__ ~ "----------FAIL----------");`;
+
+class TmpResult
+{
+	UInfo user;
+	AppInfo app;
+}
 
 void test_select(EntityManager em)
 {
@@ -44,18 +52,24 @@ void test_select(EntityManager em)
 	auto query4 = em.createEqlQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc;");
 	query4.setParameter(1,2);
 	query4.setParameter(2,1);
-
 	foreach(d ; query4.getResultList())
 	{
 		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
 	}
 
-	auto query5 = em.createEqlQuery!(LoginInfo)(" select a, b ,c from LoginInfo a left join a.uinfo b left join a.app c ;");
+	auto query5 = em.createEqlQuery!(LoginInfo)(" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = ? order by a.id desc;");
+	query5.setParameter(1,2);
 	foreach(d ; query5.getResultList())
 	{
 		logDebug("LoginInfo.UInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
 		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id,d.app.name,d.app.desc));
 		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id,d.create_time,d.update_time));
+	}
+
+	auto query6 = em.createEqlQuery!(UInfo,AppInfo)(" select a , b from UInfo a left join AppInfo b on a.id = b.id ;");
+	foreach(d ; query6.getResultList())
+	{
+		logDebug("UInfo( %s , %s , %s ) ".format(d.id,d.nickName,d.age));
 	}
 }
 
@@ -64,7 +78,7 @@ void test_update(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// update statement
-	auto update = em.createEqlQuery!(UInfo)(" update UInfo u set u.age = ? where u.id = ? "); // update UInfo u set u.age = :1 where u.id = :2
+	auto update = em.createEqlQuery!(UInfo)(" update UInfo u set u.age = ? where u.id = ? "); // update UInfo u set u.age = 5 where u.id = 2
 	update.setParameter(2,2);
 	update.setParameter(1,5);
 	logDebug(" update result : ",update.exec());

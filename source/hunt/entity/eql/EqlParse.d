@@ -16,6 +16,7 @@ import hunt.sql;
 import hunt.logging;
 import hunt.container;
 import hunt.math;
+import hunt.lang;
 import std.algorithm.sorting;
 import hunt.entity.eql.EqlInfo;
 import std.regex;
@@ -124,7 +125,12 @@ class EqlParse
         {
             if(obj.className() != null)
             {
-                obj.setTableName(_clsNameToTbName.get(obj.className(),null));
+                auto tableName = _clsNameToTbName.get(obj.className(),null);
+                if(tableName is null)
+                {
+                    eql_throw(obj.className(),"Class is not found");
+                }
+                obj.setTableName(tableName);
             }
         }
 
@@ -142,17 +148,17 @@ class EqlParse
         if(cast(SQLSelectStatement)(_stmtList.get(0)) !is null)
         {
             logDebug("EQL do_select_parse");
-            do_select_parse();
+            doSelectParse();
         }
         else if(cast(SQLUpdateStatement)(_stmtList.get(0)) !is null)
         {
             logDebug("EQL do_update_parse");
-            do_update_parse();
+            doUpdateParse();
         }
         else if(cast(SQLDeleteStatement)(_stmtList.get(0)) !is null)
         {
             logDebug("EQL do_delete_parse");
-            do_delete_parse();
+            doDeleteParse();
         }
         else
         {
@@ -163,7 +169,7 @@ class EqlParse
         // logDebug("init eql : %s".format(_eql));
     }
 
-    private void do_select_parse()
+    private void doSelectParse()
     {
         auto queryBlock = (cast(SQLSelectStatement)(_stmtList.get(0))).getSelect().getQueryBlock();
         auto select_copy = queryBlock.clone();
@@ -241,7 +247,7 @@ class EqlParse
 
     }
 
-    private void do_update_parse()
+    private void doUpdateParse()
     {
         auto updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
         /// update item
@@ -292,7 +298,7 @@ class EqlParse
         _eql = SQLUtils.toSQLString(updateBlock);
     }
 
-    private void do_delete_parse()
+    private void doDeleteParse()
     {
         auto delBlock = cast(SQLDeleteStatement)(_stmtList.get(0));
 
@@ -352,6 +358,18 @@ class EqlParse
             auto joinExpr = cast(SQLJoinTableSource)fromExpr;
             auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
             
+            auto defaultJoinCond = joinExpr.getCondition();
+            if(defaultJoinCond is null)
+            {
+                // logDebug("join table no default condition");
+            }
+            else
+            {
+                auto convertAttrStr = convertAttrExpr(SQLUtils.toSQLString(defaultJoinCond));
+                // logDebug(" join Cond : %s , convert : %s ".format(SQLUtils.toSQLString(defaultJoinCond),convertAttrStr));
+                joinExpr.setCondition(SQLUtils.toSQLExpr(convertAttrStr));
+            }
+
             if(cast(SQLJoinTableSource)(joinExpr.getLeft()) !is null)
             {
                 auto subExpr = cast(SQLJoinTableSource)(joinExpr.getLeft());
@@ -434,7 +452,8 @@ class EqlParse
                 return;
             if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
             {
-                auto clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr)(expr.getExpr())),null);
+                auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(expr.getExpr()));
+                auto clsName = _objType.get(convertStr,null);
                 if(clsName !is null)
                 {
                     auto tableName = _clsNameToTbName.get(clsName,null);
