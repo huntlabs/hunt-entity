@@ -147,17 +147,17 @@ class EqlParse
 
         if(cast(SQLSelectStatement)(_stmtList.get(0)) !is null)
         {
-            logDebug("EQL do_select_parse");
+            // logDebug("EQL do_select_parse");
             doSelectParse();
         }
         else if(cast(SQLUpdateStatement)(_stmtList.get(0)) !is null)
         {
-            logDebug("EQL do_update_parse");
+            // logDebug("EQL do_update_parse");
             doUpdateParse();
         }
         else if(cast(SQLDeleteStatement)(_stmtList.get(0)) !is null)
         {
-            logDebug("EQL do_delete_parse");
+            // logDebug("EQL do_delete_parse");
             doDeleteParse();
         }
         else
@@ -352,7 +352,7 @@ class EqlParse
     /// remove alias & a.xx -- > Table
     private void parseFromTable(SQLTableSource fromExpr)
     {
-        logDebug(" From table : %s".format(SQLUtils.toSQLString(fromExpr)));
+        // logDebug(" From table : %s".format(SQLUtils.toSQLString(fromExpr)));
         if(cast(SQLJoinTableSource)fromExpr !is null)
         {
             auto joinExpr = cast(SQLJoinTableSource)fromExpr;
