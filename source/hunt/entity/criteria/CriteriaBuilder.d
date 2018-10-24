@@ -12,6 +12,7 @@
 module hunt.entity.criteria.CriteriaBuilder;
 
 import hunt.entity;
+import hunt.logging;
 
 public class CriteriaBuilder
 {
@@ -115,6 +116,30 @@ public class CriteriaBuilder
             if (info.getJoinColumn() != "") {
                 auto entityInfo = new EntityInfo!(T,T)(_manager, t);
                 p = new Predicate().addValue(info.getJoinColumn(), "=", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
+            }
+            else {
+                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+            }
+            return p;
+        }
+    }
+
+    public Predicate ManyToManyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
+        // logDebug("@@@@ ( %s , %s.%s , %s , %s )".format(info.getFullColumn(),info.getJoinTable(),info.getJoinColumn(),info.isMainMapped(),info.getInverseJoinColumn()));
+        auto condTable = info.getJoinTable();
+        auto condColumn = info.getJoinColumn();
+        if(info.isMainMapped())
+            condColumn = info.getInverseJoinColumn();
+        static if (isBuiltinType!T) {
+            if (check)
+                assertType!(T)(info);
+            return new Predicate().addValue(condTable~"."~condColumn, "=", _factory.getDialect().toSqlValue(t));
+        }
+        else {
+            Predicate p;
+            if (info.getJoinColumn() != "") {
+                auto entityInfo = new EntityInfo!(T,T)(_manager, t);
+                p = new Predicate().addValue(condTable~"."~condColumn, "=", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
             }
             else {
                 throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));

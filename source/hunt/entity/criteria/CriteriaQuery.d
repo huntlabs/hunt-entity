@@ -12,6 +12,7 @@
 module hunt.entity.criteria.CriteriaQuery;
 
 import hunt.entity;
+import hunt.logging;
 
 class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
 {
@@ -24,6 +25,7 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
     {
         string[] selectColumn = root.getAllSelectColumn();
         foreach(value; root.getJoins()) {
+            // logDebug("####join sql : %s".format(value));
             if (value.joinType == JoinType.INNER) {
                 _sqlBuidler.innerJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {

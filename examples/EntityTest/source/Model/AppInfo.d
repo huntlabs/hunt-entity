@@ -1,7 +1,7 @@
 module Model.AppInfo;
 
 import hunt.entity;
-
+import Model.UserInfo;
 
 @Table("AppInfo")
 class AppInfo  {
@@ -14,4 +14,11 @@ class AppInfo  {
 
     string name;
     string desc;
+
+    
+    @JoinTable("UserApp")
+    @JoinColumn("appid","id")
+    @InverseJoinColumn("uid","id")
+    @ManyToMany("apps")
+    UserInfo[] uinfos;
 }

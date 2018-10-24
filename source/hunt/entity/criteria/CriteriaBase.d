@@ -26,8 +26,13 @@ class CriteriaBase(T : Object, F : Object = T)
         _sqlBuidler = criteriaBuilder.createSqlBuilder();
     }
 
-    public Root!(T,F) from(T t = null, F owner = null) {
-        _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner); 
+    public Root!(T,F) from(T t = null, F owner = null, bool enableJoin = false , string mapped = string.init) {
+        _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
+        auto entityInfo = _root.getEntityInfo();
+         auto filedInfo = entityInfo.getSingleField(mapped);
+         if(filedInfo !is null)
+            filedInfo.setEnableJoin(true);
+        // _root.setEnableJoin(enableJoin);
         _sqlBuidler.from(_root.getTableName());
         _root.autoJoin();
         return _root;
@@ -48,5 +53,10 @@ class CriteriaBase(T : Object, F : Object = T)
 
     override public string toString() {
         return _sqlBuidler.build().toString();
+    }
+
+    public void setEnableJoin(bool flg)
+    {
+        _root.setEnableJoin(flg);
     }
 }

@@ -39,13 +39,13 @@ class EntityInfo(T : Object, F : Object = T) {
     // public R getPrimaryValue() {}
     // public void setPrimaryValue(ref T entity, int value) {}
 
-    // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
-    // pragma(msg,makeImport!(T)());
-    // pragma(msg,makeInitEntityData!(T,F));
-    // pragma(msg,makeDeSerialize!(T,F));
-    // pragma(msg,makeSetIncreaseKey!(T));
-    // pragma(msg,makeGetPrimaryValue!(T));
-    // pragma(msg,makeSetPrimaryValue!(T)());
+    pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
+    pragma(msg,makeImport!(T)());
+    pragma(msg,makeInitEntityData!(T,F));
+    pragma(msg,makeDeSerialize!(T,F));
+    pragma(msg,makeSetIncreaseKey!(T));
+    pragma(msg,makeGetPrimaryValue!(T));
+    pragma(msg,makeSetPrimaryValue!(T)());
 
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
@@ -228,6 +228,11 @@ string makeInitEntityData(T,F)() {
                 //columnName nullable
                 string nullable;
                 string columnName;
+                string mappedBy;
+                static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
+                {
+                    mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
+                }
                 static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), Column)[0].nullable.to!string;
@@ -235,16 +240,37 @@ string makeInitEntityData(T,F)() {
                 else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
-                }
+                } 
                 else {
                     columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
                 }
                 //value 
                 string value = "_data."~memberName;
                 string fieldName = "_fields["~memberName.stringof~"]";
-                static if (is(F == memType)) {
-        str ~= `
-        `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, `~columnName~`, _tableName);`;
+                static if (is(F == memType) ) {
+                    str ~= `
+                `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, `~columnName~`, _tableName);`;
+                        
+                }
+                else static if( memType.stringof.replace("[]","") == F.stringof && hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
+                {
+                    string owner = (getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).mappedBy == "" ? "_data" : "_owner";
+
+                    static if (hasUDA!(__traits(getMember, T ,memberName), JoinTable))
+                            {
+                    str ~= `
+                    `~fieldName~` = new EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+                                                    ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,true,`
+                                                    ~(getUDAs!(__traits(getMember, T ,memberName), JoinTable)[0]).stringof~`,`
+                                                    ~(getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0]).stringof~`,`
+                                                    ~(getUDAs!(__traits(getMember, T ,memberName), InverseJoinColumn)[0]).stringof~ `);`;
+                            }
+                            else
+                            {
+                    str ~= `
+                    `~fieldName~` = new EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`, F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+                                                    ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,false);`;
+                            }
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                     string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
@@ -270,7 +296,45 @@ string makeInitEntityData(T,F)() {
                                     ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~`);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                    //TODO                                                                 
+                    //TODO
+                    string owner = (getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).mappedBy == "" ? "_owner" : "_data";
+
+                    static if (hasUDA!(__traits(getMember, T ,memberName), JoinTable))
+                    {
+                        // static if (is(T==F)) {
+
+            str ~= `
+            `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+                                            ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,true,`
+                                            ~(getUDAs!(__traits(getMember, T ,memberName), JoinTable)[0]).stringof~`,`
+                                            ~(getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0]).stringof~`,`
+                                            ~(getUDAs!(__traits(getMember, T ,memberName), InverseJoinColumn)[0]).stringof~ `);`;
+            //             }
+            //             else {
+                            
+            // str ~= `    logDebug("*******************1");
+            // `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+            //                                 ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, _data,true,`
+            //                                 ~(getUDAs!(__traits(getMember, T ,memberName), JoinTable)[0]).stringof~`,`
+            //                                 ~(getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0]).stringof~`,`
+            //                                 ~(getUDAs!(__traits(getMember, T ,memberName), InverseJoinColumn)[0]).stringof~ `);`;
+            //             }
+                    }
+                    else
+                    {
+                            // static if (is(T==F)) {
+            str ~= `
+            `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`, T,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+                                            ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,false);`;
+            //             }
+            //             else {
+                           
+
+            // str ~= `     logDebug("*******************2");
+            // `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`, T)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+            //                                 ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, _data,false);`;
+            //             }
+                    }
                 }
                 else {
                     // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
@@ -311,11 +375,11 @@ string makeInitEntityData(T,F)() {
 string makeDeSerialize(T,F)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-           logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
+        //    logDebug("deSerialize rows (%s) : %s , count : %s , index  : %s ".format(T.stringof,rows,count,startIndex));
 
         T _data = new T();
         RowData data = rows[startIndex].getAllRowData(_tableName);
-        logDebug("rows[0] : ",data);
+        // logDebug("rows[0] : ",data);
         if (data is null)
             return null;
         if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
@@ -326,6 +390,11 @@ string makeDeSerialize(T,F)() {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
             static if (!isFunction!(memType)) {
+                string mappedBy;
+                static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
+                {
+                    mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
+                }
                 static if (isBasicType!memType || isSomeString!memType) {
         str ~=`
         auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
@@ -355,6 +424,29 @@ string makeDeSerialize(T,F)() {
         auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));
         _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
         _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
+                    }
+                    else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
+                        static if ( memType.stringof.replace("[]","") == F.stringof)
+                        {
+                            str ~=`
+                                // logDebug("33");
+                                auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(this.`~memberName~`));
+                                // logDebug("333 end : ",`~memberName~`);
+
+                                _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                                _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                        }
+                        else
+                        {
+                            str ~=`
+                                // logDebug("44444");
+                                auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(this.`~memberName~`));
+                                // logDebug("44444 end : ",`~memberName~`);
+
+                                _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                                _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                        }
+        
                     }
                 }
             }

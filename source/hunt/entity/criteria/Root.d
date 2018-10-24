@@ -12,7 +12,7 @@
 module hunt.entity.criteria.Root;
 
 import hunt.entity;
-
+import hunt.logging;
 import std.traits;
 
 class Root(T : Object, F : Object = T)
@@ -20,6 +20,7 @@ class Root(T : Object, F : Object = T)
     private EntityInfo!(T,F) _entityInfo;
     private CriteriaBuilder _builder;
     JoinSqlBuild[] _joins;
+    private bool _enableJoin = false;
 
     public this(CriteriaBuilder builder, T t = null, F owner = null) {
         _builder = builder;
@@ -76,12 +77,18 @@ class Root(T : Object, F : Object = T)
     }
 
     public Root!(T, F) autoJoin() {
+        // logDebug("#### join Fields : ",_entityInfo.getFields());
         foreach(value; _entityInfo.getFields()) {
-            if (value.getJoinSqlData() && value.isEnableJoin())
+            if (value.getJoinSqlData() && (_enableJoin || value.isEnableJoin()))
+                // logDebug("** join sql : ",value.getJoinSqlData());
                 _joins ~= value.getJoinSqlData(); 
         }
         return this;
     }
 
+    public void setEnableJoin(bool flg)
+    {
+        _enableJoin = flg;
+    }
 
 }

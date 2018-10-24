@@ -11,6 +11,7 @@
  
 module hunt.entity.Constant;
 
+import std.format;
 //@Factory
 struct Factory
 {
@@ -31,21 +32,34 @@ struct Column {
 //@JoinColumn
 struct JoinColumn {
     string name;
-    bool nullable = true;
     string referencedColumnName;
+    bool nullable = true;
 }
 
+//@JoinTable
+struct JoinTable {
+    string name;
+}
+
+//@InverseJoinColumn
+// alias InverseJoinColumn = JoinColumn;
+struct InverseJoinColumn {
+    string name;
+    string referencedColumnName;
+    bool nullable = true;
+}
 
 
 
 //@OneToOne
 struct OneToOne {
-    FetchType fetch = FetchType.EAGER;
     string mappedBy;
+    FetchType fetch = FetchType.EAGER;
     CascadeType cascade = CascadeType.ALL;
 }
 //@ManyToMany
 struct ManyToMany {
+    string mappedBy;
     FetchType fetch = FetchType.LAZY;
     CascadeType cascade = CascadeType.ALL;
 }
@@ -103,6 +117,11 @@ class JoinSqlBuild  {
     string joinWhere;
     JoinType joinType;
     string[] columnNames;
+
+    override string toString()
+    {
+        return "(%s , %s , %s , %s )".format(tableName,joinWhere,joinType,columnNames);
+    }
 }
 
 class ForeignKeyData {
@@ -123,6 +142,11 @@ class LazyData {
     }
     string key;
     string value;
+
+    override string toString()
+    {
+        return "( %s , %s )".format(key,value);
+    }
 }
 
 class ColumnFieldData {

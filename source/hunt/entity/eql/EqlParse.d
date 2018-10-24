@@ -367,6 +367,10 @@ class EqlParse
     /// remove alias & a.xx -- > Table
     private void parseFromTable(SQLTableSource fromExpr)
     {
+        if(fromExpr is null)
+        {
+            eql_throw("Table","no found table");
+        }
         // logDebug(" From table : %s".format(SQLUtils.toSQLString(fromExpr)));
         if(cast(SQLJoinTableSource)fromExpr !is null)
         {

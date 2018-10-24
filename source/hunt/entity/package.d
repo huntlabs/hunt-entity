@@ -31,7 +31,9 @@ public import hunt.entity.EntityFieldNormal;
 public import hunt.entity.EntityFieldOneToMany;
 public import hunt.entity.EntityFieldManyToOne;
 public import hunt.entity.EntityFieldOwner;
-// public import hunt.entity.EntityFieldManyToMany;
+public import hunt.entity.EntityFieldManyToMany;
+public import hunt.entity.EntityFieldManyToManyOwner;
+
 
 public import hunt.entity.EntityFieldOneToOne;
 public import hunt.entity.EntityFieldObject;

@@ -17,6 +17,7 @@ class EntityFieldInfo : EntityExpression
 {
     private string _fileldName;
     protected string _joinColumn;
+    protected string _inverseJoinColumn;
     protected string _joinTable;
     protected string _joinPrimaryKey;
     protected ForeignKeyData _foreignKeyData;
@@ -27,7 +28,10 @@ class EntityFieldInfo : EntityExpression
     private bool _nullable = true;
     private bool _primary;
     private bool _auto;
+
     
+    protected bool _isMainMapped;
+
 
 
 
@@ -48,14 +52,17 @@ class EntityFieldInfo : EntityExpression
 
 
 
+    public bool isMainMapped() {return _isMainMapped;}
     public string getFileldName() {return _fileldName;}
     public string getJoinColumn() {return _joinColumn;}
+    public string getInverseJoinColumn() {return _inverseJoinColumn;}
     public string getJoinTable() {return _joinTable;}
     public string getJoinPrimaryKey() {return _joinPrimaryKey;}
     public ForeignKeyData getForeignKeyData() {return _foreignKeyData;}
 
     public JoinSqlBuild getJoinSqlData() {return _joinSqlData;}
     public bool isEnableJoin() {return _enableJoin;}
+    public void setEnableJoin(bool en) { _enableJoin = en;}
     public ColumnFieldData getColumnFieldData() {return _columnFieldData;}
 
 }

@@ -11,13 +11,14 @@
  
 module hunt.entity.EntityFieldOneToMany;
 
+import hunt.logging;
 import hunt.entity;
 class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
 
 
     private OneToMany _mode;
     private string _primaryKey;
-    private string _joinColumn;
+    // private string _joinColumn;
     private string _findString;
     private T[][string] _decodeCache;
     
@@ -46,6 +47,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         foreach(value; _entityInfo.getFields()) {
             _joinSqlData.columnNames ~= value.getSelectColumn();
         }
+        // logDebug("one to many join sql : %s ".format(_joinSqlData));
     }
 
     override public string getSelectColumn() {

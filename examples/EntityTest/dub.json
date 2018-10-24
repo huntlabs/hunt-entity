@@ -1,0 +1,13 @@
+{
+	"name": "entityTest",
+	"authors": [
+		"gaoxincheng"
+	],
+	"targetType": "executable",
+	"description": "test for entity",
+	"copyright": "Copyright © 2018, gaoxincheng",
+	"license": "Apache-2.0",
+	"dependencies": {
+		"hunt-entity": {"path":"../../"}
+	}
+}

@@ -15,7 +15,6 @@ import hunt.entity;
 import std.string;
 import std.traits;
 
-
 mixin template MakeEntity()
 {
     mixin(makeLazyData);
@@ -50,23 +49,52 @@ string makeLazyData() {
     public LazyData[string] getAllLazyData() {
         return _lazyDatas;
     }
-    public LazyData getLazyData(string key) {
+    public LazyData getLazyData(string key ) {
+        import hunt.logging;
+        // logDebug("lazyDatas : %s, get : %s".format(_lazyDatas,key));
+        // logDebug("Datas : %s".format(_lazyDatas[key]));
         return _lazyDatas[key];
     }`;
 }
 string makeLazyLoadList(T)() {
     return `
-    private R[] lazyLoadList(R)(LazyData data) {
+    private R[] lazyLoadList(R)(LazyData data , bool enableJoin = false , string mapped = "") {
+        import hunt.logging;
+        // logDebug("222222222222 : ",_manager,enableJoin);
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
-        auto r = criteriaQuery.from(null, this);
-        auto p = builder.equal(r.get(data.key), data.value, false);
-        auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
-        auto ret = query.getResultList();
-        foreach(v;ret) {
-            v.setManager(_manager);
+       
+        // logDebug("****LoadList( %s , %s , %s )".format(R.stringof,data.key,data.value));
+
+        
+        if(enableJoin)
+        {
+            // logDebug("lazyLoadList for :",mapped);
+            auto r = criteriaQuery.from(null, this,enableJoin,mapped);
+
+            auto p = builder.ManyToManyEqual(r.get(data.key), data.value, false);
+        
+            auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
+            auto ret = query.getResultList();
+            foreach(v;ret) {
+                v.setManager(_manager);
+            }
+            return ret;
         }
-        return ret;
+        else
+        {
+            auto r = criteriaQuery.from(null, this,enableJoin);
+
+            auto p = builder.equal(r.get(data.key), data.value, false);
+        
+            auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
+            auto ret = query.getResultList();
+            foreach(v;ret) {
+                v.setManager(_manager);
+            }
+            return ret;
+        }
+        
     }`;
 }
 string makeLazyLoadSingle(T)() {
@@ -93,14 +121,26 @@ string makeGetFunction(T)() {
     str ~= `
     public `~memType.stringof~` get`~capitalize(memberName)~`() {`;
                     static if (isArray!memType) {
-        str ~= `
-        if (`~memberName~`.length == 0)
-            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"));`;
+                        string mappedBy;
+                       static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
+                       {
+                           str ~= ` bool enableJoin = true ;`;
+                           
+                           mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
+                       }
+                       else
+                       {
+                           str ~= ` bool enableJoin = false ;`;
+                       }
+
+                        str ~= `
+                        if (`~memberName~`.length == 0)
+                            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"),enableJoin,`~mappedBy~`);`;
                     }
                     else {
-        str ~= `
-        if (`~memberName~` is null)
-            `~memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
+                            str ~= `
+                            if (`~memberName~` is null)
+                                `~memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
                     }
         str ~= `
         return `~memberName~`;

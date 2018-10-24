@@ -39,3 +39,149 @@ class Common {
     }
 
 }
+
+/// returns table name for class type
+string getTableName(T : Object)() {
+    string name = T.stringof;
+    foreach (a; __traits(getAttributes, T)) {
+        static if (is(typeof(a) == Table)) {
+            name = a.name;
+            break;
+        }
+    }
+    return name;
+}
+
+string getJoinTableName(T, string m)() {
+    string name = null;
+    static if (is(typeof(__traits(getMember, T, m)) == function)) {
+        // function: check overloads
+    Louter:
+        foreach(overload; MemberFunctionsTuple!(T, m)) {
+            static if (isGetterFunction!(overload, m)) {
+                foreach(a; __traits(getAttributes, overload)) {
+                    static if (is(typeof(a) == JoinTable)) {
+                        name = (a.name);
+                        break Louter;
+                    }
+                }
+            }
+        }
+    } else {
+        foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
+            static if (is(typeof(a) == JoinTable)) {
+                name = (a.name);
+                break;
+            }
+        }
+    }
+    return name;
+}
+
+string getPrimaryKey(T : Object)() {
+    string name = "id";
+    foreach (m; __traits(allMembers, T)) {
+        static if (__traits(compiles, (typeof(__traits(getMember, T, m))))){
+            alias memType = typeof(__traits(getMember, T ,m));
+            static if (!isFunction!(memType) && hasUDA!(__traits(getMember, T ,m), PrimaryKey)) {
+                name = m;
+            }
+        }
+    }
+      
+    return name;
+}
+
+JoinColumn getJoinColumn(T, string m)() {
+    JoinColumn joinColum ;
+    static if (is(typeof(__traits(getMember, T, m)) == function)) {
+        // function: check overloads
+    Louter:
+        foreach(overload; MemberFunctionsTuple!(T, m)) {
+            static if (isGetterFunction!(overload, m)) {
+                foreach(a; __traits(getAttributes, overload)) {
+                    static if (is(typeof(a) == JoinColumn)) {
+                        joinColum = a;
+                        break Louter;
+                    }
+                }
+            }
+        }
+    } else {
+        foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
+            static if (is(typeof(a) == JoinColumn)) {
+                joinColum = a;
+                break;
+            }
+        }
+    }
+    return joinColum;
+}
+
+InverseJoinColumn getInverseJoinColumn(T, string m)() {
+    InverseJoinColumn joinColum ;
+    static if (is(typeof(__traits(getMember, T, m)) == function)) {
+        // function: check overloads
+    Louter:
+        foreach(overload; MemberFunctionsTuple!(T, m)) {
+            static if (isGetterFunction!(overload, m)) {
+                foreach(a; __traits(getAttributes, overload)) {
+                    static if (is(typeof(a) == InverseJoinColumn)) {
+                        joinColum = a;
+                        break Louter;
+                    }
+                }
+            }
+        }
+    } else {
+        foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
+            static if (is(typeof(a) == InverseJoinColumn)) {
+                joinColum = a;
+                break;
+            }
+        }
+    }
+    return joinColum;
+}
+
+unittest{
+    import hunt.entity;
+    import hunt.logging;
+
+    @Table("UserInfo")
+    class UserInfo  {
+
+        @AutoIncrement @PrimaryKey 
+        int id;
+
+
+        @Column("nickname")
+        string nickName;
+        int age;
+
+
+    }
+
+    @Table("AppSInfo")
+    class AppInfo  {
+
+        @AutoIncrement @PrimaryKey 
+        int id;
+
+        string name;
+        string desc;
+        
+        @JoinTable("UserApp")
+        @JoinColumn("appid","id")
+        @InverseJoinColumn("uid","id")
+        @ManyToMany("apps")
+        UserInfo[] uinfos;
+    }
+
+    logDebug("Table Name : %s ".format(getTableName!AppInfo));
+    logDebug("Join Table Name : %s ".format(getJoinTableName!(AppInfo,"uinfos")));
+    logDebug("Join  Column : %s ".format(getJoinColumn!(AppInfo,"uinfos")));
+    logDebug("Inverse Join  Column : %s ".format(getInverseJoinColumn!(AppInfo,"uinfos")));
+    logDebug("PrimaryKey : %s ".format(getPrimaryKey!AppInfo));
+
+}

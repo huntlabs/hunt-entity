@@ -64,17 +64,19 @@ class EqlQuery(T...) {
         {
             static if (isAggregateType!(ObjType) && hasUDA!(ObjType,Table))
             {
-                auto entInfo = new EqlInfo!(ObjType)(_manager);
-             
-                _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
-                _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
-                // if(entInfo.getJoinCond() !is null)
-                //     _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
-                // logDebug("( %s , %s ) ".format(ObjType.stringof,ResultObj.stringof));
-                _eqlParser.putJoinCond(entInfo.getJoinConds());
-                if(ObjType.stringof == ResultObj.stringof)
                 {
-                    _resultDes.setFields(entInfo.getFields);
+                     auto entInfo = new EqlInfo!(ObjType)(_manager);
+             
+                    _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
+                    _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
+                    // if(entInfo.getJoinCond() !is null)
+                    //     _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
+                    // logDebug("( %s , %s ) ".format(ObjType.stringof,ResultObj.stringof));
+                    _eqlParser.putJoinCond(entInfo.getJoinConds());
+                    if(ObjType.stringof == ResultObj.stringof)
+                    {
+                        _resultDes.setFields(entInfo.getFields);
+                    }
                 }
             }
             else
@@ -86,13 +88,15 @@ class EqlQuery(T...) {
                 static if (__traits(getProtection, __traits(getMember, ObjType, memberName)) == "public") {
                     alias memType = typeof(__traits(getMember, ObjType ,memberName));
                     static if (is(memType == class)) {
-                        auto sub_en = new EqlInfo!(memType)(_manager);
-                        _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
-                        _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
-                        _eqlParser._objType[ObjType.stringof ~ "." ~ memberName] = sub_en.getEntityClassName();
-                        // if(sub_en.getJoinCond(memberName.stringof) !is null)
-                        //     _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond(memberName.stringof);
-                        //  logDebug("joinCond (  %s , %s ) ".format(memberName,sub_en.getJoinCond(memberName.stringof)));
+                        {
+                            auto sub_en = new EqlInfo!(memType)(_manager);
+                            _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
+                            _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
+                            _eqlParser._objType[ObjType.stringof ~ "." ~ memberName] = sub_en.getEntityClassName();
+                            // if(sub_en.getJoinCond(memberName.stringof) !is null)
+                            //     _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond(memberName.stringof);
+                            //  logDebug("joinCond (  %s , %s ) ".format(memberName,sub_en.getJoinCond(memberName.stringof)));
+                        }
                     }
                 }
             }

@@ -1,10 +1,10 @@
-module Model.AppInfo;
+module Model.UserApp;
 
 import hunt.entity;
 
 
-@Table("AppInfo")
-class AppInfo  {
+@Table("UserApp")
+class UserApp  {
 
     mixin MakeEntity;
 
@@ -12,6 +12,7 @@ class AppInfo  {
     int id;
 
 
-    string name;
-    string desc;
+    int uid;
+    int appid;
+
 }

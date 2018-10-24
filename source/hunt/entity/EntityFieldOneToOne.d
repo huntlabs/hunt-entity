@@ -12,6 +12,7 @@
 module hunt.entity.EntityFieldOneToOne;
 
 import hunt.entity;
+import hunt.logging;
 
 class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     
@@ -70,6 +71,8 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         foreach(value; _entityInfo.getFields()) {
             _joinSqlData.columnNames ~= value.getSelectColumn();
         }
+        // logDebug("one to one join sql : %s ".format(_joinSqlData));
+
     }
 
     public T deSerialize(Row row) {

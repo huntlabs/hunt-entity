@@ -104,7 +104,7 @@ class EntityManager {
         //TODO 将受控态的实体数据同步到数据库中
     }
 
-    public EqlQuery!(T) createEqlQuery(T...)(string eql)
+    public EqlQuery!(T) createQuery(T...)(string eql)
     {
         return new EqlQuery!(T)(eql, this);
     }
