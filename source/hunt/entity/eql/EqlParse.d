@@ -155,8 +155,10 @@ class EqlParse
                         foreach(clsFiled , entFiled ; fields)
                         {
                             if(!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
+                            {
                                 select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null ? entFiled.getSelectColumn() : entFiled.getFullColumn()),selectItem.getAlias());
-                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+                                // logDebug("sql replace : (%s ,%s) ".format(clsName ~ "." ~ clsFiled,clsName ~ "." ~ entFiled.getSelectColumn()));
+                            }
                         }
                     }
                 }

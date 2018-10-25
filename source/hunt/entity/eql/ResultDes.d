@@ -35,7 +35,7 @@ class ResultDes(T : Object) {
         _fields = fields;
     }
 
-
+    // pragma(msg, "T = "~T.stringof);
     // pragma(msg,makeDeSerialize!(T));
     // pragma(msg,makeInitEntityData!(T));
 
@@ -131,7 +131,7 @@ string makeDeSerialize(T)() {
                         `;
                     }
                 }
-                else static if(is(memType == class))
+                else static if(!isArray!memType && hasUDA!(__traits(getMember, T ,memberName), JoinColumn))
                 {
                     str ~= `
                         auto `~memberName~ ` = new ResultDes!(`~memType.stringof~`)();

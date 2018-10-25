@@ -6,6 +6,7 @@ import Model.UserApp;
 import Model.AppInfo;
 import Model.Car;
 import Model.IDCard;
+import Model.LoginInfo;
 
 import hunt.logging;
 import std.traits;
@@ -24,24 +25,18 @@ void  test_OneToOne(EntityManager em) {
 	mixin(DO_TEST);
 	
     auto uinfo = em.find!(UserInfo)(1);
-	uinfo.setManager(em);
-	logDebug("uinfo.IDCard : %s ".format(uinfo.card));
+	logDebug("Uinfo.IDCard is Lazy load : %s ".format(uinfo.card));
 	auto card = uinfo.getCard;
 	logDebug("Card( %s , %s ) ".format(card.id,card.desc));
 
 	auto card2 = em.find!(IDCard)(1);
-	card2.setManager(em);
-	logDebug("card.user : %s ".format(card2.user));
-	auto uinfo2 = card2.user;
-	logDebug("Uinfo( %s , %s ) ".format(uinfo2.id,uinfo2.nickName));
+	logDebug("Uinfo( %s , %s ) ".format(card2.user.id,card2.user.nickName));
 }
 
 void  test_OneToMany(EntityManager em) {
 	mixin(DO_TEST);
 	
     auto uinfo = em.find!(UserInfo)(1);
-	uinfo.setManager(em);
-	// logDebug("uinfo.cars : %s ".format(uinfo.cars));
 	auto cars = uinfo.getCars();
 	foreach(car;cars)
 	{
@@ -53,28 +48,76 @@ void  test_ManyToOne(EntityManager em) {
 	mixin(DO_TEST);
 	
 	auto car = em.find!(Car)(2);
-	car.setManager(em);
-	logDebug("card.user : %s ".format(car.user));
-	auto uinfo2 = car.user;
-	logDebug("Uinfo( %s , %s ) ".format(uinfo2.id,uinfo2.nickName));
+	logDebug("Uinfo( %s , %s , %s ) ".format(car.user.id,car.user.nickName,car.user.age));
 }
 
 void  test_ManyToMany(EntityManager em) {
 	mixin(DO_TEST);
 
     auto app = em.find!(AppInfo)(1);
-	app.setManager(em);
 	auto uinfos = app.getUinfos();
 	logDebug("AppInfo( %s , %s , %s ) ".format(app.id,app.name,app.desc));
 	foreach(uinfo ; uinfos)
-		logDebug("AppInfo.UserInfo( %s , %s ) ".format(uinfo.nickName,uinfo.age));
+		logDebug("AppInfo.UserInfo( %s , %s , %s ) ".format(uinfo.id,uinfo.nickName,uinfo.age));
 
 	auto uinfo = em.find!(UserInfo)(1);
-	uinfo.setManager(em);
 	auto apps = uinfo.getApps();
-	logDebug("UserInfo( %s , %s) ".format(uinfo.nickName, uinfo.age));
+	logDebug("UserInfo( %s , %s , %s) ".format(uinfo.id,uinfo.nickName, uinfo.age));
 	foreach(app2 ; apps)
 		logDebug("UserInfo.AppInfo( %s , %s , %s ) ".format(app2.id,app2.name,app2.desc));
+}
+
+
+
+void test_eql_select(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// select statement
+	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
+	foreach(d ; query1.getResultList())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id,d.nickName,d.age));
+	}
+
+	auto query2 = em.createQuery!(LoginInfo)(" select a,b  from LoginInfo a left join a.uinfo b ;");
+	foreach(d ; query2.getResultList())
+	{
+		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
+		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id,d.create_time,d.update_time));
+	}
+
+	auto query3 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
+	foreach(d ; query3.getResultList())
+	{
+		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
+
+	}
+
+	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
+	query4.setParameter(1,2);
+	query4.setParameter(2,1);
+	foreach(d ; query4.getResultList())
+	{
+		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
+	}
+
+	auto query5 = em.createQuery!(LoginInfo)(" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = ? order by a.id desc;");
+	query5.setParameter(1,2);
+	foreach(d ; query5.getResultList())
+	{
+		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
+		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id,d.app.name,d.app.desc));
+		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id,d.create_time,d.update_time));
+	}
+
+	auto query6 = em.createQuery!(UserInfo,AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id ;");
+	foreach(d ; query6.getResultList())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id,d.nickName,d.age));
+	}
+
+	auto query7 = em.createQuery!(UserInfo)(" select a.nickName as name ,count(*) as num from UserInfo a group by a.nickName;");
+	logDebug("UserInfo( %s ) ".format(query7.getNativeResult()));
 }
 
 void main()
@@ -102,4 +145,5 @@ void main()
 
 	test_ManyToMany(em);
 
+	test_eql_select(em);
 }

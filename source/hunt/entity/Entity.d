@@ -58,19 +58,18 @@ string makeLazyData() {
 }
 string makeLazyLoadList(T)() {
     return `
-    private R[] lazyLoadList(R)(LazyData data , bool enableJoin = false , string mapped = "") {
+    private R[] lazyLoadList(R)(LazyData data , bool manyToMany = false , string mapped = "") {
         import hunt.logging;
-        // logDebug("222222222222 : ",_manager,enableJoin);
+        // logDebug("lazyLoadList ETMANAGER : ",_manager);
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
        
         // logDebug("****LoadList( %s , %s , %s )".format(R.stringof,data.key,data.value));
 
-        
-        if(enableJoin)
+        if(manyToMany)
         {
             // logDebug("lazyLoadList for :",mapped);
-            auto r = criteriaQuery.from(null, this,enableJoin,mapped);
+            auto r = criteriaQuery.manyToManyFrom(null, this,mapped);
 
             auto p = builder.ManyToManyEqual(r.get(data.key), data.value, false);
         
@@ -83,7 +82,7 @@ string makeLazyLoadList(T)() {
         }
         else
         {
-            auto r = criteriaQuery.from(null, this,enableJoin);
+            auto r = criteriaQuery.from(null, this);
 
             auto p = builder.equal(r.get(data.key), data.value, false);
         
@@ -124,18 +123,18 @@ string makeGetFunction(T)() {
                         string mappedBy;
                        static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
                        {
-                           str ~= ` bool enableJoin = true ;`;
+                           str ~= ` bool manyToMany = true ;`;
                            
                            mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
                        }
                        else
                        {
-                           str ~= ` bool enableJoin = false ;`;
+                           str ~= ` bool manyToMany = false ;`;
                        }
 
                         str ~= `
                         if (`~memberName~`.length == 0)
-                            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"),enableJoin,`~mappedBy~`);`;
+                            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"),manyToMany,`~mappedBy~`);`;
                     }
                     else {
                             str ~= `

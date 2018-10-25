@@ -19,7 +19,7 @@ class LoginInfo
     
     // int uid;
     @JoinColumn("uid")
-    UInfo uinfo;
+    UserInfo uinfo;
 
     @JoinColumn("appid")
     AppInfo app;

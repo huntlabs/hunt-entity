@@ -19,6 +19,7 @@ import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
 import std.exception;
+import std.algorithm.searching;
 
 class EqlQuery(T...) {
 
@@ -29,7 +30,7 @@ class EqlQuery(T...) {
 
     private EqlParse _eqlParser;
     private string _eql;
-
+    private string[] _isExtracted;
 
     this(string eql, EntityManager em)
     {
@@ -37,9 +38,6 @@ class EqlQuery(T...) {
         _resultDes = new ResultDes!(ResultObj)();
         _eql = eql;
 
-        // logDebug("getFactoryName : %s , getEntityClassName : %s , getTableName : %s , getAutoIncrementKey : %s , getPrimaryKeyString : %s ".
-        //     format(_entityInfo.getFactoryName(),_entityInfo.getEntityClassName(),_entityInfo.getTableName(),_entityInfo.getAutoIncrementKey(),
-        //     _entityInfo.getPrimaryKeyString()));
         parseEql();
     }
 
@@ -62,49 +60,56 @@ class EqlQuery(T...) {
         
         foreach(ObjType ; T)
         {
-            static if (isAggregateType!(ObjType) && hasUDA!(ObjType,Table))
-            {
-                {
-                     auto entInfo = new EqlInfo!(ObjType)(_manager);
-             
-                    _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
-                    _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
-                    // if(entInfo.getJoinCond() !is null)
-                    //     _eqlParser._joinConds[entInfo.getEntityClassName()] = entInfo.getJoinCond();
-                    // logDebug("( %s , %s ) ".format(ObjType.stringof,ResultObj.stringof));
-                    _eqlParser.putJoinCond(entInfo.getJoinConds());
-                    if(ObjType.stringof == ResultObj.stringof)
-                    {
-                        _resultDes.setFields(entInfo.getFields);
-                    }
-                }
-            }
-            else
-            {
-                // throw new Exception(" not support type : " ~ ObjType.stringof);
-            }
-
-            foreach(memberName; __traits(derivedMembers, ObjType)) {
-                static if (__traits(getProtection, __traits(getMember, ObjType, memberName)) == "public") {
-                    alias memType = typeof(__traits(getMember, ObjType ,memberName));
-                    static if (is(memType == class)) {
-                        {
-                            auto sub_en = new EqlInfo!(memType)(_manager);
-                            _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
-                            _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
-                            _eqlParser._objType[ObjType.stringof ~ "." ~ memberName] = sub_en.getEntityClassName();
-                            // if(sub_en.getJoinCond(memberName.stringof) !is null)
-                            //     _eqlParser._joinConds[sub_en.getEntityClassName()] = sub_en.getJoinCond(memberName.stringof);
-                            //  logDebug("joinCond (  %s , %s ) ".format(memberName,sub_en.getJoinCond(memberName.stringof)));
-                        }
-                    }
-                }
-            }
-            
+            extractInfo!ObjType();
         }
         _eqlParser.parse();
     }
 
+    private void extractInfo(ObjType)()
+    {
+        if(_isExtracted.canFind(ObjType.stringof))
+            return;
+        _isExtracted ~= ObjType.stringof;
+
+        static if (isAggregateType!(ObjType) && hasUDA!(ObjType,Table))
+        {
+            {
+                auto entInfo = new EqlInfo!(ObjType)(_manager);
+            
+                _eqlParser.putFields(entInfo.getEntityClassName(),entInfo.getFields);
+                _eqlParser.putClsTbName(entInfo.getEntityClassName(),entInfo.getTableName());
+                
+                _eqlParser.putJoinCond(entInfo.getJoinConds());
+                if(ObjType.stringof == ResultObj.stringof)
+                {
+                    _resultDes.setFields(entInfo.getFields);
+                }
+            }
+        }
+        else
+        {
+            // throw new Exception(" not support type : " ~ ObjType.stringof);
+        }
+
+        foreach(memberName; __traits(derivedMembers, ObjType)) {
+            static if (__traits(getProtection, __traits(getMember, ObjType, memberName)) == "public") {
+                alias memType = typeof(__traits(getMember, ObjType ,memberName));
+                static if (is(memType == class)) {
+                    {
+                        auto sub_en = new EqlInfo!(memType)(_manager);
+                        _eqlParser.putFields(sub_en.getEntityClassName(),sub_en.getFields);
+                        _eqlParser.putClsTbName(sub_en.getEntityClassName(),sub_en.getTableName());
+                        _eqlParser._objType[ObjType.stringof ~ "." ~ memberName] = sub_en.getEntityClassName();
+                    
+                        extractInfo!memType();
+                    }
+                }
+                else if(isArray!memType)
+                {
+                }
+            }
+        }
+    }
 
     public void setParameter(R = string)(int idx , R param)
     {

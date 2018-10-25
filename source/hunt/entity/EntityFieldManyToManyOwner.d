@@ -50,7 +50,6 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
         // logDebug("----(%s , %s ,%s )".format(_joinColumn,_inverseJoinColumn,_joinTable));
         
         initJoinData();
-        initFindStr();
     }
 
     private void initJoinData() {
@@ -72,20 +71,6 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     }
 
 
-    private void initFindStr() {
-        // _findString = "SELECT ";
-        // string[] el;
-        // foreach(k,v; _entityInfo.getFields()) {
-        //     if (v.getSelectColumn() != "")
-        //         el ~= " "~v.getSelectColumn();
-        // }
-        // foreach(k,v; el) {
-        //     _findString ~= v;
-        //     if (k != el.length -1)
-        //         _findString ~= ",";
-        // }
-        // _findString ~= " FROM "~_joinTable~" WHERE " ~ _joinTable ~"."~_joinColumn~" = ";
-    }
 
     public string getPrimaryKey() {return _primaryKey;}
     public ManyToMany getMode() {return _mode;}
@@ -96,54 +81,9 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
         T[] ret;
         if (_mode.fetch == FetchType.LAZY)
             return ret;
-        // T singleRet;
-        // long count = -1;
-        // if (!isFromManyToOne) {
-        //     foreach(value; rows) {
-        //         singleRet = _entityInfo.deSerialize([value], count);
-        //         if (singleRet)
-        //             ret ~= Common.sampleCopy(singleRet);
-        //     }
-        // }
-        // else {
-        //     string joinValue = getJoinKeyValue(rows[startIndex]);
-        //     if (joinValue == "")
-        //         return ret;
-        //     T[] rets = getValueByJoinKeyValue(joinValue);
-        //     foreach(value; rets) {
-        //         ret ~= Common.sampleCopy(value);
-        //     }
-        // }
         return ret;
     }
 
-    private string getJoinKeyValue(Row row) {
-        RowData data = row.getAllRowData(getTableName());
-        if (data is null)
-            return "";
-        RowDataS rd = data.getData(_primaryKey);
-        if (rd is null)
-            return "";
-        return rd.value;
-    }
-
-    private T[] getValueByJoinKeyValue(string key) {
-        if (key in _decodeCache)
-            return _decodeCache[key];
-
-        // T[] ret;
-        // T singleRet;
-        // auto stmt = _manager.getSession().prepare(_findString~key);
-		// auto res = stmt.query();
-        // long count = -1;
-        // foreach(value; res) {
-        //     singleRet = _entityInfo.deSerialize([value], count);
-        //     if (singleRet)
-        //         ret ~=  singleRet;
-        // }
-        // _decodeCache[key] = ret;
-        return _decodeCache[key];
-    }
 
     public void setMode(ManyToMany mode) {
         _mode = mode;

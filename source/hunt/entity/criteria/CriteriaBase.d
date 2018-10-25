@@ -26,13 +26,19 @@ class CriteriaBase(T : Object, F : Object = T)
         _sqlBuidler = criteriaBuilder.createSqlBuilder();
     }
 
-    public Root!(T,F) from(T t = null, F owner = null, bool enableJoin = false , string mapped = string.init) {
+    public Root!(T,F) from(T t = null, F owner = null) {
+        _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
+        _sqlBuidler.from(_root.getTableName());
+        _root.autoJoin();
+        return _root;
+    }
+
+    public Root!(T,F) manyToManyFrom(T t = null, F owner = null ,string mapped = string.init) {
         _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
         auto entityInfo = _root.getEntityInfo();
          auto filedInfo = entityInfo.getSingleField(mapped);
          if(filedInfo !is null)
             filedInfo.setEnableJoin(true);
-        // _root.setEnableJoin(enableJoin);
         _sqlBuidler.from(_root.getTableName());
         _root.autoJoin();
         return _root;

@@ -16,9 +16,7 @@ class AppInfo  {
     string desc;
 
     
-    @JoinTable("UserApp")
-    @JoinColumn("appid","id")
-    @InverseJoinColumn("uid","id")
+    @(JoinTable("UserApp"),JoinColumn("appid"),InverseJoinColumn("uid"))
     @ManyToMany("apps")
     UserInfo[] uinfos;
 }
