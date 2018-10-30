@@ -16,6 +16,6 @@ class BookDetail {
 
     long numberOfPages;
 
-    @OneToOne(FetchType.LAZY, "detail")
+    @OneToOne("detail",FetchType.LAZY)
     Book book;
 }

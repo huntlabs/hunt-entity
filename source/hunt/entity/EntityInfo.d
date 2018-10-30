@@ -409,20 +409,14 @@ string makeDeSerialize(T,F)() {
                         static if ( memType.stringof.replace("[]","") == F.stringof)
                         {
                             str ~=`
-                                // logDebug("33");
                                 auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(this.`~memberName~`));
-                                // logDebug("333 end : ",`~memberName~`);
-
                                 _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                                 _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
                         }
                         else
                         {
                             str ~=`
-                                // logDebug("44444");
                                 auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(this.`~memberName~`));
-                                // logDebug("44444 end : ",`~memberName~`);
-
                                 _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                                 _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
                         }

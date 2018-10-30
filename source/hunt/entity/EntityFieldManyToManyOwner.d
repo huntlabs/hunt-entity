@@ -9,10 +9,8 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     
     private ManyToMany _mode;
     private string _primaryKey;
-    // private string _joinColumn;
     private string _findString;
     private T[][string] _decodeCache;
-    // private bool _isMainMapped;
 
 
     this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {

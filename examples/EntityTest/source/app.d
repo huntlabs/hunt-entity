@@ -94,8 +94,7 @@ void test_eql_select(EntityManager em)
 	}
 
 	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
-	query4.setParameter(1,2);
-	query4.setParameter(2,1);
+	query4.setParameter(1,2).setParameter(2,1);
 	foreach(d ; query4.getResultList())
 	{
 		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));
@@ -118,6 +117,12 @@ void test_eql_select(EntityManager em)
 
 	auto query7 = em.createQuery!(UserInfo)(" select a.nickName as name ,count(*) as num from UserInfo a group by a.nickName;");
 	logDebug("UserInfo( %s ) ".format(query7.getNativeResult()));
+
+	auto query8 = em.createQuery!(IDCard)(" select distinct b from IDCard a join a.user b where b.id = 2;");
+	foreach(d ; query8.getResultList())
+	{
+		logDebug("IDCard.UserInfo( %s , %s , %s ) ".format(d.user.id,d.user.nickName,d.user.age));
+	}
 }
 
 void main()

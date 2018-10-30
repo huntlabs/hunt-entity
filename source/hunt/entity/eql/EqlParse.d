@@ -312,7 +312,7 @@ class EqlParse
     }
 
     /// a.id  --- > Class.id , a is instance of Class
-    string convertExprAlias(SQLPropertyExpr expr)
+    private string convertExprAlias(SQLPropertyExpr expr)
     {
         string originStr = SQLUtils.toSQLString(expr) ;
         auto objName = expr.getOwnernName();

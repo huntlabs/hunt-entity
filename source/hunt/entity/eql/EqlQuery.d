@@ -111,12 +111,13 @@ class EqlQuery(T...) {
         }
     }
 
-    public void setParameter(R = string)(int idx , R param)
+    public EqlQuery setParameter(R = string)(int idx , R param)
     {
         if(_eqlParser !is null)
         {
             _eqlParser.setParameter!R(idx,param);
         }
+        return this;
     }
 
     public int exec() {

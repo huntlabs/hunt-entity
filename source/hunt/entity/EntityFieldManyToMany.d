@@ -22,7 +22,6 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
 
     private ManyToMany _mode;
     private string _primaryKey;
-    // private string _joinColumn;
     private string _findString;
     private T[][string] _decodeCache;
 
@@ -108,7 +107,7 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
         T[] ret;
         if (_mode.fetch == FetchType.LAZY)
             return ret;
-        logDebug("-----do do do ---");
+        // logDebug("-----do do do ---");
         T singleRet;
         long count = -1;
         if (!isFromManyToOne) {

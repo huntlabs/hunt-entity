@@ -274,15 +274,20 @@ string makeInitEntityData(T,F)() {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
                     referencedColumnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].referencedColumnName~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
+                    static if(is(memType == class))
+                    {
+                        str ~= `
+                        {
+                            auto joinCond = new JoinCond!(`~memType.stringof~`)(_manager,_entityClassName,`~memberName.stringof~`, `~columnName~`,`~referencedColumnName~`, _tableName);
+                            _joinConds[_entityClassName ~ "." ~ `~memberName.stringof~`] = joinCond;
+                        }
+                        `;
+                    }
                 }
                 else {
                     columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
                 }
-                //value
-            //     str ~= `
-            //     auto fieldInfo = new EqlInfo!(`~memType.stringof~`)(_manager);
-            //     _joinCond  = "` ~ T.stringof ~ `.`~ columnName ~ `= fieldInfo.getEntityClassName().fieldInfo.getPrimaryKeyString();
-            // `; 
+           
                 string value = "_data."~memberName;
                 string fieldName = "_fields["~memberName.stringof~"]";
                 static if (is(F == memType)) {
@@ -316,18 +321,8 @@ string makeInitEntityData(T,F)() {
                     //TODO                                                                 
                 }
                 else {
-                    // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
         str ~= `
         `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager,`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
-                static if(is(memType == class))
-                {
-                    str ~= `
-                    {
-                        auto joinCond = new JoinCond!(`~memType.stringof~`)(_manager,_entityClassName,`~memberName.stringof~`, `~columnName~`,`~referencedColumnName~`, _tableName, ` ~value~ `);
-                        _joinConds[_entityClassName ~ "." ~ `~memberName.stringof~`] = joinCond;
-                    }
-                     `;
-                }
             }
 
                 //nullable
@@ -423,7 +418,7 @@ class JoinCond(T : Object)
 {
     private string _joinCond;
     private EqlInfo!T _eqlInfo;
-    this(EntityManager manager, string leftTable,string fileldName, string joinCol, string referencedColumnName ,string tableName,T vale)
+    this(EntityManager manager, string leftTable,string fileldName, string joinCol, string referencedColumnName ,string tableName)
     {
         _eqlInfo = new EqlInfo!T(manager);
         if(referencedColumnName.length == 0)
