@@ -63,7 +63,7 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
     //O = Order
     public CriteriaQuery!(T,F) orderBy(O...)(O orders) {
         foreach(v; orders) {
-            _sqlBuidler.orderBy(v.getColumn(), v.getOrderType());
+            _sqlBuidler.orderBy(v.getColumn() ~ " " ~ v.getOrderType());
         }
         return this;
     }
@@ -100,7 +100,7 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
         return this;
     }
     
-    public SqlBuilder getSqlBuilder()
+    public QueryBuilder getQueryBuilder()
     {
         return _sqlBuidler;
     }

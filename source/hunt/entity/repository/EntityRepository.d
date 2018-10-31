@@ -78,7 +78,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy( o.getColumn() , o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
 
         //all
         criteriaQuery.select(root);
@@ -128,7 +128,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy( o.getColumn() , o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(condition.toPredicate());
@@ -147,7 +147,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; sort.list)
-            criteriaQuery.getSqlBuilder().orderBy(o.getColumn() , o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(specification.toPredicate(
@@ -167,7 +167,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(o.getColumn() , o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //all
         criteriaQuery.select(root);
@@ -191,7 +191,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy(o.getColumn(), o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
 
         //condition
@@ -214,7 +214,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         //sort
         foreach(o ; pageable.getSort.list)
-            criteriaQuery.getSqlBuilder().orderBy( o.getColumn(), o.getOrderType());
+            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(specification.toPredicate(

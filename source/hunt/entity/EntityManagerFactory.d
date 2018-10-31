@@ -44,12 +44,12 @@ class EntityManagerFactory {
     {
         return new EntityManager(this, _name, _option, _db, _dialect);
     }
-
-    public SqlBuilder createSqlBuilder()
-    {
-        return _db.createSqlBuilder();
-    }
     
+    public QueryBuilder createQueryBuilder()
+    {
+        return _db.createQueryBuilder();
+    }
+
     public void close()
     {
         if (_db)
@@ -60,8 +60,8 @@ class EntityManagerFactory {
 
     private string[] showTables() {
         string[] ret;
-        SqlBuilder builder = createSqlBuilder();
-        Statement stmt = _db.prepare(builder.showTables().build().toString());
+        QueryBuilder builder = createQueryBuilder();
+        Statement stmt = _db.prepare(builder.showTables().toString());
         ResultSet rs = stmt.query();
         foreach(row; rs) {
             foreach(v; row.toStringArray()) {
@@ -75,8 +75,8 @@ class EntityManagerFactory {
     private string[] descTable(string tableName)
     {
         string[] ret;
-        SqlBuilder builder = createSqlBuilder();
-        Statement stmt = _db.prepare(builder.descTable(tableName).build().toString());
+        QueryBuilder builder = createQueryBuilder();
+        Statement stmt = _db.prepare(builder.descTable(tableName).toString());
         ResultSet rs = stmt.query();
         foreach(row; rs) {
             string[string] array = row.toStringArray();

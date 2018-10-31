@@ -41,12 +41,12 @@ class TypedQuery(T : Object, F : Object = T) {
     }
 
     public TypedQuery!(T,F) setMaxResults(int maxResult) {
-        _query.getSqlBuilder().limit(maxResult);
+        _query.getQueryBuilder().limit(maxResult);
         return this;
     }
 
     public TypedQuery!(T,F) setFirstResult(int startPosition) {
-        _query.getSqlBuilder().offset(startPosition);
+        _query.getQueryBuilder().offset(startPosition);
         return this;
     }
 

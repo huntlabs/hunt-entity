@@ -31,8 +31,8 @@ public class CriteriaBuilder
 
     public EntityManager getManager() {return _manager;}
 
-    public SqlBuilder createSqlBuilder() {
-        return _factory.createSqlBuilder();
+    public QueryBuilder createQueryBuilder() {
+        return _factory.createQueryBuilder();
     }
 
     public Dialect getDialect() {
@@ -109,6 +109,7 @@ public class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
+            logDebug("111111333 : ",_factory.getDialect().toSqlValue(t));
             return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
         }
         else {
@@ -149,7 +150,7 @@ public class CriteriaBuilder
     }
 
     public Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().valueString);
     }
 
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
@@ -173,7 +174,7 @@ public class CriteriaBuilder
     }
 
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().valueString);
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
@@ -182,7 +183,7 @@ public class CriteriaBuilder
     }
 
     public Predicate gt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().valueString);
     }
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
@@ -191,7 +192,7 @@ public class CriteriaBuilder
     }
 
     public Predicate ge(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().valueString);
     }
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
@@ -200,7 +201,7 @@ public class CriteriaBuilder
     }
 
     public Predicate lt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().valueString);
     }
 
     public Predicate le(T)(EntityFieldInfo info, T t){
@@ -209,7 +210,7 @@ public class CriteriaBuilder
     }
 
     public Predicate le(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().value);
+        return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().valueString);
     }
 
     public Predicate like(EntityFieldInfo info, string pattern) {

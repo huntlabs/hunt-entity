@@ -12,6 +12,7 @@
 module hunt.entity.EntityFieldManyToOne;
 
 import hunt.entity;
+import hunt.lang;
 
 class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
 
@@ -25,10 +26,20 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _joinColumn = columnName;
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
-        if (_columnFieldData.valueType == "string" && manager !is null)
-            _columnFieldData.value = manager.getDatabase().escapeLiteral(_entityInfo.getPrimaryValue().to!string);
-        else
-            _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+        // if (_columnFieldData.valueType == "string" && manager !is null)
+        //     _columnFieldData.value =/*manager.getDatabase().escapeLiteral*/(_entityInfo.getPrimaryValue().to!string);
+        // else
+        // //     _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+        // if(_columnFieldData.valueType == "string")
+        //     _columnFieldData.value = new hunt.lang.Nullable.Nullable!string(_entityInfo.getPrimaryValue().to!string);
+        // else if(_columnFieldData.valueType == "int")
+        //     _columnFieldData.value = new hunt.lang.Nullable.Nullable!int(_entityInfo.getPrimaryValue());
+        // else if(_columnFieldData.valueType == "long")
+        //     _columnFieldData.value = new hunt.lang.Nullable.Nullable!long(_entityInfo.getPrimaryValue());
+        // else
+        //     _columnFieldData.value = new hunt.lang.Nullable.Nullable!string(_entityInfo.getPrimaryValue().to!string);
+
+        _columnFieldData.value = new hunt.lang.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
 
         initJoinData(tableName, columnName);
     }

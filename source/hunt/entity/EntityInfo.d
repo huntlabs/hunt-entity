@@ -82,8 +82,8 @@ class EntityInfo(T : Object, F : Object = T) {
         return null;
     }
 
-    public string[string] getInsertString() {
-        string[string] str;
+    public Object[string] getInsertString() {
+        Object[string] str;
         foreach(info; _fields) {
             if (info.getFileldName() != _autoIncrementKey) {
                 if (info.getColumnName() != "") {

@@ -15,7 +15,7 @@ import hunt.entity;
 import hunt.entity.EntityOption;
 import hunt.entity.eql;
 import hunt.logging;
- 
+
 class EntityManager {
 
     public Dialect _dialect;
@@ -38,12 +38,12 @@ class EntityManager {
 
 
     public T persist(T)(ref T entity) {
-        SqlBuilder builder = _factory.createSqlBuilder();
+        QueryBuilder builder = _factory.createQueryBuilder();
         EntityInfo!T info = new EntityInfo!(T)(this, entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
             builder.setAutoIncrease(info.getAutoIncrementKey());
-        auto stmt = _EntitySession.prepare(builder.build().toString);
+        auto stmt = _EntitySession.prepare(builder.toString);
         int r = stmt.execute();
         info.setIncreaseKey(entity, stmt.lastInsertId);
         return entity;

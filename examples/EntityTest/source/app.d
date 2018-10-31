@@ -21,6 +21,41 @@ enum DO_TEST = `
     scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
     scope(failure) logError("END   ----------------" ~ __FUNCTION__ ~ "----------FAIL----------");`;
 
+void test_persist(EntityManager em) {
+	mixin(DO_TEST);
+
+    UserInfo user = new UserInfo();
+    user.nickName = "Jame's HaDeng";
+    user.age = 30;
+    em.persist(user);
+}
+
+void test_merge(EntityManager em)
+{
+	mixin(DO_TEST);
+    auto u = em.find!(UserInfo)(1);
+	u.age = 100 ;
+	em.merge!(UserInfo)(u);
+}
+
+void test_CriteriaQueryOffsetLimit(EntityManager em) {
+	mixin(DO_TEST);
+
+    CriteriaBuilder builder = em.getCriteriaBuilder();
+    CriteriaQuery!UserInfo criteriaQuery = builder.createQuery!(UserInfo);
+    Root!UserInfo root = criteriaQuery.from();
+	string name = "tom";
+    Predicate c1 = builder.equal(root.UserInfo.nickName, name);
+    Predicate c2 = builder.gt(root.UserInfo.age, 0);
+    criteriaQuery.orderBy(builder.asc(root.UserInfo.age), builder.asc(root.UserInfo.id));
+    TypedQuery!UserInfo typedQuery = em.createQuery(criteriaQuery.select(root).where(builder.or(c1, c2)));
+    auto uinfos =  typedQuery.getResultList();
+	foreach(u; uinfos) {
+		logDebug("Uinfo( %s , %s , %s ) ".format(u.id,u.nickName,u.age));
+	}
+    
+}
+
 void  test_OneToOne(EntityManager em) {
 	mixin(DO_TEST);
 	
@@ -142,13 +177,19 @@ void main()
     EntityManager em = entityManagerFactory.createEntityManager();
     CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	test_OneToOne(em);
+	// test_OneToOne(em);
 
-	test_OneToMany(em);
+	// test_OneToMany(em);
 
-	test_ManyToOne(em);
+	// test_ManyToOne(em);
 
-	test_ManyToMany(em);
+	// test_ManyToMany(em);
 
-	test_eql_select(em);
+	// test_eql_select(em);
+
+	// test_merge(em);
+
+	// test_persist(em);
+
+	test_CriteriaQueryOffsetLimit(em);
 }

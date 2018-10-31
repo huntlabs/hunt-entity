@@ -12,22 +12,24 @@
 module hunt.entity.criteria.CriteriaBase;
 
 import hunt.entity;
+import hunt.logging;
 
 class CriteriaBase(T : Object, F : Object = T)
 {
 
     protected Root!(T,F) _root;
     protected CriteriaBuilder _criteriaBuilder;
-    protected SqlBuilder _sqlBuidler;
+    protected QueryBuilder _sqlBuidler;
 
 
     this(CriteriaBuilder criteriaBuilder) {
         _criteriaBuilder = criteriaBuilder;
-        _sqlBuidler = criteriaBuilder.createSqlBuilder();
+        _sqlBuidler = criteriaBuilder.createQueryBuilder();
     }
 
     public Root!(T,F) from(T t = null, F owner = null) {
         _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
+        // logDebug("Form table : ",_root.getTableName());
         _sqlBuidler.from(_root.getTableName());
         _root.autoJoin();
         return _root;
@@ -58,7 +60,7 @@ class CriteriaBase(T : Object, F : Object = T)
     }
 
     override public string toString() {
-        return _sqlBuidler.build().toString();
+        return _sqlBuidler.toString();
     }
 
     public void setEnableJoin(bool flg)

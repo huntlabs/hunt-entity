@@ -11,6 +11,8 @@
  
 module hunt.entity.Constant;
 
+import hunt.lang;
+import hunt.database;
 import std.format;
 //@Factory
 struct Factory
@@ -150,8 +152,23 @@ class LazyData {
 }
 
 class ColumnFieldData {
-    string value;
+    Object value;
     string valueType;
+
+    public string valueString()
+    {
+        if(cast(String)value !is null)
+            return quoteSqlString(value.toString);
+        else 
+        {
+            return value !is null ? value.toString : "";
+        }
+    }
+
+    override string toString()
+    {
+        return value !is null ? value.toString : "";
+    }
 }
 
 

@@ -13,6 +13,7 @@ module hunt.entity.EntityFieldOneToOne;
 
 import hunt.entity;
 import hunt.logging;
+import hunt.lang;
 
 class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     
@@ -36,10 +37,11 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
             _columnFieldData = new ColumnFieldData();
             _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
-            if (_columnFieldData.valueType == "string" && manager !is null)
-                _columnFieldData.value = manager.getDatabase().escapeLiteral(_entityInfo.getPrimaryValue().to!string);
-            else
-                _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+            // if (_columnFieldData.valueType == "string" && manager !is null)
+            //     _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(_entityInfo.getPrimaryValue().to!string);
+            // else
+            //     _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+             _columnFieldData.value = new hunt.lang.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
 
             _foreignKeyData = new ForeignKeyData();
             _foreignKeyData.columnName = columnOrjoin;

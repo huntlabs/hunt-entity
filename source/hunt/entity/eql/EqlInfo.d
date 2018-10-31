@@ -112,20 +112,6 @@ class EqlInfo(T : Object, F : Object = T) {
         return null;
     }
 
-    public string[string] getInsertString() {
-        string[string] str;
-        foreach(info; _fields) {
-            if (info.getFileldName() != _autoIncrementKey) {
-                if (info.getColumnName() != "") {
-                    if(!_manager.getDatabase().getOption().isPgsql())
-                        str[info.getFullColumn()] = info.getColumnFieldData().value;
-                    else
-                        str[info.getColumnName()] = info.getColumnFieldData().value;
-                }
-            }
-        }
-        return str;
-    }
 
     public EntityFieldInfo opDispatch(string name)() 
     {

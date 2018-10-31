@@ -13,7 +13,7 @@ module hunt.entity.EntityFieldNormal;
 
 import hunt.entity;
 import std.math;
-
+import hunt.lang;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 
@@ -22,32 +22,32 @@ class EntityFieldNormal(T) : EntityFieldInfo {
 
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(value).stringof;
-        
-        static if (isSomeString!T) {
-            if( manager !is null)
-                _columnFieldData.value = manager.getDatabase().escapeLiteral(value);
-            else
-                _columnFieldData.value = value;
-        }
-        else static if (is(T == double)) {
-            if (isNaN(value))
-                _columnFieldData.value = "0";
-            else 
-                _columnFieldData.value = "%s".format(value);
-        }
-        else static if (is(T == bool)) {
-            if(manager.getDatabase().getOption().isPgsql())
-            {
-                _columnFieldData.value = value ? "'1'":"'0'";
-            }
-            else
-            {
-                _columnFieldData.value = value ? "1" : "0";
-            }
-        }
-        else {
-            _columnFieldData.value = "%s".format(value);
-        }
+        _columnFieldData.value = new hunt.lang.Nullable.Nullable!(T)(value);
+        // static if (isSomeString!T) {
+        //     if( manager !is null)
+        //         _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(value);
+        //     else
+        //         _columnFieldData.value = value;
+        // }
+        // else static if (is(T == double)) {
+        //     if (isNaN(value))
+        //         _columnFieldData.value = "0";
+        //     else 
+        //         _columnFieldData.value = "%s".format(value);
+        // }
+        // else static if (is(T == bool)) {
+        //     if(manager.getDatabase().getOption().isPgsql())
+        //     {
+        //         _columnFieldData.value = value ? "'1'":"'0'";
+        //     }
+        //     else
+        //     {
+        //         _columnFieldData.value = value ? "1" : "0";
+        //     }
+        // }
+        // else {
+        //     _columnFieldData.value = "%s".format(value);
+        // }
     }
 
     public void deSerialize(R)(string value, ref R r) {
