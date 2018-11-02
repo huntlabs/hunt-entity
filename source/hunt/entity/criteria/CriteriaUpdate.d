@@ -23,6 +23,10 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
         _sqlBuidler.update(_root.getTableName());
         return _root;
     }
+    //Comparison
+    public CriteriaUpdate!(T,F) where(R)(Comparison!R cond) {
+        return cast(CriteriaUpdate!(T,F))super.where(cond);
+    }
     //P = Predicate
     public CriteriaUpdate!(T,F) where(P...)(P predicates) {
         return cast(CriteriaUpdate!(T,F))super.where(predicates);

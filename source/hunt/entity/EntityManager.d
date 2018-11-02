@@ -121,6 +121,11 @@ class EntityManager {
         return new Query!(T)(query, this);
     }
 
+    public NativeQuery createNativeQuery(string sql)
+    {
+        return new NativeQuery(this,sql);
+    }
+
     public Dialect getDialect() {return _dialect;}
     public EntitySession getSession() {return _EntitySession;}
     public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     

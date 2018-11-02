@@ -56,6 +56,10 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
         _sqlBuidler.select([info.getSelectColumn()]);
         return this;
     }
+    //Comparison
+    public CriteriaQuery!(T,F) where(R)(Comparison!R cond) {
+        return cast(CriteriaQuery!(T,F))super.where(cond);
+    }
     //P = Predicate
     public CriteriaQuery!(T,F) where(P...)(P predicates) {
         return cast(CriteriaQuery!(T,F))super.where(predicates);

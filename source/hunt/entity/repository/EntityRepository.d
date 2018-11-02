@@ -101,7 +101,18 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        
+        return res;
+    }
+
+     T[] findAll(R)(Comparison!R condition)
+    {
+        mixin(initObjects);
+
+        //specification
+        criteriaQuery.select(root).where(condition);
+
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        auto res = typedQuery.getResultList();
 
         return res;
     }
@@ -116,8 +127,6 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
-
-        
 
         return res;
     }
@@ -135,8 +144,6 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID)
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
-
-        
 
         return res;
     }

@@ -23,7 +23,10 @@ class CriteriaDelete(T : Object, F : Object = T) : CriteriaBase!(T,F)
         _sqlBuidler.del(_root.getTableName());
         return _root;
     }
-
+    //string
+    public CriteriaDelete!(T,F) where(R)(Comparison!R cond) {
+        return cast(CriteriaDelete!(T,F))super.where(cond);
+    }
     //P = Predicate
     public CriteriaDelete!(T,F) where(P...)(P predicates) {
         return cast(CriteriaDelete!(T,F))super.where(predicates);

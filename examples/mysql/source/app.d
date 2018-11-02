@@ -208,7 +208,7 @@ int testEntityRemove1(EntityManager manager, User user) {
     return manager.remove!(User)(user);
 }
 
-int testEntityMerge(EntityManager manager, User user, int money) {
+int testEntityMerge(EntityManager manager, User user, double money) {
     user.money = money;
     return manager.merge!(User)(user);
 }
@@ -242,6 +242,8 @@ Blog testEntityFindByClass(EntityManager manager, User user) {
 
 
 void main() {
+
+    writeln("*****Note : This example may not run correctly , please use 'examples/EntityTest'*****");
 
     EntityOption option = new EntityOption();
     option.database.driver = "mysql";

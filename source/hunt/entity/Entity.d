@@ -71,7 +71,7 @@ string makeLazyLoadList(T)() {
             // logDebug("lazyLoadList for :",mapped);
             auto r = criteriaQuery.manyToManyFrom(null, this,mapped);
 
-            auto p = builder.ManyToManyEqual(r.get(data.key), data.value, false);
+            auto p = builder.lazyManyToManyEqual(r.get(data.key), data.value, false);
         
             auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
             auto ret = query.getResultList();
@@ -84,7 +84,7 @@ string makeLazyLoadList(T)() {
         {
             auto r = criteriaQuery.from(null, this);
 
-            auto p = builder.equal(r.get(data.key), data.value, false);
+            auto p = builder.lazyEqual(r.get(data.key), data.value, false);
         
             auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
             auto ret = query.getResultList();
@@ -102,7 +102,7 @@ string makeLazyLoadSingle(T)() {
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
         auto r = criteriaQuery.from(null, this);
-        auto p = builder.equal(r.get(data.key), data.value, false);
+        auto p = builder.lazyEqual(r.get(data.key), data.value, false);
         auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
         R ret = cast(R)(query.getSingleResult());
         ret.setManager(_manager);

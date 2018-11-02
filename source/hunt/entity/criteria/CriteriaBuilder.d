@@ -109,7 +109,6 @@ public class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
-            logDebug("111111333 : ",_factory.getDialect().toSqlValue(t));
             return new Predicate().addValue(info.getFullColumn(), "=", _factory.getDialect().toSqlValue(t));
         }
         else {
@@ -125,8 +124,29 @@ public class CriteriaBuilder
         }
     }
 
-    public Predicate ManyToManyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
-        // logDebug("@@@@ ( %s , %s.%s , %s , %s )".format(info.getFullColumn(),info.getJoinTable(),info.getJoinColumn(),info.isMainMapped(),info.getInverseJoinColumn()));
+
+    /// for get lazy data
+    public Predicate lazyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
+        static if (isBuiltinType!T) {
+            if (check)
+                assertType!(T)(info);
+                return new Predicate().addValue(info.getFullColumn(), "=", t);
+        }
+        else {
+            Predicate p;
+            if (info.getJoinColumn() != "") {
+                auto entityInfo = new EntityInfo!(T,T)(_manager, t);
+                p = new Predicate().addValue(info.getJoinColumn(), "=", _factory.getDialect().toSqlValue(entityInfo.getPrimaryValue()));
+            }
+            else {
+                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+            }
+            return p;
+        }
+    }
+
+    /// for get lazy data
+    public Predicate lazyManyToManyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
         auto condTable = info.getJoinTable();
         auto condColumn = info.getJoinColumn();
         if(info.isMainMapped())
@@ -134,7 +154,7 @@ public class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
-            return new Predicate().addValue(condTable~"."~condColumn, "=", _factory.getDialect().toSqlValue(t));
+                return new Predicate().addValue(condTable~"."~condColumn, "=", t);
         }
         else {
             Predicate p;

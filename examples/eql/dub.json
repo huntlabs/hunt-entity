@@ -5,7 +5,7 @@
 	],
 	"targetType": "executable",
 	"dependencies": {
-		"hunt-entity": {"path":"../../"}
+		"hunt-entity": "~>2.0.0"
 	},
 	"description": "test for eql",
 	"copyright": "Copyright © 2018, Huntlabs.cn",

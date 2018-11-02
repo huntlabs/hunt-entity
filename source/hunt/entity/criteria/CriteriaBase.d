@@ -59,6 +59,11 @@ class CriteriaBase(T : Object, F : Object = T)
         return this;
     }
 
+    public CriteriaBase!(T,F) where(R)(Comparison!R cond) {
+        _sqlBuidler.where(cond);
+        return this;
+    }
+
     override public string toString() {
         return _sqlBuidler.toString();
     }

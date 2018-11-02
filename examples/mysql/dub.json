@@ -2,7 +2,7 @@
 	"name": "mysql-example",
 	"authors": ["HuntLabs.cn"],
 	"dependencies": {
-		"hunt-entity": {"path":"../../"}
+		"hunt-entity": "~>2.0.0"
 	},
 	"targetType": "executable",
 	"description": "A mysql example application for entity.",

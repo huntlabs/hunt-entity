@@ -9,25 +9,29 @@
  *
  */
  
-module hunt.entity.Query;
+module hunt.entity.NativeQuery;
 
 import hunt.entity;
 
 
-class Query(T) {
+class NativeQuery {
 
-    private string _sqlSting;
-    private CriteriaBase!T _criteria;
+    private string _nativeSql;
     private EntityManager _manager;
 
-    this(CriteriaBase!T criteria, EntityManager manager) {
-        _criteria = criteria;
+    this(EntityManager manager,string sql) {
         _manager = manager;
-        _sqlSting = criteria.toString();
+        _nativeSql = sql;
     }
- 
+
+    public ResultSet getResultList() {
+       
+        auto stmt = _manager.getSession().prepare(_nativeSql);
+		return stmt.query();
+    }
+
     public int executeUpdate() {
-        auto stmt = _manager.getSession().prepare(_sqlSting); 
+        auto stmt = _manager.getSession().prepare(_nativeSql); 
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
     }

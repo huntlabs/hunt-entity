@@ -20,6 +20,7 @@ public import hunt.entity.Entity;
 public import hunt.entity.Constant;
 public import hunt.entity.EntityInfo;
 public import hunt.entity.TypedQuery;
+public import hunt.entity.NativeQuery;
 public import hunt.entity.Persistence;
 public import hunt.entity.EntityOption;
 public import hunt.entity.EntityManager;
