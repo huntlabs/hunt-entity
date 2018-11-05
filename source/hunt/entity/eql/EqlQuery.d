@@ -120,6 +120,15 @@ class EqlQuery(T...) {
         return this;
     }
 
+    public EqlQuery setParameter(R = string)(string idx , R param)
+    {
+        if(_eqlParser !is null)
+        {
+            _eqlParser.setParameter!R(idx,param);
+        }
+        return this;
+    }
+
     public int exec() {
         auto stmt = _manager.getSession().prepare(_eqlParser.getNativeSql); 
         //TODO update 时 返回的row line count 为 0

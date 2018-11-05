@@ -49,9 +49,9 @@ void test_select(EntityManager em)
 
 	}
 
-	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
-	query4.setParameter(1,2);
-	query4.setParameter(2,1);
+	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (:1,:2) order by a.id desc limit 0 ,1 ;");
+	query4.setParameter("1",2);
+	query4.setParameter("2",1);
 	foreach(d ; query4.getResultList())
 	{
 		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id,d.create_time,d.uinfo.nickName));

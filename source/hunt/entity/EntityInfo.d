@@ -212,7 +212,7 @@ string makeInitEntityData(T,F)() {
     }
     else {
         str ~= `
-        _tableName = _tablePrefix ~ "` ~ T.stringof ~ `"`;
+        _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
     }
 
     static if (hasUDA!(T, Factory))

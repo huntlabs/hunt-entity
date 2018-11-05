@@ -12,7 +12,10 @@ class Member(T)
 
     this(EntityManager em)
     {
-        _tableName = em.getPrefix() ~ getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
+        static if (hasUDA!(T,Table))
+            _tableName = em.getPrefix() ~ getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
+        else
+            _tableName = em.getPrefix() ~ T.stringof;
     }
 
     mixin(MakeMember!T);

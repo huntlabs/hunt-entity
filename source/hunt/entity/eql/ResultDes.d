@@ -87,7 +87,7 @@ string makeInitEntityData(T)() {
     }
     else {
         str ~= `
-        _tableName = "` ~ T.stringof ~ `"`;
+        _tableName = "` ~ T.stringof ~ `";`;
     }
     str ~= `
         }

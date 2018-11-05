@@ -228,14 +228,15 @@ void test_eql_select(EntityManager em)
 
 void test_statement(EntityManager em)
 {
+	mixin(DO_TEST);
+
 	auto db =em.getDatabase();
-	Statement statement = db.prepare(`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :ageil, :firstName, :lastName )`);
-	statement.setParameter(`age`, 17);
-	statement.setParameter(`ageil`, "me@example.com");
+	Statement statement = db.prepare(`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :email, :firstName, :lastName )`);
+	statement.setParameter(`age`, 16);
+	statement.setParameter(`email`, "me@example.com");
 	statement.setParameter(`firstName`, "John");
 	statement.setParameter(`lastName`, "Doe");
-	// ":age([^\w])", "\\1"
-	logDebug(" sql : ",statement.sql);
+	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
 }
 
 void main()

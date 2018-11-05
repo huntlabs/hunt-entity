@@ -17,6 +17,7 @@ import hunt.logging;
 import hunt.container;
 import hunt.math;
 import hunt.lang;
+import hunt.database;
 import std.algorithm.sorting;
 import hunt.entity.eql.EqlInfo;
 import std.regex;
@@ -41,6 +42,8 @@ class EqlParse
     private  Object[string] _joinConds;
 
     private Object[int] _params;
+    private Object[string] _parameters;
+
 
     this(string eql, string dbtype = "mysql")
     {
@@ -532,6 +535,58 @@ class EqlParse
         {
             _params[idx] = new Byte(param);
         }
+        else static if(is(R == class))
+        {
+            _params[key] = param;
+        }
+        else
+        {
+            eql_throw("setParameter","IllegalArgument not support : " ~ R.stringof);
+        }
+    }
+
+    public void setParameter(R)(string key, R param)
+    {
+        static if (is(R == int) || is(R == uint))
+        {
+            _parameters[key] = new Integer(param);
+        }
+        else static if (is(R == string) || is(R == char) || is(R == byte[]))
+        {
+            _parameters[key] = new String(param);
+        }
+        else static if (is(R == bool))
+        {
+            _parameters[key] = new Boolean(param);
+        }
+        else static if (is(R == double))
+        {
+            _parameters[key] = new Double(param);
+        }
+        else static if (is(R == float))
+        {
+            _parameters[key] = new Float(param);
+        }
+        else static if (is(R == short) || is(R == ushort))
+        {
+            _parameters[key] = new Short(param);
+        }
+        else static if (is(R == long) || is(R == ulong))
+        {
+            _parameters[key] = new Long(param);
+        }
+        else static if (is(R == byte) || is(R == ubyte))
+        {
+            _parameters[key] = new Byte(param);
+        }
+        else static if(is(R == class))
+        {
+            _parameters[key] = param;
+        }
+        else
+        {
+            eql_throw("setParameter","IllegalArgument not support : " ~ R.stringof);
+        }
     }
 
     public void putClsTbName(string clsName, string tableName)
@@ -559,15 +614,32 @@ class EqlParse
     public string getNativeSql()
     {
         string sql = _eql;
-     
-        auto keys = _params.keys;
-		sort!("a < b")(keys);
-        List!Object params = new ArrayList!Object();
-		foreach(e;keys)
+
+        foreach (k, v; _parameters)
         {
-            params.add(_params[e]);
+            auto re = regex(r":" ~ k ~ r"([^\w])", "g");
+            if (cast(String) v !is null)
+            {
+                sql = sql.replaceAll(re,quoteSqlString(v.toString())  ~ "$1");
+            }
+            else
+            {
+                sql = sql.replaceAll(re, v.toString() ~ "$1" );
+            }
         }
-        sql = SQLUtils.format(sql, _dbtype,params);
+
+        if(_params.length > 0)
+        {
+            auto keys = _params.keys;
+            sort!("a < b")(keys);
+            List!Object params = new ArrayList!Object();
+            foreach(e;keys)
+            {
+                params.add(_params[e]);
+            }
+            sql = SQLUtils.format(sql, _dbtype,params);
+        }
+       
 
         // logDebug("native sql : %s".format(sql));
         return sql;
