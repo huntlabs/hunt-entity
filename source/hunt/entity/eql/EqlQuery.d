@@ -20,6 +20,7 @@ import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
 import std.exception;
 import std.algorithm.searching;
+import hunt.entity.eql.EqlCache;
 
 class EqlQuery(T...) {
 
@@ -58,11 +59,23 @@ class EqlQuery(T...) {
             throw new Exception("not support dbtype : %s".format(opt.url().scheme));
         }
         
-        foreach(ObjType ; T)
+        auto parsedEql = eqlCache.get(_eql);
+        if(parsedEql is null)
         {
-            extractInfo!ObjType();
+            foreach(ObjType ; T)
+            {
+                extractInfo!ObjType();
+            }
+            _eqlParser.parse();
+
+            eqlCache.put(_eql , _eqlParser.getParsedEql());
         }
-        _eqlParser.parse();
+        else
+        {
+            logInfo("EQL Cache Hit : ",_eql);
+            _eqlParser.setParsedEql(parsedEql);
+        }
+       
     }
 
     private void extractInfo(ObjType)()

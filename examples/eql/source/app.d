@@ -43,7 +43,8 @@ void test_select(EntityManager em)
 	}
 
 	auto query3 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
-	foreach(d ; query3.getResultList())
+	auto query3_1 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
+	foreach(d ; query3_1.getResultList())
 	{
 		logDebug("LoginInfo.UInfo( %s , %s , %s ) ".format(d.uinfo.id,d.uinfo.nickName,d.uinfo.age));
 

@@ -16,7 +16,7 @@
 import hunt.entity;
 
 @Table("user")
-class User : Entity
+class User
 {
     @PrimaryKey
     @AutoIncrement

@@ -29,7 +29,8 @@ void eql_throw(string type, string message) {
 class EqlParse
 {
     alias EntityField = EntityFieldInfo[string];
-    private string _eql;
+    private string _eql; 
+    private string _parsedEql; 
     private string _dbtype;
     private ExportTableAliasVisitor _aliasVistor; //表 与 别名
     private SchemaStatVisitor   _schemaVistor;
@@ -47,15 +48,30 @@ class EqlParse
 
     this(string eql, string dbtype = "mysql")
     {
-        _eql = eql;
+        _parsedEql = _eql = eql;
         _dbtype = dbtype;
         _aliasVistor = new ExportTableAliasVisitor();
         _schemaVistor = SQLUtils.createSchemaStatVisitor(_dbtype);
     }
 
+    string getEql()
+    {
+        return _eql;
+    }
+
+    void setParsedEql(string parsedEql)
+    {
+        _parsedEql = parsedEql;
+    }
+
+    string getParsedEql()
+    {
+        return _parsedEql;
+    }
+
     public void parse()
     {
-        _stmtList = SQLUtils.parseStatements(_eql, _dbtype);
+        _stmtList = SQLUtils.parseStatements(_parsedEql, _dbtype);
 
         foreach(stmt ; _stmtList)
         {
@@ -64,7 +80,7 @@ class EqlParse
         }
 
         if(_stmtList.size == 0)
-            eql_throw("Statement", " statement error : " ~ _eql);
+            eql_throw("Statement", " statement error : " ~ _parsedEql);
 
         init();
     }
@@ -135,7 +151,7 @@ class EqlParse
         }
 
 
-        // logDebug("init eql : %s".format(_eql));
+        // logDebug("init eql : %s".format(_parsedEql));
     }
 
     private void doSelectParse()
@@ -236,7 +252,7 @@ class EqlParse
             select_copy.setGroupBy(groupBy);
         }
 
-        _eql = SQLUtils.toSQLString(select_copy);
+        _parsedEql = SQLUtils.toSQLString(select_copy);
 
     }
 
@@ -288,7 +304,7 @@ class EqlParse
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _eql = SQLUtils.toSQLString(updateBlock);
+        _parsedEql = SQLUtils.toSQLString(updateBlock);
     }
 
     private void doDeleteParse()
@@ -311,7 +327,7 @@ class EqlParse
             delBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _eql = SQLUtils.toSQLString(delBlock);
+        _parsedEql = SQLUtils.toSQLString(delBlock);
     }
 
     /// a.id  --- > Class.id , a is instance of Class
@@ -613,7 +629,7 @@ class EqlParse
 
     public string getNativeSql()
     {
-        string sql = _eql;
+        string sql = _parsedEql;
 
         foreach (k, v; _parameters)
         {
