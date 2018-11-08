@@ -1,5 +1,5 @@
 {
-	"name": "entityTest",
+	"name": "postgresql-test",
 	"authors": [
 		"gaoxincheng"
 	],
@@ -9,5 +9,11 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"hunt-entity": "~>2.0.0"
-	}
+	},
+	"configurations": [{
+		"name": "postgresql",
+		"subConfigurations": {
+			"hunt-entity": "postgresql"
+		}
+	}]
 }

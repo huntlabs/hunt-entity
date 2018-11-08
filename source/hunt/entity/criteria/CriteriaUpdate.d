@@ -36,9 +36,9 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
         import hunt.logging;
         // logDebug("set value : %s".format(_criteriaBuilder.getDialect().toSqlValue(p)));
         if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
-            _sqlBuidler.set(field.getFullColumn(), /*_criteriaBuilder.getDialect().toSqlValue*/(p));
+            _sqlBuidler.set(field.getFullColumn(), p);
         else
-            _sqlBuidler.set(field.getColumnName(), /*_criteriaBuilder.getDialect().toSqlValue*/(p));
+            _sqlBuidler.set(field.getColumnName(), p);
         return this;
     }
 

@@ -1,0 +1,14 @@
+.dub
+docs.json
+__dummy.html
+docs/
+postgresql.so
+postgresql.dylib
+postgresql.dll
+postgresql.a
+postgresql.lib
+postgresql-test-*
+*.exe
+*.o
+*.obj
+*.lst

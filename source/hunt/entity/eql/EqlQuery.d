@@ -44,15 +44,18 @@ class EqlQuery(T...) {
 
     private void parseEql()
     {
-        //
         auto opt = _manager.getDatabase().getOption();
         if(opt.isMysql())
         {
-           _eqlParser = new EqlParse(_eql);
+           _eqlParser = new EqlParse(_eql,DBType.MYSQL.name);
         }
         else if(opt.isPgsql())
         {
            _eqlParser = new EqlParse(_eql,DBType.POSTGRESQL.name);
+        }
+        else if(opt.isSqlite())
+        {
+           _eqlParser = new EqlParse(_eql,DBType.SQLITE.name);
         }
         else
         {

@@ -81,7 +81,7 @@ void test_delete(EntityManager em)
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 	CriteriaDelete!UserInfo criteriaDelete = builder.createCriteriaDelete!(UserInfo);
 	Root!UserInfo root = criteriaDelete.from();
-	string name = "Jame\"s HaDeng";
+	string name = "Jame\"s Ha'Deng";
 	Predicate c1 = builder.equal(root.UserInfo.nickName, name);
 	Query!UserInfo query = em.createQuery(criteriaDelete.where(c1));
 	auto res = query.executeUpdate();
@@ -165,7 +165,7 @@ void test_ManyToMany(EntityManager em)
 void test_eql_select(EntityManager em)
 {
 	mixin(DO_TEST);
-	/// select statement
+
 	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
 	foreach (d; query1.getResultList())
 	{
@@ -189,7 +189,7 @@ void test_eql_select(EntityManager em)
 
 	}
 
-	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
+	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (? , ? ) order by a.id desc LIMIT 1 OFFSET 1 ;");
 	query4.setParameter(1, 2).setParameter(2, 1);
 	foreach (d; query4.getResultList())
 	{
@@ -197,7 +197,7 @@ void test_eql_select(EntityManager em)
 	}
 
 	auto query5 = em.createQuery!(LoginInfo)(
-			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = ? order by a.id desc;");
+			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = 2 order by a.id desc;");
 	query5.setParameter(1, 2);
 	foreach (d; query5.getResultList())
 	{
@@ -244,14 +244,14 @@ void main()
 	writeln("Edit source/app.d to start your project.");
 
 	EntityOption option = new EntityOption();
-	option.database.driver = "mysql";
-	option.database.host = "10.1.11.171";
-	option.database.port = 3306;
-	option.database.database = "eql_test";
-	option.database.username = "root";
+	option.database.driver = "postgresql";
+	option.database.host = "10.1.11.34";
+	option.database.port = 5432;
+	option.database.database = "exampledb";
+	option.database.username = "postgres";
 	option.database.password = "123456";
 
-	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",
+	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("postgresql",
 			option);
 	EntityManager em = entityManagerFactory.createEntityManager();
 	CriteriaBuilder builder = em.getCriteriaBuilder();
@@ -270,11 +270,11 @@ void main()
 
 	test_persist(em);
 
-	test_CriteriaQuery(em);
-
 	test_comparison(em);
 
 	test_delete(em);
+
+	test_CriteriaQuery(em);
 
 	test_nativeQuery(em);
 

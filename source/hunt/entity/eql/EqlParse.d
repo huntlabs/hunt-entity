@@ -52,6 +52,7 @@ class EqlParse
         _dbtype = dbtype;
         _aliasVistor = new ExportTableAliasVisitor();
         _schemaVistor = SQLUtils.createSchemaStatVisitor(_dbtype);
+        // logDebug("EQL DBType : ",_dbtype);
     }
 
     string getEql()
@@ -228,9 +229,9 @@ class EqlParse
         {
             foreach(item ; orderBy.getItems)
             {
-                auto exprStr = SQLUtils.toSQLString(item.getExpr());
+                auto exprStr = SQLUtils.toSQLString(item.getExpr(),_dbtype);
                 // logDebug("order item : %s".format(exprStr));
-                item.replace(item.getExpr(),SQLUtils.toSQLExpr(convertAttrExpr(exprStr)));
+                item.replace(item.getExpr(),SQLUtils.toSQLExpr(convertAttrExpr(exprStr),_dbtype));
             }
         }
 
@@ -252,7 +253,7 @@ class EqlParse
             select_copy.setGroupBy(groupBy);
         }
 
-        _parsedEql = SQLUtils.toSQLString(select_copy);
+        _parsedEql = SQLUtils.toSQLString(select_copy,_dbtype);
 
     }
 
@@ -304,7 +305,7 @@ class EqlParse
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(updateBlock);
+        _parsedEql = SQLUtils.toSQLString(updateBlock,_dbtype);
     }
 
     private void doDeleteParse()
@@ -327,7 +328,7 @@ class EqlParse
             delBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(delBlock);
+        _parsedEql = SQLUtils.toSQLString(delBlock,_dbtype);
     }
 
     /// a.id  --- > Class.id , a is instance of Class

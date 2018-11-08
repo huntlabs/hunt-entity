@@ -1,16 +1,13 @@
 {
-	"name": "mysql-example",
-	"authors": ["HuntLabs.cn"],
+	"name": "mysql-test",
+	"authors": [
+		"gaoxincheng"
+	],
+	"targetType": "executable",
+	"description": "test for entity",
+	"copyright": "Copyright © 2018, gaoxincheng",
+	"license": "Apache-2.0",
 	"dependencies": {
 		"hunt-entity": "~>2.0.0"
-	},
-	"targetType": "executable",
-	"description": "A mysql example application for entity.",
-	"copyright": "Copyright © 2017, HuntLabs.cn",
-	"configurations": [{
-		"name": "default",
-		"subConfigurations": {
-			"entity": "mysql"
-		}
-	}]
+	}
 }
