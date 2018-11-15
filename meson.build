@@ -2,11 +2,13 @@ project('hunt-entity', 'd',
     meson_version: '>=0.46',
     license: 'Apache-2.0',
 
-    version: '1.6.2'
+    version: '2.0.0'
 )
 
 project_soversion = '0'
-hdb_required_version = '>= 0.2.0'
+hdb_required_version = '>= 1.0.0'
+hunt_sql_required_version = '>= 1.0.0'
+
 
 src_dir = include_directories('source/')
 pkgc = import('pkgconfig')
@@ -44,6 +46,8 @@ entity_src = [
     'source/hunt/entity/EntityFieldOneToMany.d',
     'source/hunt/entity/EntityFieldOneToOne.d',
     'source/hunt/entity/EntityFieldOwner.d',
+    'source/hunt/entity/EntityFieldManyToMany.d',
+    'source/hunt/entity/EntityFieldManyToManyOwner.d',
     'source/hunt/entity/EntityInfo.d',
     'source/hunt/entity/EntityManager.d',
     'source/hunt/entity/EntityManagerFactory.d',
@@ -58,7 +62,14 @@ entity_src = [
     'source/hunt/entity/repository/package.d',
     'source/hunt/entity/repository/Repository.d',
     'source/hunt/entity/TypedQuery.d',
-    'source/hunt/entity/utils/Common.d'
+    'source/hunt/entity/utils/Common.d',
+    'source/hunt/entity/eql/EqlCache.d',
+    'source/hunt/entity/eql/EqlInfo.d',
+    'source/hunt/entity/eql/EqlParse.d',
+    'source/hunt/entity/eql/EqlQuery.d',
+    'source/hunt/entity/eql/ResultDes.d',
+    'source/hunt/entity/eql/package.d',
+    'source/hunt/entity/NativeQuery.d'
 ]
 install_subdir('source/hunt/', install_dir: 'include/d/hunt-entity/')
 
@@ -108,6 +119,10 @@ if not native_dep_found
     if enabled_drivers.contains('multi')
         hdb_multi_dep = hdb_prj.get_variable('hdb_multi_dep')
     endif
+
+    hunt_sql_prj = subproject('hunt-sql',
+                         version: hunt_sql_required_version
+              )
 
 endif
 
