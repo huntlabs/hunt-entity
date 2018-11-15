@@ -14,6 +14,13 @@ class Condition
 		_str = strings.data;
     }
 
+    Condition append(A ...)(A args)
+    {
+        auto strings = appender!string();
+		formattedWrite(strings, args);
+        _str ~= strings.data;
+        return this;
+    }
 
     Predicate toPredicate()
     {
