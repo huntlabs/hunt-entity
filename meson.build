@@ -2,12 +2,12 @@ project('hunt-entity', 'd',
     meson_version: '>=0.46',
     license: 'Apache-2.0',
 
-    version: '2.0.0'
+    version: '2.0.2'
 )
 
 project_soversion = '0'
-hdb_required_version = '>= 1.0.0'
-hunt_sql_required_version = '>= 1.0.0'
+hdb_required_version = '>= 1.0.1'
+hunt_sql_required_version = '>= 1.0.1'
 
 
 src_dir = include_directories('source/')
@@ -120,11 +120,11 @@ if not native_dep_found
         hdb_multi_dep = hdb_prj.get_variable('hdb_multi_dep')
     endif
 
-    hunt_sql_prj = subproject('hunt-sql',
+endif
+
+hunt_sql_prj = subproject('hunt-sql',
                          version: hunt_sql_required_version
               )
-
-endif
 
 # determine the right version flag for the compiler we use
 dc = meson.get_compiler('d')
