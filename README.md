@@ -9,7 +9,8 @@
  * SQLite 3.7.11+
  
 ## Depends
- * [database](https://github.com/huntlabs/database)
+ * [hunt-database](https://github.com/huntlabs/hunt-database)
+ * [hunt-sql](https://github.com/huntlabs/hunt-sql)
 
 ## Simple code
 ```D
