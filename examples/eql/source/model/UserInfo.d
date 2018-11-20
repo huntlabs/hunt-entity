@@ -1,20 +1,22 @@
-module Model.UserInfo;
+module model.UserInfo;
 
 import hunt.entity;
-import Model.LoginInfo;
+import model.LoginInfo;
 
 
 @Table("UserInfo")
-class UInfo  {
+class UInfo : Model {
 
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;
 
 
     @Column("nickname")
+    @Length(0,50)
     string nickName;
+    @Max(150)
     int age;
 
 }

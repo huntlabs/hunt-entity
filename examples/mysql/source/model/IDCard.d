@@ -1,12 +1,12 @@
-module Model.IDCard;
+module model.IDCard;
 
 import hunt.entity;
-import Model.UserInfo;
+import model.UserInfo;
 
-@Table("idcard")
-class IDCard  {
+@Table("IDCard")
+class IDCard : Model {
 
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;

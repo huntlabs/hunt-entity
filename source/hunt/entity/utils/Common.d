@@ -54,20 +54,7 @@ string getTableName(T : Object)() {
 
 string getJoinTableName(T, string m)() {
     string name = null;
-    static if (is(typeof(__traits(getMember, T, m)) == function)) {
-        // function: check overloads
-    Louter:
-        foreach(overload; MemberFunctionsTuple!(T, m)) {
-            static if (isGetterFunction!(overload, m)) {
-                foreach(a; __traits(getAttributes, overload)) {
-                    static if (is(typeof(a) == JoinTable)) {
-                        name = (a.name);
-                        break Louter;
-                    }
-                }
-            }
-        }
-    } else {
+    {
         foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
             static if (is(typeof(a) == JoinTable)) {
                 name = (a.name);
@@ -94,20 +81,7 @@ string getPrimaryKey(T : Object)() {
 
 JoinColumn getJoinColumn(T, string m)() {
     JoinColumn joinColum ;
-    static if (is(typeof(__traits(getMember, T, m)) == function)) {
-        // function: check overloads
-    Louter:
-        foreach(overload; MemberFunctionsTuple!(T, m)) {
-            static if (isGetterFunction!(overload, m)) {
-                foreach(a; __traits(getAttributes, overload)) {
-                    static if (is(typeof(a) == JoinColumn)) {
-                        joinColum = a;
-                        break Louter;
-                    }
-                }
-            }
-        }
-    } else {
+    {
         foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
             static if (is(typeof(a) == JoinColumn)) {
                 joinColum = a;
@@ -120,20 +94,7 @@ JoinColumn getJoinColumn(T, string m)() {
 
 InverseJoinColumn getInverseJoinColumn(T, string m)() {
     InverseJoinColumn joinColum ;
-    static if (is(typeof(__traits(getMember, T, m)) == function)) {
-        // function: check overloads
-    Louter:
-        foreach(overload; MemberFunctionsTuple!(T, m)) {
-            static if (isGetterFunction!(overload, m)) {
-                foreach(a; __traits(getAttributes, overload)) {
-                    static if (is(typeof(a) == InverseJoinColumn)) {
-                        joinColum = a;
-                        break Louter;
-                    }
-                }
-            }
-        }
-    } else {
+    {
         foreach(a; __traits(getAttributes, __traits(getMember,T,m))) {
             static if (is(typeof(a) == InverseJoinColumn)) {
                 joinColum = a;

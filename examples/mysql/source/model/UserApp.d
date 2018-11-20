@@ -1,12 +1,12 @@
-module Model.UserApp;
+module model.UserApp;
 
 import hunt.entity;
 
 
 @Table("UserApp")
-class UserApp  {
+class UserApp : Model {
 
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;

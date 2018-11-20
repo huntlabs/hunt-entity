@@ -635,7 +635,7 @@ class EqlParse
         foreach (k, v; _parameters)
         {
             auto re = regex(r":" ~ k ~ r"([^\w])", "g");
-            if (cast(String) v !is null)
+            if (cast(String) v !is null || (cast(Nullable!string)v !is null))
             {
                 sql = sql.replaceAll(re,quoteSqlString(v.toString())  ~ "$1");
             }

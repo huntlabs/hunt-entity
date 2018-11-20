@@ -19,7 +19,7 @@ import hunt.entity;
 @Table("user")
 class User
 {
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @PrimaryKey
     @AutoIncrement

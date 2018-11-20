@@ -1,9 +1,9 @@
 import std.stdio;
 
 import hunt.entity;
-import Model.UserInfo;
-import Model.LoginInfo;
-import Model.AppInfo;
+import model.UserInfo;
+import model.LoginInfo;
+import model.AppInfo;
 
 
 import hunt.logging;

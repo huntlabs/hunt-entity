@@ -11,17 +11,18 @@
  
 module hunt.entity.Entity;
 
+import hunt.validation.DeclDef;
 import hunt.entity;
 import std.string;
 import std.traits;
 
-mixin template MakeEntity()
+mixin template MakeModel()
 {
     mixin(makeLazyData);
     mixin(makeLazyLoadList!(typeof(this)));
     mixin(makeLazyLoadSingle!(typeof(this)));
     mixin(makeGetFunction!(typeof(this)));
-
+    mixin MakeValid;
     /*  
      *   NOTE: annotation following code forbid auto create tables function when the EntityFactory construct for the reason when 
      *   the Entity model import other Entity model cause the dlang bug like "object.Error@src/rt/minfo.d(371): Cyclic dependency between 

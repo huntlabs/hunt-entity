@@ -1,15 +1,15 @@
-module Model.LoginInfo;
+module model.LoginInfo;
 
 import hunt.entity;
-import Model.UserInfo;
-import Model.AppInfo;
+import model.UserInfo;
+import model.AppInfo;
 
 
 
-@Table("logininfo")
-class LoginInfo
+@Table("LoginInfo")
+class LoginInfo : Model
 {
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;

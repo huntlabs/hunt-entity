@@ -1,12 +1,12 @@
-module Model.AppInfo;
+module model.AppInfo;
 
 import hunt.entity;
 
 
 @Table("AppInfo")
-class AppInfo  {
+class AppInfo : Model {
 
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;

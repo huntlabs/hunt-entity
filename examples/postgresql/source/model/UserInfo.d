@@ -1,14 +1,14 @@
-module Model.UserInfo;
+module model.UserInfo;
 
-import Model.AppInfo;
+import model.AppInfo;
 import hunt.entity;
-import Model.Car;
-import Model.IDCard;
+import model.Car;
+import model.IDCard;
 
 @Table("userinfo")
-class UserInfo  {
+class UserInfo : Model {
 
-    mixin MakeEntity;
+    mixin MakeModel;
 
     @AutoIncrement @PrimaryKey 
     int id;

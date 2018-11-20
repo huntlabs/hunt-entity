@@ -1,12 +1,12 @@
 import std.stdio;
 
 import hunt.entity;
-import Model.UserInfo;
-import Model.UserApp;
-import Model.AppInfo;
-import Model.Car;
-import Model.IDCard;
-import Model.LoginInfo;
+import model.UserInfo;
+import model.UserApp;
+import model.AppInfo;
+import model.Car;
+import model.IDCard;
+import model.LoginInfo;
 
 import hunt.logging;
 import std.traits;

@@ -12,12 +12,15 @@
 module hunt.entity.NativeQuery;
 
 import hunt.entity;
-
+import hunt.lang;
+import std.regex;
+import hunt.entity.EntityException;
 
 class NativeQuery {
 
     private string _nativeSql;
     private EntityManager _manager;
+    private Object[string] _parameters;
 
     this(EntityManager manager,string sql) {
         _manager = manager;
@@ -25,15 +28,78 @@ class NativeQuery {
     }
 
     public ResultSet getResultList() {
-       
-        auto stmt = _manager.getSession().prepare(_nativeSql);
+        auto sql = paramedSql();
+        auto stmt = _manager.getSession().prepare(sql);
 		return stmt.query();
     }
 
     public int executeUpdate() {
-        auto stmt = _manager.getSession().prepare(_nativeSql); 
+        auto sql = paramedSql();
+        auto stmt = _manager.getSession().prepare(sql); 
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
+    }
+
+    public void setParameter(R)(string key, R param)
+    {
+        static if (is(R == int) || is(R == uint))
+        {
+            _parameters[key] = new Integer(param);
+        }
+        else static if (is(R == string) || is(R == char) || is(R == byte[]))
+        {
+            _parameters[key] = new String(param);
+        }
+        else static if (is(R == bool))
+        {
+            _parameters[key] = new Boolean(param);
+        }
+        else static if (is(R == double))
+        {
+            _parameters[key] = new Double(param);
+        }
+        else static if (is(R == float))
+        {
+            _parameters[key] = new Float(param);
+        }
+        else static if (is(R == short) || is(R == ushort))
+        {
+            _parameters[key] = new Short(param);
+        }
+        else static if (is(R == long) || is(R == ulong))
+        {
+            _parameters[key] = new Long(param);
+        }
+        else static if (is(R == byte) || is(R == ubyte))
+        {
+            _parameters[key] = new Byte(param);
+        }
+        else static if(is(R == class))
+        {
+            _parameters[key] = param;
+        }
+        else
+        {
+            throw new EntityException("IllegalArgument not support : " ~ R.stringof);
+        }
+    }
+
+    private string paramedSql()
+    {
+        string str = _nativeSql;
+        foreach (k, v; _parameters)
+        {
+            auto re = regex(r":" ~ k ~ r"([^\w])", "g");
+            if ((cast(String) v !is null) || (cast(Nullable!string)v !is null))
+            {
+                str = str.replaceAll(re, quoteSqlString(v.toString())  ~ "$1");
+            }
+            else
+            {
+                str = str.replaceAll(re, v.toString() ~ "$1" );
+            }
+        }
+        return str;
     }
 
 }

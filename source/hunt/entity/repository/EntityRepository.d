@@ -258,7 +258,7 @@ version(unittest)
 	@Table("p_menu")
 	class Menu  
 	{
-        mixin MakeEntity;
+        mixin MakeModel;
 
 		@PrimaryKey
 		@AutoIncrement

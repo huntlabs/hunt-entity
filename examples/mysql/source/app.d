@@ -1,12 +1,12 @@
 import std.stdio;
 
 import hunt.entity;
-import Model.UserInfo;
-import Model.UserApp;
-import Model.AppInfo;
-import Model.Car;
-import Model.IDCard;
-import Model.LoginInfo;
+import model.UserInfo;
+import model.UserApp;
+import model.AppInfo;
+import model.Car;
+import model.IDCard;
+import model.LoginInfo;
 
 import hunt.logging;
 import std.traits;
@@ -29,6 +29,7 @@ void test_persist(EntityManager em)
 	UserInfo user = new UserInfo();
 	user.nickName = "Jame\"s Ha'Deng";
 	user.age = 30;
+	assert(user.valid.isValid);
 	em.persist(user);
 }
 
@@ -239,6 +240,16 @@ void test_statement(EntityManager em)
 	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
 }
 
+void test_valid(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	auto query = em.createQuery!UserInfo("select u from UserInfo u");
+	auto uinfos = query.getResultList();
+	foreach(u;uinfos)
+		assert(u.valid.isValid);
+}
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -281,4 +292,6 @@ void main()
 	test_create_eql_by_queryBuilder(em);
 
 	test_statement(em);
+
+	test_valid(em);
 }
