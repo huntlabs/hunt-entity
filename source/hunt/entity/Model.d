@@ -11,11 +11,9 @@
 
 module hunt.entity.Model;
 
-import hunt.validation.ConstraintValidatorContext;
+import hunt.validation.Valid;
 
-interface Model 
+interface Model : Valid
 {
-    ///make valid and return result 
-    ConstraintValidatorContext valid();
 }
 
