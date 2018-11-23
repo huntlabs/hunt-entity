@@ -5,7 +5,7 @@
     "copyright": "Copyright (C) 2015-2018 Shanghai Putao Technology Co., Ltd",
     "license": "Apache-2.0",
     "dependencies": {
-        "hunt" : "~>1.0.0-rc.1",
+        "hunt" : "~>1.0.0-rc.2",
         "hunt-database": "~>1.0.1",
         "hunt-sql": "~>1.0.1"
     },

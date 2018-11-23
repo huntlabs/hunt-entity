@@ -5,7 +5,7 @@ import hunt.entity;
 import model.Car;
 import model.IDCard;
 
-// @Table("UserInfo")
+@Table("UserInfo")
 class UserInfo : Model {
 
     mixin MakeModel;

@@ -29,7 +29,6 @@ void test_persist(EntityManager em)
 	UserInfo user = new UserInfo();
 	user.nickName = "Jame\"s Ha'Deng";
 	user.age = 30;
-	assert(user.valid.isValid);
 	em.persist(user);
 }
 
@@ -198,8 +197,8 @@ void test_eql_select(EntityManager em)
 	}
 
 	auto query5 = em.createQuery!(LoginInfo)(
-			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = ? order by a.id desc;");
-	query5.setParameter(1, 2);
+			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
+	query5.setParameter("id", 2);
 	foreach (d; query5.getResultList())
 	{
 		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
@@ -244,11 +243,13 @@ void test_valid(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query = em.createQuery!UserInfo("select u from UserInfo u");
+	auto query = em.createQuery!UserInfo("select u from UserInfo u where u.id = :id;");
+	query.setParameter("id",3);
 	auto uinfos = query.getResultList();
 	foreach(u;uinfos)
 		assert(u.valid.isValid);
 }
+
 
 void main()
 {
