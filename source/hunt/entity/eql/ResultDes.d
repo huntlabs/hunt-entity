@@ -21,12 +21,17 @@ import std.conv;
 class ResultDes(T : Object) {
     
     private string _tableName;
+    private string _tablePrefix;
     private string _clsName;
+    private EntityManager _em;
 
     private EntityFieldInfo[string] _fields;
 
-    this()
+    this(EntityManager em)
     {
+        _em = em;
+        if(em !is null)
+            _tablePrefix = em.getPrefix();
         initEntityData();
     }
 
@@ -83,11 +88,11 @@ string makeInitEntityData(T)() {
         _clsName = "`~T.stringof~`";`;
     static if (hasUDA!(T,Table)) {
         str ~= `
-        _tableName = "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
+        _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
     }
     else {
         str ~= `
-        _tableName = "` ~ T.stringof ~ `";`;
+        _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
     }
     str ~= `
         }
@@ -134,7 +139,7 @@ string makeDeSerialize(T)() {
                 else static if(!isArray!memType && hasUDA!(__traits(getMember, T ,memberName), JoinColumn))
                 {
                     str ~= `
-                        auto `~memberName~ ` = new ResultDes!(`~memType.stringof~`)();
+                        auto `~memberName~ ` = new ResultDes!(`~memType.stringof~`)(_em);
                         _data.`~memberName~ ` = `~memberName~`.deSerialize(rows,count,startIndex);
                     `;
                 }

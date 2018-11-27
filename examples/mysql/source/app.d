@@ -262,6 +262,7 @@ void main()
 	option.database.database = "eql_test";
 	option.database.username = "root";
 	option.database.password = "123456";
+	option.database.prefix = "";
 
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",
 			option);

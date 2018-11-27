@@ -36,7 +36,7 @@ class EqlQuery(T...) {
     this(string eql, EntityManager em)
     {
         _manager = em;
-        _resultDes = new ResultDes!(ResultObj)();
+        _resultDes = new ResultDes!(ResultObj)(em);
         _eql = eql;
 
         parseEql();

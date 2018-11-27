@@ -11,10 +11,11 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     private string _primaryKey;
     private string _findString;
     private T[][string] _decodeCache;
-
+    private EntityManager _em;
 
     this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {
         // logDebug("ManyToManyOwner(%s,%s) not main mapped ( %s , %s , %s , %s ,%s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped));
+        _em = manager;
         super(fileldName, "", tableName);
         _isMainMapped = isMainMapped;
         init(primaryKey, mode, owner);
@@ -23,6 +24,7 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, 
             bool isMainMapped ,JoinTable joinTable , JoinColumn jc  ,InverseJoinColumn ijc ) {
         // logDebug("ManyToManyOwner(%s,%s) main mapped( %s , %s , %s , %s ,%s , %s , %s , %s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped,joinTable,jc,ijc));
+        _em = manager;
         super(fileldName, "", tableName);
         _isMainMapped = isMainMapped;
         _joinColumn = jc.name;
@@ -41,7 +43,7 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
             {
                 _inverseJoinColumn =  hunt.entity.utils.Common.getInverseJoinColumn!(T,MAPPEDBY).name;
                 _joinColumn =   hunt.entity.utils.Common.getJoinColumn!(T,MAPPEDBY).name;
-                _joinTable =   hunt.entity.utils.Common.getJoinTableName!(T,MAPPEDBY);
+                _joinTable =   _em.getPrefix() ~ hunt.entity.utils.Common.getJoinTableName!(T,MAPPEDBY);
             }
         }
         
