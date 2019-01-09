@@ -109,6 +109,11 @@ class EntityManager {
         return new EqlQuery!(T)(eql, this);
     }
 
+    public EqlQuery!(T) createQuery(T...)(string query_eql,Pageable page)
+    {
+        return new EqlQuery!(T)(query_eql,page,this);
+    }
+
     public TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
         return new TypedQuery!(T,F)(query, this);
     }

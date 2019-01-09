@@ -60,6 +60,11 @@ class EqlParse
         return _eql;
     }
 
+    string getDBType()
+    {
+        return _dbtype;
+    }
+
     void setParsedEql(string parsedEql)
     {
         _parsedEql = parsedEql;
@@ -206,6 +211,7 @@ class EqlParse
             }
             else
             {
+                // logError("------> :",SQLUtils.toSQLString(selectItem));
                 select_copy.addSelectItem(selectItem);
             }
         }

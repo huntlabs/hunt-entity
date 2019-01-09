@@ -239,6 +239,39 @@ void test_statement(EntityManager em)
 	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
 }
 
+void test_pagination(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a where a.age > :age order by a.id ",new Pageable(0,2)).setParameter("age",10);
+	auto page = query.getPageResult();
+	logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),page.getSize(),page.getTotalPages(),page.getTotalElements()));
+	foreach(d ; page.getContent())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	}
+}
+
+void test_pagination_1(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a ").setFirstResult(1).setMaxResults(2);
+	foreach (d; query.getResultList())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	}
+}
+
+void test_count(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	auto query = em.createQuery!(UserInfo)(
+			" select count(UserInfo.id) as num from UserInfo a ");
+	logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
+}
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -281,4 +314,9 @@ void main()
 	test_create_eql_by_queryBuilder(em);
 
 	test_statement(em);
+
+	test_pagination(em);
+
+	test_pagination_1(em);
+
 }
