@@ -47,8 +47,7 @@ class EntitySession
 
     public Statement prepare(string sql)
     {
-        checkConnection();
-        return _trans.prepare(sql);
+        return new Statement(_manager.getDatabase(), sql);
     }
 
     public Connection getConnection() {return _conn;}

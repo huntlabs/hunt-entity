@@ -14,6 +14,7 @@ import std.format;
 import std.array;
 import core.stdc.stdlib;
 import core.runtime;
+import core.thread;
 import std.conv;
 import hunt.database;
 
@@ -166,6 +167,7 @@ void test_eql_select(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// select statement
+
 	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
 	foreach (d; query1.getResultList())
 	{
@@ -299,6 +301,23 @@ void test_transaction(EntityManager em)
 	em.getTransaction().rollback();
 }
 
+void test_connect(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	auto group = new ThreadGroup();
+	logDebug("init Database pool size : ",em.getDatabase().getPoolSize());
+    foreach (_; 0 .. 20)
+    {
+        group.create(() { 
+                auto nativeQuery = em.createNativeQuery(" select * from UserInfo;");
+				nativeQuery.getResultList();
+            });
+    }
+	logDebug("Database pool size : ",em.getDatabase().getPoolSize());
+    group.joinAll();
+	
+}
 
 void main()
 {

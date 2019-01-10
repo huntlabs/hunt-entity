@@ -39,7 +39,15 @@ class EntityManagerFactory {
         _exitTables = showTables();
         autoCreateTables();
     }
-    
+
+    ~this()
+    {
+        log("EntityManagerFactory destruct");
+        if(_db)
+            _db.close();
+        _db = null;
+    }   
+
     public EntityManager createEntityManager()
     {
         return new EntityManager(this, _name, _option, _db, _dialect);
