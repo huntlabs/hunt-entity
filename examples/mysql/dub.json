@@ -8,6 +8,6 @@
 	"copyright": "Copyright © 2018, gaoxincheng",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"hunt-entity": "~>2.0.0"
+		"hunt-entity": "~>2.1.0"
 	}
 }

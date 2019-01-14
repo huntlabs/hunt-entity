@@ -11,7 +11,7 @@
  
 module hunt.entity.Constant;
 
-import hunt.lang;
+import hunt.String;
 import hunt.database;
 import std.format;
 //@Factory

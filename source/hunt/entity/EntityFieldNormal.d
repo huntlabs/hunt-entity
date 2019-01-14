@@ -13,7 +13,7 @@ module hunt.entity.EntityFieldNormal;
 
 import hunt.entity;
 import std.math;
-import hunt.lang;
+// import hunt.lang;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 
@@ -22,7 +22,7 @@ class EntityFieldNormal(T) : EntityFieldInfo {
 
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(value).stringof;
-        _columnFieldData.value = new hunt.lang.Nullable.Nullable!(T)(value);
+        _columnFieldData.value = new hunt.Nullable.Nullable!(T)(value);
         // static if (isSomeString!T) {
         //     if( manager !is null)
         //         _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(value);

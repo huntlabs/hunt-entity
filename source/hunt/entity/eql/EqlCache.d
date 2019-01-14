@@ -15,7 +15,7 @@ import std.array;
 import std.string;
 import core.sync.rwmutex;
 import std.digest.md;
-import hunt.container;
+import hunt.collection;
 import hunt.logging;
 import std.uni;
 

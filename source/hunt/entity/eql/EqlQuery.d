@@ -14,7 +14,7 @@ module hunt.entity.eql.EqlQuery;
 import hunt.entity;
 import hunt.sql;
 import hunt.logging;
-import hunt.container;
+import hunt.collection;
 import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;

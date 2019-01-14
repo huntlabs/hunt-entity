@@ -12,7 +12,7 @@
 module hunt.entity.EntityFieldManyToOne;
 
 import hunt.entity;
-import hunt.lang;
+import hunt.Nullable;
 
 class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
 
@@ -27,7 +27,7 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
 
-        _columnFieldData.value = new hunt.lang.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
+        _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
 
         initJoinData(tableName, columnName);
     }

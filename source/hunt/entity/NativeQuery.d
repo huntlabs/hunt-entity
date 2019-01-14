@@ -12,7 +12,16 @@
 module hunt.entity.NativeQuery;
 
 import hunt.entity;
-import hunt.lang;
+import hunt.Number;
+import hunt.String;
+import hunt.Integer;
+import hunt.Long;
+import hunt.Double;
+import hunt.Float;
+import hunt.Short;
+import hunt.Byte;
+import hunt.Boolean;
+import hunt.Nullable;
 import std.regex;
 import hunt.entity.EntityException;
 
