@@ -25,25 +25,53 @@ import hunt.Nullable;
 import std.regex;
 import hunt.entity.EntityException;
 
+import hunt.trace.Constrants;
+import hunt.trace.Plugin;
+import hunt.trace.Span;
+
 class NativeQuery {
 
     private string _nativeSql;
     private EntityManager _manager;
     private Object[string] _parameters;
 
+    private Span _span;
+    private string[string] _tags;
+
     this(EntityManager manager,string sql) {
         _manager = manager;
         _nativeSql = sql;
     }
 
+    private void beginTrace(string name) {
+        _tags.clear();
+        _span = traceSpanBefore(name);
+    }
+
+    private void endTrace(string error = null) {
+        if(_span !is null) {
+            traceSpanAfter(_span , _tags , error);
+        }
+    }
+
     public ResultSet getResultList() {
         auto sql = paramedSql();
+        beginTrace("NativeQuery getResultList");
+        scope(exit){
+            _tags["sql"] = sql;
+            endTrace();
+        }
         auto stmt = _manager.getSession().prepare(sql);
 		return stmt.query();
     }
 
     public int executeUpdate() {
         auto sql = paramedSql();
+        beginTrace("NativeQuery executeUpdate");
+        scope(exit){
+            _tags["sql"] = sql;
+            endTrace();
+        }
         auto stmt = _manager.getSession().prepare(sql); 
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();

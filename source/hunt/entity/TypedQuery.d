@@ -13,6 +13,10 @@ module hunt.entity.TypedQuery;
 
 import hunt.entity;
 
+import hunt.trace.Constrants;
+import hunt.trace.Plugin;
+import hunt.trace.Span;
+
 class TypedQuery(T : Object, F : Object = T) {
 
 
@@ -20,9 +24,23 @@ class TypedQuery(T : Object, F : Object = T) {
     private CriteriaQuery!(T,F) _query;
     private EntityManager _manager;
 
+    private Span _span;
+    private string[string] _tags;
+
     this(CriteriaQuery!(T,F) query, EntityManager manager) {
         _query = query;
         _manager = manager;
+    }
+
+    private void beginTrace(string name) {
+        _tags.clear();
+        _span = traceSpanBefore(name);
+    }
+
+    private void endTrace(string error = null) {
+        if(_span !is null) {
+            traceSpanAfter(_span , _tags , error);
+        }
     }
 
     public Object getSingleResult() {
@@ -51,9 +69,15 @@ class TypedQuery(T : Object, F : Object = T) {
     }
 
     private Object[] _getResultList() {
+        auto sql = _query.toString();
+        beginTrace("TypeQuery _getResultList");
+        scope(exit){
+            _tags["sql"] = sql;
+            endTrace();
+        }
         Object[] ret;
         long count = -1;
-        auto stmt = _manager.getSession().prepare(_query.toString());
+        auto stmt = _manager.getSession().prepare(sql);
 		auto res = stmt.query();
         Row[] rows;
         foreach(value; res) {

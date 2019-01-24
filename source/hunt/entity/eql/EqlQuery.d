@@ -22,6 +22,11 @@ import std.exception;
 import std.algorithm.searching;
 import hunt.entity.eql.EqlCache;
 
+import hunt.trace.Constrants;
+import hunt.trace.Plugin;
+import hunt.trace.Span;
+
+
 class EqlQuery(T...)
 {
 
@@ -37,6 +42,9 @@ class EqlQuery(T...)
     private string[] _isExtracted;
     private long _offset = -1;
     private long _limit = -1;
+
+    private Span _span;
+    private string[string] _tags;
 
     this(string eql, EntityManager em)
     {
@@ -56,8 +64,22 @@ class EqlQuery(T...)
         parseEql();
     }
 
+    private void beginTrace(string name) {
+        _tags.clear();
+        _span = traceSpanBefore(name);
+    }
+
+    private void endTrace(string error = null) {
+        if(_span !is null) {
+            _tags["eql"] = _eql;
+            traceSpanAfter(_span , _tags , error);
+        }
+    }
+
     private void parseEql()
     {
+        beginTrace("EQL PARSE");
+        scope(exit) endTrace();
         auto opt = _manager.getDatabase().getOption();
         if (opt.isMysql())
         {
@@ -206,13 +228,19 @@ class EqlQuery(T...)
 
     public int exec()
     {
-        auto stmt = _manager.getSession().prepare(getExecSql());
+        auto sql = getExecSql();
+        beginTrace("EqlQuery exec");
+        scope(exit) {
+            _tags["sql"] = sql;
+            endTrace();
+        }
+        auto stmt = _manager.getSession().prepare();
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
     }
 
     public ResultObj getSingleResult()
-    {
+    {        
         Object[] ret = _getResultList();
         if (ret.length == 0)
             return null;
@@ -244,9 +272,16 @@ class EqlQuery(T...)
 
     private Object[] _getResultList()
     {
+        auto sql = getExecSql();
+        beginTrace("EqlQuery _getResultList");
+        scope(exit) {
+                _tags["sql"] = sql;
+                endTrace();
+            }
+
         Object[] ret;
         long count = -1;
-        auto stmt = _manager.getSession().prepare(getExecSql());
+        auto stmt = _manager.getSession().prepare();
         auto res = stmt.query();
         Row[] rows;
         foreach (value; res)
@@ -284,12 +319,24 @@ class EqlQuery(T...)
 
     public ResultSet getNativeResult()
     {
-        auto stmt = _manager.getSession().prepare(getExecSql());
+        auto sql = getExecSql();
+        beginTrace("EqlQuery getNativeResult");
+        scope(exit) {
+            _tags["sql"] = sql;
+            endTrace();
+        }
+
+        auto stmt = _manager.getSession().prepare();
         return stmt.query();
     }
 
     private long count(string sql)
     {
+        beginTrace("EqlQuery count");
+        scope(exit) {
+            _tags["sql"] = sql;
+            endTrace();
+        }
         long total = 0;
         auto stmt = _manager.getSession().prepare(sql);
         auto res = stmt.query();
