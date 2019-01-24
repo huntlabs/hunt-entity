@@ -13,6 +13,7 @@ module hunt.entity.EntityManagerFactory;
 
 import hunt.entity;
 import hunt.entity.EntityOption;
+import hunt.logging;
 
 class EntityManagerFactory {
 
@@ -42,7 +43,7 @@ class EntityManagerFactory {
 
     ~this()
     {
-        log("EntityManagerFactory destruct");
+        trace("EntityManagerFactory destruct");
         if(_db)
             _db.close();
         _db = null;
@@ -111,7 +112,7 @@ class EntityManagerFactory {
             string check = _option.database.prefix~k;
             if (!Common.inArray(_exitTables, _option.database.prefix~k)) {
                 flushList[k] = v;
-                log("create new table ", _option.database.prefix~k);
+                trace("create new table ", _option.database.prefix~k);
             }
         }
 
@@ -124,7 +125,7 @@ class EntityManagerFactory {
         
         //step2: alert table, eg add foreign key..
         foreach(v; alterRows) {
-            log(v);
+            trace(v);
             _db.execute(v);
         }
     }
