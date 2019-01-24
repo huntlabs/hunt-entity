@@ -1,14 +1,14 @@
 {
     "name": "hunt-entity",
-    "authors": ["HuntLabs.net"],
     "description": "Entity is an object-relational mapping tool for the D programming language. Referring to the design idea of JPA. support PostgreSQL / MySQL / SQLite.",
-    "copyright": "Copyright (C) 2015-2018 Shanghai Putao Technology Co., Ltd",
+    "copyright": "Copyright (C) 2018-2019, HuntLabs",
+    "homepage": "https://www.huntlabs.net/",
     "license": "Apache-2.0",
     "dependencies": {
         "hunt" : "~>1.0.0",
-        "hunt-database": "~>1.0.3",
+        "hunt-database": "~>1.0.5",
         "hunt-sql": "~>1.0.4",
-        "hunt-validation" : "~>0.0.1",
+        "hunt-validation" : "~>0.0.2",
         "hunt-trace" : "~>0.1.4"
     },
     "configurations": [

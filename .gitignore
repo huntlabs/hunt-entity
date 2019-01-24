@@ -41,3 +41,7 @@ __test__library__
 
 # Ignore Sublime Text workspace (project file is ok):
 *.sublime-workspace
+<<<<<<< HEAD
+=======
+dub.selections.json
+>>>>>>> 21d5e8f2c0d51543d99a806c8a87a0feaba76533
