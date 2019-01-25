@@ -235,7 +235,7 @@ class EqlQuery(T...)
             _tags["sql"] = sql;
             endTrace();
         }
-        auto stmt = _manager.getSession().prepare();
+        auto stmt = _manager.getSession().prepare(sql);
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
     }
@@ -282,7 +282,7 @@ class EqlQuery(T...)
 
         Object[] ret;
         long count = -1;
-        auto stmt = _manager.getSession().prepare();
+        auto stmt = _manager.getSession().prepare(sql);
         auto res = stmt.query();
         Row[] rows;
         foreach (value; res)
@@ -327,7 +327,7 @@ class EqlQuery(T...)
             endTrace();
         }
 
-        auto stmt = _manager.getSession().prepare();
+        auto stmt = _manager.getSession().prepare(sql);
         return stmt.query();
     }
 

@@ -8,6 +8,7 @@ entity.dll
 entity.a
 entity.lib
 entity-test-*
+mysql-test
 *.exe
 *.o
 *.obj
