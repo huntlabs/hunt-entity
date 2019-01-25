@@ -2,6 +2,7 @@ module hunt.entity.eql.EqlInfo;
 
 import hunt.logging;
 import std.format;
+import std.traits;
 
 class EqlObject
 {

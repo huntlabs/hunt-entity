@@ -16,7 +16,7 @@ import hunt.entity.DefaultEntityManagerFactory;
 
 import hunt.logging;
 import std.conv;
-
+import std.traits;
 
 class EntityInfo(T : Object, F : Object = T) {
     

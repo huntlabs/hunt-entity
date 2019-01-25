@@ -25,6 +25,7 @@ import hunt.entity.eql.EqlCache;
 import hunt.trace.Constrants;
 import hunt.trace.Plugin;
 import hunt.trace.Span;
+import std.traits;
 
 
 class EqlQuery(T...)

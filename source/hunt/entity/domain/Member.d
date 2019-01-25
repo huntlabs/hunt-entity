@@ -3,7 +3,7 @@ module hunt.entity.domain.Member;
 import hunt.entity;
 
 import std.stdio;
-
+import std.traits;
 
 
 class Member(T)

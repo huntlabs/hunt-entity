@@ -16,6 +16,7 @@ import hunt.entity;
 
 import hunt.logging;
 import std.conv;
+import std.traits;
 
 
 class ResultDes(T : Object) {

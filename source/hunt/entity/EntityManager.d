@@ -15,6 +15,7 @@ import hunt.entity;
 import hunt.entity.EntityOption;
 import hunt.entity.eql;
 import hunt.logging;
+import std.traits;
 
 class EntityManager {
 

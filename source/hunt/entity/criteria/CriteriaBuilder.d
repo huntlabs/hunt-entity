@@ -13,6 +13,7 @@ module hunt.entity.criteria.CriteriaBuilder;
 
 import hunt.entity;
 import hunt.logging;
+import std.traits;
 
 public class CriteriaBuilder
 {
