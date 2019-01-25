@@ -319,6 +319,17 @@ void test_connect(EntityManager em)
 	
 }
 
+
+void test_other(EntityManager em)
+{
+	mixin(DO_TEST);
+	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a order by field(a.id,1,2);");
+	foreach (d; query1.getResultList())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	}
+}
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -372,4 +383,5 @@ void main()
 	test_count(em);
 
 	test_transaction(em);
+	test_other(em);
 }

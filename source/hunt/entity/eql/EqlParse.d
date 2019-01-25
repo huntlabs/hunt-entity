@@ -245,9 +245,12 @@ class EqlParse
             foreach(item ; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(),_dbtype);
-                // logDebug("order item : %s".format(exprStr));
+                version(HUNT_DEBUG)logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(),SQLUtils.toSQLExpr(convertAttrExpr(exprStr),_dbtype));
             }
+        }
+        else{
+            version(HUNT_DEBUG)logDebug("order by item is null");
         }
 
         /// group by 
@@ -377,7 +380,7 @@ class EqlParse
     private string convertAttrExpr(string attrExpr)
     {
         string res = attrExpr;
-        auto conds = matchAll(attrExpr, regex("([^\\s]+)\\.([^\\s]+)"));
+        auto conds = matchAll(attrExpr, regex("([^\\(\\s]+)\\.([^\\s]+)"));
         foreach(cond ; conds)
         {
             string newCond = cond.captures[0];
