@@ -5,7 +5,7 @@
     "homepage": "https://www.huntlabs.net/",
     "license": "Apache-2.0",
     "dependencies": {
-        "hunt" : "~>1.0.0",
+        "hunt" : "~>1.1.0",
         "hunt-database": "~>1.1.0",
         "hunt-sql": "~>1.0.4",
         "hunt-validation" : "~>0.0.2",
