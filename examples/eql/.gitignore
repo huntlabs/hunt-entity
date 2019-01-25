@@ -7,7 +7,7 @@ eql.dylib
 eql.dll
 eql.a
 eql.lib
-eql-test-*
+eql-test*
 *.exe
 *.o
 *.obj

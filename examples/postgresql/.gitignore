@@ -7,7 +7,7 @@ postgresql.dylib
 postgresql.dll
 postgresql.a
 postgresql.lib
-postgresql-test-*
+postgresql-test*
 *.exe
 *.o
 *.obj
