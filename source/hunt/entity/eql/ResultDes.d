@@ -60,6 +60,23 @@ class ResultDes(T : Object) {
         return _tableName ~ "__as__" ~ col;
     }
 
+    public void deSerialize(R)(string value, ref R r) {
+        if (value.length == 0) {
+            return;
+        }
+        if (value.length == 1 && cast(byte)(value[0]) == 0) {
+            return;
+        }
+        static if (is(R==bool)) {
+            if( value[0] == 1 || value[0] == 't')
+                r = true;
+            else 
+                r = false;
+        }
+        else {
+            r = to!R(value);
+        }
+    }
 }
 
 string makeImport(T)() {
@@ -125,14 +142,16 @@ string makeDeSerialize(T)() {
                         string columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
                         str ~=`
                             if ((data !is null ) && data.getData((`~columnName~`))){
-                                _data.`~memberName ~ ` = data.getData((`~ columnName ~`)).value.to!`~memType.stringof ~ `;
+                                
+                                deSerialize(data.getData((`~ columnName ~`)).value,_data.`~memberName ~ `);
                         }
                         `;
                     }
                     else {
                                 str ~=`
                             if ((data !is null ) && data.getData((`~memberName.stringof~`))){
-                                _data.`~memberName ~ ` = data.getData((`~ memberName.stringof ~`)).value.to!`~memType.stringof ~ `;
+                                
+                                deSerialize(data.getData((`~ memberName.stringof ~`)).value,_data.`~memberName ~ `);
                         }
                         `;
                     }
