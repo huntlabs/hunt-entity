@@ -30,7 +30,7 @@ import std.traits;
 
 class EqlQuery(T...)
 {
-
+    alias executeUpdate = exec;
     alias ResultObj = T[0];
 
     private EntityManager _manager;
@@ -43,6 +43,9 @@ class EqlQuery(T...)
     private string[] _isExtracted;
     private long _offset = -1;
     private long _limit = -1;
+    private int _lastInsertId = -1;
+    private int _affectRows = 0;
+
 
     private Span _span;
     private string[string] _tags;
@@ -236,8 +239,20 @@ class EqlQuery(T...)
             endTrace();
         }
         auto stmt = _manager.getSession().prepare(sql);
+        _lastInsertId = stmt.lastInsertId();
+        _affectRows = stmt.affectedRows();
         //TODO update 时 返回的row line count 为 0
         return stmt.execute();
+    }
+
+    public int lastInsertId()
+    {
+        return _lastInsertId;    
+    }
+    
+	public int affectedRows()
+    {
+        return _affectRows;    
     }
 
     public ResultObj getSingleResult()

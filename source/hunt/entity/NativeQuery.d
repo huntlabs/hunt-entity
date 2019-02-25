@@ -34,6 +34,8 @@ class NativeQuery {
     private string _nativeSql;
     private EntityManager _manager;
     private Object[string] _parameters;
+    private int _lastInsertId = -1;
+    private int _affectRows = 0;
 
     private Span _span;
     private string[string] _tags;
@@ -74,7 +76,19 @@ class NativeQuery {
         }
         auto stmt = _manager.getSession().prepare(sql); 
         //TODO update 时 返回的row line count 为 0
+        _lastInsertId = stmt.lastInsertId();
+        _affectRows = stmt.affectedRows();
         return stmt.execute();
+    }
+
+    public int lastInsertId()
+    {
+        return _lastInsertId;    
+    }
+    
+	public int affectedRows()
+    {
+        return _affectRows;    
     }
 
     public void setParameter(R)(string key, R param)
