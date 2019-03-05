@@ -45,9 +45,9 @@ class EntitySession
         _trans.rollback();
     }
 
-    public Statement prepare(string sql)
+    public TransStatement prepare(string sql)
     {
-        return new Statement(_manager.getDatabase(), sql);
+        return new TransStatement(_conn, sql);
     }
 
     public Connection getConnection() {return _conn;}

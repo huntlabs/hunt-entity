@@ -93,7 +93,7 @@ void test_delete(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// delete statement
-	auto del = em.createQuery!(UInfo)(" delete UInfo u where u.id = ? "); 
+	auto del = em.createQuery!(UInfo)(" delete from UInfo u where u.id = ? "); 
 	del.setParameter(1,3);
 	logDebug(" del result : ",del.exec());
 }
