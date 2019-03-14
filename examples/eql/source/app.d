@@ -82,9 +82,11 @@ void test_update(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// update statement
-	auto update = em.createQuery!(UInfo)(" update UInfo u set u.age = ? where u.id = ? "); // update UInfo u set u.age = 5 where u.id = 2
-	update.setParameter(2,2);
-	update.setParameter(1,5);
+	auto update = em.createQuery!(UInfo)(" update UInfo u set u.age = u.id, u.nickName = 'dd' where  u.age > 2 and u.age < :age2 and u.id = :id and u.nickName = :name " ); // update UInfo u set u.age = 5 where u.id = 2
+	update.setParameter("age",2);
+	update.setParameter("age2",55);
+	update.setParameter("id",1);
+	update.setParameter("name","tom");
 	logDebug(" update result : ",update.exec());
 }
 
@@ -98,6 +100,7 @@ void test_delete(EntityManager em)
 	logDebug(" del result : ",del.exec());
 }
 
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -109,6 +112,7 @@ void main()
     option.database.database = "eql_test";
     option.database.username = "root";
     option.database.password = "123456";
+	// option.database.prefix = "hc_";
 
     
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);

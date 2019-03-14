@@ -330,6 +330,16 @@ void test_other(EntityManager em)
 	}
 }
 
+void test_exception(EntityManager em)
+{
+	mixin(DO_TEST);
+	auto query1 = em.createQuery!(UserInfo)(" select sum(a.id) as id from UserInfo a ");
+	foreach (d; query1.getResultList())
+	{
+		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	}
+}
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -348,40 +358,43 @@ void main()
 	EntityManager em = entityManagerFactory.createEntityManager();
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	test_OneToOne(em);
+	// test_OneToOne(em);
 
-	test_OneToMany(em);
+	// test_OneToMany(em);
 
-	test_ManyToOne(em);
+	// test_ManyToOne(em);
 
-	test_ManyToMany(em);
+	// test_ManyToMany(em);
 
-	test_eql_select(em);
+	// test_eql_select(em);
 
-	test_merge(em);
+	// test_merge(em);
 
-	test_persist(em);
+	// test_persist(em);
 
-	test_comparison(em);
+	// test_comparison(em);
 
-	test_delete(em);
+	// test_delete(em);
 
-	test_CriteriaQuery(em);
+	// test_CriteriaQuery(em);
 
-	test_nativeQuery(em);
+	// test_nativeQuery(em);
 
-	test_create_eql_by_queryBuilder(em);
+	// test_create_eql_by_queryBuilder(em);
 
-	test_statement(em);
+	// test_statement(em);
 
-	test_valid(em);
+	// test_valid(em);
 
-	test_pagination(em);
+	// test_pagination(em);
 
-	test_pagination_1(em);
+	// test_pagination_1(em);
 
-	test_count(em);
+	// test_count(em);
 
-	test_transaction(em);
-	test_other(em);
+	// test_transaction(em);
+
+	// test_other(em);
+
+	test_exception(em);
 }

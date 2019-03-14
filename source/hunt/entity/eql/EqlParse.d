@@ -8,7 +8,7 @@
  * Licensed under the Apache-2.0 License.
  *
  */
- 
+
 module hunt.entity.eql.EqlParse;
 
 import hunt.entity;
@@ -31,29 +31,29 @@ import std.algorithm.sorting;
 import hunt.entity.eql.EqlInfo;
 import std.regex;
 
-void eql_throw(string type, string message) {
-	throw new Exception("[EQL PARSE EXCEPTION." ~ type ~ "] " ~ message);
+void eql_throw(string type, string message)
+{
+    throw new Exception("[EQL PARSE EXCEPTION." ~ type ~ "] " ~ message);
 }
 
 class EqlParse
 {
     alias EntityField = EntityFieldInfo[string];
-    private string _eql; 
-    private string _parsedEql; 
+    private string _eql;
+    private string _parsedEql;
     private string _dbtype;
     private ExportTableAliasVisitor _aliasVistor; //表 与 别名
-    private SchemaStatVisitor   _schemaVistor;
+    private SchemaStatVisitor _schemaVistor;
     private List!SQLStatement _stmtList;
     private string[string] _clsNameToTbName;
 
-    private EntityField[string] _tableFields;   //类名 与 表字段
+    private EntityField[string] _tableFields; //类名 与 表字段
     private EqlObject[string] _eqlObj;
-    public  string[string] _objType;
-    private  Object[string] _joinConds;
+    public string[string] _objType;
+    private Object[string] _joinConds;
 
     private Object[int] _params;
     private Object[string] _parameters;
-
 
     this(string eql, string dbtype = "mysql")
     {
@@ -86,49 +86,57 @@ class EqlParse
 
     public void parse()
     {
-        _stmtList = SQLUtils.parseStatements(_parsedEql, _dbtype);
-
-        foreach(stmt ; _stmtList)
+        try
         {
-            stmt.accept(_aliasVistor);
-            stmt.accept(_schemaVistor);
+            _stmtList = SQLUtils.parseStatements(_parsedEql, _dbtype);
+
+            foreach (stmt; _stmtList)
+            {
+                stmt.accept(_aliasVistor);
+                stmt.accept(_schemaVistor);
+            }
+
+            if (_stmtList.size == 0)
+                eql_throw("Statement", " statement error : " ~ _parsedEql);
+
+            init();
+        }
+        catch(Exception e)
+        {
+            throw e;
         }
 
-        if(_stmtList.size == 0)
-            eql_throw("Statement", " statement error : " ~ _parsedEql);
-
-        init();
     }
 
     private void init()
     {
         auto aliasMap = _aliasVistor.getAliasMap();
-        foreach(objName , v ; aliasMap)
+        foreach (objName, v; aliasMap)
         {
             string clsName;
-            auto expr = (cast(SQLExprTableSource)v).getExpr();
-            if(cast(SQLIdentifierExpr)expr !is null)
+            auto expr = (cast(SQLExprTableSource) v).getExpr();
+            if (cast(SQLIdentifierExpr) expr !is null)
             {
-                clsName = (cast(SQLIdentifierExpr)expr).getName();
+                clsName = (cast(SQLIdentifierExpr) expr).getName();
             }
-            else if(cast(SQLPropertyExpr)expr !is null)
+            else if (cast(SQLPropertyExpr) expr !is null)
             {
-                
+
                 // clsName = (cast(SQLPropertyExpr)expr);
-                clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr)expr),null);
+                clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr) expr), null);
             }
-            auto obj = new EqlObject(objName , clsName);
+            auto obj = new EqlObject(objName, clsName);
             _eqlObj[objName] = obj;
         }
 
-        foreach(objName , obj ; _eqlObj)
+        foreach (objName, obj; _eqlObj)
         {
-            if(obj.className() != null)
+            if (obj.className() != null)
             {
-                auto tableName = _clsNameToTbName.get(obj.className(),null);
-                if(tableName is null)
+                auto tableName = _clsNameToTbName.get(obj.className(), null);
+                if (tableName is null)
                 {
-                    eql_throw(obj.className(),"Class is not found");
+                    eql_throw(obj.className(), "Class is not found");
                 }
                 obj.setTableName(tableName);
             }
@@ -144,18 +152,17 @@ class EqlParse
 
         // logDebug("EQL objType : %s".format(_objType));
 
-
-        if(cast(SQLSelectStatement)(_stmtList.get(0)) !is null)
+        if (cast(SQLSelectStatement)(_stmtList.get(0)) !is null)
         {
             // logDebug("EQL do_select_parse");
             doSelectParse();
         }
-        else if(cast(SQLUpdateStatement)(_stmtList.get(0)) !is null)
+        else if (cast(SQLUpdateStatement)(_stmtList.get(0)) !is null)
         {
             // logDebug("EQL do_update_parse");
             doUpdateParse();
         }
-        else if(cast(SQLDeleteStatement)(_stmtList.get(0)) !is null)
+        else if (cast(SQLDeleteStatement)(_stmtList.get(0)) !is null)
         {
             // logDebug("EQL do_delete_parse");
             doDeleteParse();
@@ -164,7 +171,6 @@ class EqlParse
         {
             eql_throw("Statement", " unknown sql statement");
         }
-
 
         // logDebug("init eql : %s".format(_parsedEql));
     }
@@ -175,42 +181,47 @@ class EqlParse
         auto select_copy = queryBlock.clone();
         select_copy.getSelectList().clear();
         /// select item
-        foreach(selectItem; queryBlock.getSelectList()) {
+        foreach (selectItem; queryBlock.getSelectList())
+        {
             auto expr = selectItem.getExpr();
-            if(cast(SQLIdentifierExpr)expr !is null)
+            if (cast(SQLIdentifierExpr) expr !is null)
             {
-                auto eqlObj = _eqlObj.get( (cast(SQLIdentifierExpr)expr).getName(),null);
-                if(eqlObj !is null)
+                auto eqlObj = _eqlObj.get((cast(SQLIdentifierExpr) expr).getName(), null);
+                if (eqlObj !is null)
                 {
                     auto clsName = eqlObj.className();
-                    auto fields = _tableFields.get(clsName,null);
-                    if(fields !is null)
+                    auto fields = _tableFields.get(clsName, null);
+                    if (fields !is null)
                     {
-                        foreach(clsFiled , entFiled ; fields)
+                        foreach (clsFiled, entFiled; fields)
                         {
-                            if(!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
+                            if (!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
                             {
-                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null ? entFiled.getSelectColumn() : entFiled.getFullColumn()),selectItem.getAlias());
+                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null
+                                        ? entFiled.getSelectColumn()
+                                        : entFiled.getFullColumn()), selectItem.getAlias());
                                 // logDebug("sql replace : (%s ,%s) ".format(clsName ~ "." ~ clsFiled,clsName ~ "." ~ entFiled.getSelectColumn()));
                             }
                         }
                     }
                 }
             }
-            else if(cast(SQLPropertyExpr)expr !is null)
+            else if (cast(SQLPropertyExpr) expr !is null)
             {
-                auto eqlObj = _eqlObj.get( (cast(SQLPropertyExpr)expr).getOwnernName(),null);
-                auto clsFieldName = (cast(SQLPropertyExpr)expr).getName();
-                if(eqlObj !is null)
+                auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
+                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                if (eqlObj !is null)
                 {
-                    auto fields = _tableFields.get(eqlObj.className(),null);
-                    if(fields !is null)
+                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    if (fields !is null)
                     {
-                        foreach(clsFiled , entFiled ; fields)
+                        foreach (clsFiled, entFiled; fields)
                         {
-                            if(clsFiled == clsFieldName)
+                            if (clsFiled == clsFieldName)
                             {
-                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null ? entFiled.getSelectColumn() : entFiled.getFullColumn()),selectItem.getAlias());
+                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null
+                                        ? entFiled.getSelectColumn()
+                                        : entFiled.getFullColumn()), selectItem.getAlias());
                                 break;
                             }
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
@@ -231,7 +242,7 @@ class EqlParse
 
         ///where 
         auto whereCond = select_copy.getWhere();
-        if(whereCond !is null)
+        if (whereCond !is null)
         {
             auto where = SQLUtils.toSQLString(whereCond);
             where = convertAttrExpr(where);
@@ -240,38 +251,42 @@ class EqlParse
 
         ///order by
         auto orderBy = select_copy.getOrderBy();
-        if(orderBy !is null)
+        if (orderBy !is null)
         {
-            foreach(item ; orderBy.getItems)
+            foreach (item; orderBy.getItems)
             {
-                auto exprStr = SQLUtils.toSQLString(item.getExpr(),_dbtype);
-                version(HUNT_DEBUG)logDebug("order item : %s".format(exprStr));
-                item.replace(item.getExpr(),SQLUtils.toSQLExpr(convertAttrExpr(exprStr),_dbtype));
+                auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
+                version (HUNT_DEBUG)
+                    logDebug("order item : %s".format(exprStr));
+                item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
-        else{
-            version(HUNT_DEBUG)logDebug("order by item is null");
+        else
+        {
+            version (HUNT_DEBUG)
+                logDebug("order by item is null");
         }
 
         /// group by 
         auto groupBy = select_copy.getGroupBy();
-        if(groupBy !is null)
+        if (groupBy !is null)
         {
             groupBy.getItems().clear();
-            foreach(item ; queryBlock.getGroupBy().getItems())
+            foreach (item; queryBlock.getGroupBy().getItems())
             {
                 // logDebug("group item : %s".format(SQLUtils.toSQLString(item)));
                 groupBy.addItem(SQLUtils.toSQLExpr(convertAttrExpr(SQLUtils.toSQLString(item))));
             }
             auto having = groupBy.getHaving();
-            if(having !is null)
+            if (having !is null)
             {
-                groupBy.setHaving(SQLUtils.toSQLExpr(convertAttrExpr(SQLUtils.toSQLString(having))));
+                groupBy.setHaving(SQLUtils.toSQLExpr(
+                        convertAttrExpr(SQLUtils.toSQLString(having))));
             }
             select_copy.setGroupBy(groupBy);
         }
 
-        _parsedEql = SQLUtils.toSQLString(select_copy,_dbtype);
+        _parsedEql = SQLUtils.toSQLString(select_copy, _dbtype);
 
     }
 
@@ -279,27 +294,54 @@ class EqlParse
     {
         auto updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
         /// update item
-        foreach(updateItem; updateBlock.getItems()) {
+        foreach (updateItem; updateBlock.getItems())
+        {
             // logDebug("clone selcet : ( %s , %s ) ".format(SQLUtils.toSQLString(selectItem.getExpr()),selectItem.computeAlias()));
+            logInfo("update item :", SQLUtils.toSQLString(updateItem.getValue));
             auto expr = updateItem.getColumn();
-            if(cast(SQLIdentifierExpr)expr !is null)
+            if (cast(SQLIdentifierExpr) expr !is null)
             {
-                
+
             }
-            if(cast(SQLPropertyExpr)expr !is null)
+            if (cast(SQLPropertyExpr) expr !is null)
             {
-                auto eqlObj = _eqlObj.get( (cast(SQLPropertyExpr)expr).getOwnernName(),null);
-                auto clsFieldName = (cast(SQLPropertyExpr)expr).getName();
-                if(eqlObj !is null)
+                auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
+                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                if (eqlObj !is null)
                 {
-                    auto fields = _tableFields.get(eqlObj.className(),null);
-                    if(fields !is null)
+                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    if (fields !is null)
                     {
-                        foreach(clsFiled , entFiled ; fields)
+                        foreach (clsFiled, entFiled; fields)
                         {
-                            if(clsFiled == clsFieldName)
+                            if (clsFiled == clsFieldName)
                             {
-                                updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),entFiled.getColumnName()));
+                                updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
+                                        entFiled.getColumnName()));
+                                break;
+                            }
+                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+                        }
+                    }
+                }
+            }
+
+            auto valueExpr = updateItem.getValue();
+            if (cast(SQLPropertyExpr) valueExpr !is null)
+            {
+                auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) valueExpr).getOwnernName(), null);
+                auto clsFieldName = (cast(SQLPropertyExpr) valueExpr).getName();
+                if (eqlObj !is null)
+                {
+                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    if (fields !is null)
+                    {
+                        foreach (clsFiled, entFiled; fields)
+                        {
+                            if (clsFiled == clsFieldName)
+                            {
+                                updateItem.setValue(new SQLPropertyExpr(eqlObj.tableName(),
+                                        entFiled.getColumnName()));
                                 break;
                             }
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
@@ -316,21 +358,20 @@ class EqlParse
 
         ///where 
         auto whereCond = updateBlock.getWhere();
-        if(whereCond !is null)
+        if (whereCond !is null)
         {
             auto where = SQLUtils.toSQLString(whereCond);
             where = convertAttrExpr(where);
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(updateBlock,_dbtype);
+        _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
     }
 
     private void doDeleteParse()
     {
         auto delBlock = cast(SQLDeleteStatement)(_stmtList.get(0));
 
-        
         ///from
         auto fromExpr = delBlock.getTableSource();
         // logDebug("delete From : %s".format(SQLUtils.toSQLString(fromExpr)));
@@ -339,36 +380,37 @@ class EqlParse
 
         ///where 
         auto whereCond = delBlock.getWhere();
-        if(whereCond !is null)
+        if (whereCond !is null)
         {
             auto where = SQLUtils.toSQLString(whereCond);
             where = convertAttrExpr(where);
             delBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(delBlock,_dbtype);
+        _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype);
     }
 
     /// a.id  --- > Class.id , a is instance of Class
     private string convertExprAlias(SQLPropertyExpr expr)
     {
-        string originStr = SQLUtils.toSQLString(expr) ;
+        string originStr = SQLUtils.toSQLString(expr);
         auto objName = expr.getOwnernName();
         auto subPropertyName = expr.getName();
         auto aliasMap = _aliasVistor.getAliasMap();
         string clsName;
-        foreach(obj , v ; aliasMap)
+        foreach (obj, v; aliasMap)
         {
-            if(obj == objName)
+            if (obj == objName)
             {
-                auto exprTab = (cast(SQLExprTableSource)v).getExpr();
-                if(cast(SQLIdentifierExpr)exprTab !is null)
+                auto exprTab = (cast(SQLExprTableSource) v).getExpr();
+                if (cast(SQLIdentifierExpr) exprTab !is null)
                 {
                     expr.setOwner(exprTab);
                 }
-                else if(cast(SQLPropertyExpr)exprTab !is null)
+                else if (cast(SQLPropertyExpr) exprTab !is null)
                 {
-                    expr.setOwner(SQLUtils.toSQLExpr(convertExprAlias(cast(SQLPropertyExpr)exprTab)));
+                    expr.setOwner(SQLUtils.toSQLExpr(
+                            convertExprAlias(cast(SQLPropertyExpr) exprTab)));
                 }
             }
         }
@@ -381,25 +423,31 @@ class EqlParse
     {
         string res = attrExpr;
         auto conds = matchAll(attrExpr, regex("([^\\(\\s]+)\\.([^\\s]+)"));
-        foreach(cond ; conds)
+        bool[string] handerFlag;
+        foreach (cond; conds)
         {
             string newCond = cond.captures[0];
-            auto eqlObj = _eqlObj.get(cond.captures[1],null);
-            if(eqlObj !is null)
+            if (newCond in handerFlag)
+                continue;
+            else
+                handerFlag[newCond] = true;
+            auto eqlObj = _eqlObj.get(cond.captures[1], null);
+            if (eqlObj !is null)
             {
-                newCond = newCond.replace(cond.captures[1]~".",eqlObj.tableName()~".");
-                auto fields = _tableFields.get(eqlObj.className(),null);
-                if(fields !is null)
+                newCond = newCond.replace(cond.captures[1] ~ ".", eqlObj.tableName() ~ ".");
+                auto fields = _tableFields.get(eqlObj.className(), null);
+                if (fields !is null)
                 {
-                    foreach(clsFiled , entFiled ; fields)
+                    foreach (clsFiled, entFiled; fields)
                     {
-                        if(clsFiled == cond.captures[2])
-                            newCond = newCond.replace("."~cond.captures[2],"."~entFiled.getColumnName());
-                       
+                        if (clsFiled == cond.captures[2])
+                            newCond = newCond.replace("." ~ cond.captures[2],
+                                    "." ~ entFiled.getColumnName());
+
                     }
                 }
             }
-            res = res.replace(cond.captures[0],newCond);
+            res = res.replace(cond.captures[0], newCond);
         }
         return res;
     }
@@ -407,18 +455,18 @@ class EqlParse
     /// remove alias & a.xx -- > Table
     private void parseFromTable(SQLTableSource fromExpr)
     {
-        if(fromExpr is null)
+        if (fromExpr is null)
         {
-            eql_throw("Table","no found table");
+            eql_throw("Table", "no found table");
         }
         // logDebug(" From table : %s".format(SQLUtils.toSQLString(fromExpr)));
-        if(cast(SQLJoinTableSource)fromExpr !is null)
+        if (cast(SQLJoinTableSource) fromExpr !is null)
         {
-            auto joinExpr = cast(SQLJoinTableSource)fromExpr;
+            auto joinExpr = cast(SQLJoinTableSource) fromExpr;
             auto rightExpr = cast(SQLExprTableSource)(joinExpr.getRight());
-            
+
             auto defaultJoinCond = joinExpr.getCondition();
-            if(defaultJoinCond is null)
+            if (defaultJoinCond is null)
             {
                 // logDebug("join table no default condition");
             }
@@ -429,39 +477,39 @@ class EqlParse
                 joinExpr.setCondition(SQLUtils.toSQLExpr(convertAttrStr));
             }
 
-            if(cast(SQLJoinTableSource)(joinExpr.getLeft()) !is null)
+            if (cast(SQLJoinTableSource)(joinExpr.getLeft()) !is null)
             {
                 auto subExpr = cast(SQLJoinTableSource)(joinExpr.getLeft());
                 parseFromTable(subExpr);
             }
-            else if(cast(SQLExprTableSource)(joinExpr.getLeft()) !is null)
+            else if (cast(SQLExprTableSource)(joinExpr.getLeft()) !is null)
             {
                 auto leftExpr = cast(SQLExprTableSource)(joinExpr.getLeft());
 
-                if(cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
+                if (cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
                 {
                     auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(leftExpr.getExpr()));
-                    auto clsName = _objType.get(convertStr,null);
-                    if(clsName !is null)
+                    auto clsName = _objType.get(convertStr, null);
+                    if (clsName !is null)
                     {
-                        auto tableName = _clsNameToTbName.get(clsName,null);
-                        if(tableName !is null)
+                        auto tableName = _clsNameToTbName.get(clsName, null);
+                        if (tableName !is null)
                         {
                             leftExpr.setExpr(tableName);
                         }
                     }
-                    auto joinCond = _joinConds.get(convertStr,null);
-                        // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
-                    if(joinCond !is null)
+                    auto joinCond = _joinConds.get(convertStr, null);
+                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+                    if (joinCond !is null)
                     {
                         joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond.toString()));
                     }
                 }
-                else if(cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
+                else if (cast(SQLIdentifierExpr)(leftExpr.getExpr()) !is null)
                 {
                     auto clsName = (cast(SQLIdentifierExpr)(leftExpr.getExpr())).getName();
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
+                    auto tableName = _clsNameToTbName.get(clsName, null);
+                    if (tableName !is null)
                     {
                         leftExpr.setExpr(tableName);
                     }
@@ -469,34 +517,33 @@ class EqlParse
                 leftExpr.setAlias("");
             }
 
-            
-            if(rightExpr is null)
+            if (rightExpr is null)
                 return;
-            if(cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
+            if (cast(SQLPropertyExpr)(rightExpr.getExpr()) !is null)
             {
                 auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(rightExpr.getExpr()));
-                auto clsName = _objType.get(convertStr,null);
-                if(clsName !is null)
+                auto clsName = _objType.get(convertStr, null);
+                if (clsName !is null)
                 {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
+                    auto tableName = _clsNameToTbName.get(clsName, null);
+                    if (tableName !is null)
                     {
                         rightExpr.setExpr(tableName);
                     }
                 }
-                auto joinCond = _joinConds.get(convertStr,null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+                auto joinCond = _joinConds.get(convertStr, null);
+                // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
 
-                if(joinCond !is null)
+                if (joinCond !is null)
                 {
                     joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond.toString()));
                 }
             }
-            else if(cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
+            else if (cast(SQLIdentifierExpr)(rightExpr.getExpr()) !is null)
             {
                 auto clsName = (cast(SQLIdentifierExpr)(rightExpr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
+                auto tableName = _clsNameToTbName.get(clsName, null);
+                if (tableName !is null)
                 {
                     rightExpr.setExpr(tableName);
                 }
@@ -507,27 +554,27 @@ class EqlParse
         else
         {
             auto expr = cast(SQLExprTableSource)(fromExpr);
-            if(expr is null)
+            if (expr is null)
                 return;
-            if(cast(SQLPropertyExpr)(expr.getExpr()) !is null)
+            if (cast(SQLPropertyExpr)(expr.getExpr()) !is null)
             {
                 auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(expr.getExpr()));
-                auto clsName = _objType.get(convertStr,null);
-                if(clsName !is null)
+                auto clsName = _objType.get(convertStr, null);
+                if (clsName !is null)
                 {
-                    auto tableName = _clsNameToTbName.get(clsName,null);
-                    if(tableName !is null)
+                    auto tableName = _clsNameToTbName.get(clsName, null);
+                    if (tableName !is null)
                     {
                         expr.setExpr(tableName);
                     }
                 }
-                
+
             }
-            else if(cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
+            else if (cast(SQLIdentifierExpr)(expr.getExpr()) !is null)
             {
                 auto clsName = (cast(SQLIdentifierExpr)(expr.getExpr())).getName();
-                auto tableName = _clsNameToTbName.get(clsName,null);
-                if(tableName !is null)
+                auto tableName = _clsNameToTbName.get(clsName, null);
+                if (tableName !is null)
                 {
                     expr.setExpr(tableName);
                 }
@@ -536,47 +583,47 @@ class EqlParse
         }
     }
 
-    public void setParameter(R)(int idx , R param)
+    public void setParameter(R)(int idx, R param)
     {
         static if (is(R == int) || is(R == uint))
         {
             _params[idx] = new Integer(param);
         }
-        else static if(is( R == string ) || is ( R == char ) || is( R == byte[] ))
+        else static if (is(R == string) || is(R == char) || is(R == byte[]))
         {
             _params[idx] = new String(param);
         }
-        else static if(is( R == bool))
+        else static if (is(R == bool))
         {
             _params[idx] = new Boolean(param);
         }
-        else static if(is( R == double))
+        else static if (is(R == double))
         {
             _params[idx] = new Double(param);
         }
-        else static if(is( R == float))
+        else static if (is(R == float))
         {
             _params[idx] = new Float(param);
         }
-        else static if(is( R == short) || is( R == ushort))
+        else static if (is(R == short) || is(R == ushort))
         {
             _params[idx] = new Short(param);
         }
-        else static if(is( R == long) || is( R == ulong))
+        else static if (is(R == long) || is(R == ulong))
         {
             _params[idx] = new Long(param);
         }
-        else static if(is(R == byte) || is(R == ubyte))
+        else static if (is(R == byte) || is(R == ubyte))
         {
             _params[idx] = new Byte(param);
         }
-        else static if(is(R == class))
+        else static if (is(R == class))
         {
             _params[key] = param;
         }
         else
         {
-            eql_throw("setParameter","IllegalArgument not support : " ~ R.stringof);
+            eql_throw("setParameter", "IllegalArgument not support : " ~ R.stringof);
         }
     }
 
@@ -614,13 +661,13 @@ class EqlParse
         {
             _parameters[key] = new Byte(param);
         }
-        else static if(is(R == class))
+        else static if (is(R == class))
         {
             _parameters[key] = param;
         }
         else
         {
-            eql_throw("setParameter","IllegalArgument not support : " ~ R.stringof);
+            eql_throw("setParameter", "IllegalArgument not support : " ~ R.stringof);
         }
     }
 
@@ -636,47 +683,48 @@ class EqlParse
 
     public void putJoinCond(Object[string] conds)
     {
-        foreach(k , v; conds) {
+        foreach (k, v; conds)
+        {
             _joinConds[k] = v;
         }
     }
 
     public string getTableName(string clsName)
     {
-        return _clsNameToTbName.get(clsName,null);
+        return _clsNameToTbName.get(clsName, null);
     }
 
     public string getNativeSql()
     {
         string sql = _parsedEql;
 
-        version(HUNT_DEBUG) logDebug("EQL params : ",_parameters);
+        version (HUNT_DEBUG)
+            logDebug("EQL params : ", _parameters);
 
         foreach (k, v; _parameters)
         {
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
-            if (cast(String) v !is null || (cast(Nullable!string)v !is null))
+            if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                sql = sql.replaceAll(re,quoteSqlString(v.toString())  ~ "$1");
+                sql = sql.replaceAll(re, quoteSqlString(v.toString()) ~ "$1");
             }
             else
             {
-                sql = sql.replaceAll(re, v.toString() ~ "$1" );
+                sql = sql.replaceAll(re, v.toString() ~ "$1");
             }
         }
 
-        if(_params.length > 0)
+        if (_params.length > 0)
         {
             auto keys = _params.keys;
             sort!("a < b")(keys);
             List!Object params = new ArrayList!Object();
-            foreach(e;keys)
+            foreach (e; keys)
             {
                 params.add(_params[e]);
             }
-            sql = SQLUtils.format(sql, _dbtype,params);
+            sql = SQLUtils.format(sql, _dbtype, params);
         }
-       
 
         // logDebug("native sql : %s".format(sql));
         return sql;
