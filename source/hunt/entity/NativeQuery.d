@@ -8,7 +8,7 @@
  * Licensed under the Apache-2.0 License.
  *
  */
- 
+
 module hunt.entity.NativeQuery;
 
 import hunt.entity;
@@ -29,7 +29,8 @@ import hunt.trace.Constrants;
 import hunt.trace.Plugin;
 import hunt.trace.Span;
 
-class NativeQuery {
+class NativeQuery
+{
 
     private string _nativeSql;
     private EntityManager _manager;
@@ -37,44 +38,64 @@ class NativeQuery {
     private int _lastInsertId = -1;
     private int _affectRows = 0;
 
-    private Span _span;
-    private string[string] _tags;
+    version (WITH_TRACE)
+    {
+        private Span _span;
+        private string[string] _tags;
+    }
 
-    this(EntityManager manager,string sql) {
+    this(EntityManager manager, string sql)
+    {
         _manager = manager;
         _nativeSql = sql;
     }
 
-    private void beginTrace(string name) {
-        _tags.clear();
-        _span = traceSpanBefore(name);
-    }
+    version (WITH_TRACE)
+    {
+        private void beginTrace(string name)
+        {
+            _tags.clear();
+            _span = traceSpanBefore(name);
+        }
 
-    private void endTrace(string error = null) {
-        if(_span !is null) {
-            traceSpanAfter(_span , _tags , error);
+        private void endTrace(string error = null)
+        {
+            if (_span !is null)
+            {
+                traceSpanAfter(_span, _tags, error);
+            }
         }
     }
 
-    public ResultSet getResultList() {
+    public ResultSet getResultList()
+    {
         auto sql = paramedSql();
-        beginTrace("NativeQuery getResultList");
-        scope(exit){
-            _tags["sql"] = sql;
-            endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("NativeQuery getResultList");
+            scope (exit)
+            {
+                _tags["sql"] = sql;
+                endTrace();
+            }
         }
         auto stmt = _manager.getSession().prepare(sql);
-		return stmt.query();
+        return stmt.query();
     }
 
-    public int executeUpdate() {
+    public int executeUpdate()
+    {
         auto sql = paramedSql();
-        beginTrace("NativeQuery executeUpdate");
-        scope(exit){
-            _tags["sql"] = sql;
-            endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("NativeQuery executeUpdate");
+            scope (exit)
+            {
+                _tags["sql"] = sql;
+                endTrace();
+            }
         }
-        auto stmt = _manager.getSession().prepare(sql); 
+        auto stmt = _manager.getSession().prepare(sql);
         //TODO update 时 返回的row line count 为 0
         _lastInsertId = stmt.lastInsertId();
         _affectRows = stmt.affectedRows();
@@ -83,12 +104,12 @@ class NativeQuery {
 
     public int lastInsertId()
     {
-        return _lastInsertId;    
+        return _lastInsertId;
     }
-    
-	public int affectedRows()
+
+    public int affectedRows()
     {
-        return _affectRows;    
+        return _affectRows;
     }
 
     public void setParameter(R)(string key, R param)
@@ -125,7 +146,7 @@ class NativeQuery {
         {
             _parameters[key] = new Byte(param);
         }
-        else static if(is(R == class))
+        else static if (is(R == class))
         {
             _parameters[key] = param;
         }
@@ -141,13 +162,13 @@ class NativeQuery {
         foreach (k, v; _parameters)
         {
             auto re = regex(r":" ~ k ~ r"([^\w])", "g");
-            if ((cast(String) v !is null) || (cast(Nullable!string)v !is null))
+            if ((cast(String) v !is null) || (cast(Nullable!string) v !is null))
             {
-                str = str.replaceAll(re, quoteSqlString(v.toString())  ~ "$1");
+                str = str.replaceAll(re, quoteSqlString(v.toString()) ~ "$1");
             }
             else
             {
-                str = str.replaceAll(re, v.toString() ~ "$1" );
+                str = str.replaceAll(re, v.toString() ~ "$1");
             }
         }
         return str;

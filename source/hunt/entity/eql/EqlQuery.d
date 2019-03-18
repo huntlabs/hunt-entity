@@ -27,7 +27,6 @@ import hunt.trace.Plugin;
 import hunt.trace.Span;
 import std.traits;
 
-
 class EqlQuery(T...)
 {
     alias executeUpdate = exec;
@@ -46,9 +45,11 @@ class EqlQuery(T...)
     private int _lastInsertId = -1;
     private int _affectRows = 0;
 
-
-    private Span _span;
-    private string[string] _tags;
+    version (WITH_TRACE)
+    {
+        private Span _span;
+        private string[string] _tags;
+    }
 
     this(string eql, EntityManager em)
     {
@@ -68,22 +69,32 @@ class EqlQuery(T...)
         parseEql();
     }
 
-    private void beginTrace(string name) {
-        _tags.clear();
-        _span = traceSpanBefore(name);
-    }
+    version (WITH_TRACE)
+    {
+        private void beginTrace(string name)
+        {
+            _tags.clear();
+            _span = traceSpanBefore(name);
+        }
 
-    private void endTrace(string error = null) {
-        if(_span !is null) {
-            _tags["eql"] = _eql;
-            traceSpanAfter(_span , _tags , error);
+        private void endTrace(string error = null)
+        {
+            if (_span !is null)
+            {
+                _tags["eql"] = _eql;
+                traceSpanAfter(_span, _tags, error);
+            }
         }
     }
 
     private void parseEql()
     {
-        beginTrace("EQL PARSE");
-        scope(exit) endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("EQL PARSE");
+            scope (exit)
+                endTrace();
+        }
         auto opt = _manager.getDatabase().getOption();
         if (opt.isMysql())
         {
@@ -191,7 +202,7 @@ class EqlQuery(T...)
 
     public EqlQuery setMaxResults(long maxResult)
     {
-        if(_pageable)
+        if (_pageable)
         {
             throw new Exception("This method is not supported!");
         }
@@ -201,7 +212,7 @@ class EqlQuery(T...)
 
     public EqlQuery setFirstResult(long startPosition)
     {
-        if(_pageable)
+        if (_pageable)
         {
             throw new Exception("This method is not supported!");
         }
@@ -214,14 +225,14 @@ class EqlQuery(T...)
         auto sql = strip(_eqlParser.getNativeSql());
         if (endsWith(sql, ";"))
             sql = sql[0 .. $ - 1];
-        if(_pageable)
+        if (_pageable)
         {
             sql ~= " limit " ~ to!string(_pageable.getPageSize());
             auto offset = _pageable.getOffset();
-            if ( offset > 0)
+            if (offset > 0)
                 sql ~= " offset " ~ to!string(offset);
         }
-        else if(_limit != -1)
+        else if (_limit != -1)
         {
             sql ~= " limit " ~ to!string(_limit);
             if (_offset != -1)
@@ -233,10 +244,14 @@ class EqlQuery(T...)
     public int exec()
     {
         auto sql = getExecSql();
-        beginTrace("EqlQuery exec");
-        scope(exit) {
-            _tags["sql"] = sql;
-            endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("EqlQuery exec");
+            scope (exit)
+            {
+                _tags["sql"] = sql;
+                endTrace();
+            }
         }
         auto stmt = _manager.getSession().prepare(sql);
         _lastInsertId = stmt.lastInsertId();
@@ -247,16 +262,16 @@ class EqlQuery(T...)
 
     public int lastInsertId()
     {
-        return _lastInsertId;    
+        return _lastInsertId;
     }
-    
-	public int affectedRows()
+
+    public int affectedRows()
     {
-        return _affectRows;    
+        return _affectRows;
     }
 
     public ResultObj getSingleResult()
-    {        
+    {
         Object[] ret = _getResultList();
         if (ret.length == 0)
             return null;
@@ -282,18 +297,22 @@ class EqlQuery(T...)
             throw new Exception("please use 'createPageQuery'");
         }
 
-        auto res = getResultList();    
+        auto res = getResultList();
         return new Page!ResultObj(res, _pageable, count(_countEql));
-    }   
+    }
 
     private Object[] _getResultList()
     {
         auto sql = getExecSql();
-        beginTrace("EqlQuery _getResultList");
-        scope(exit) {
+        version (WITH_TRACE)
+        {
+            beginTrace("EqlQuery _getResultList");
+            scope (exit)
+            {
                 _tags["sql"] = sql;
                 endTrace();
             }
+        }
 
         Object[] ret;
         long count = -1;
@@ -336,10 +355,14 @@ class EqlQuery(T...)
     public ResultSet getNativeResult()
     {
         auto sql = getExecSql();
-        beginTrace("EqlQuery getNativeResult");
-        scope(exit) {
-            _tags["sql"] = sql;
-            endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("EqlQuery getNativeResult");
+            scope (exit)
+            {
+                _tags["sql"] = sql;
+                endTrace();
+            }
         }
 
         auto stmt = _manager.getSession().prepare(sql);
@@ -348,10 +371,14 @@ class EqlQuery(T...)
 
     private long count(string sql)
     {
-        beginTrace("EqlQuery count");
-        scope(exit) {
-            _tags["sql"] = sql;
-            endTrace();
+        version (WITH_TRACE)
+        {
+            beginTrace("EqlQuery count");
+            scope (exit)
+            {
+                _tags["sql"] = sql;
+                endTrace();
+            }
         }
         long total = 0;
         auto stmt = _manager.getSession().prepare(sql);
