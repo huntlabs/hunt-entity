@@ -29,6 +29,11 @@ class EntitySession
         _trans = manager.getDatabase().getTransaction(_conn);
     }
 
+    ~this()
+    {
+        close();
+    }
+
     public void beginTransaction()
     {
         checkConnection();
