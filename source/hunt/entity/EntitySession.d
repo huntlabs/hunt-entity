@@ -47,10 +47,17 @@ class EntitySession
 
     public TransStatement prepare(string sql)
     {
+        if(_conn is null)
+           _conn = _manager.getDatabase().getConnection();  
         return new TransStatement(_conn, sql);
     }
 
-    public Connection getConnection() {return _conn;}
+    public Connection getConnection() 
+    {
+        if(_conn is null)
+           _conn = _manager.getDatabase().getConnection(); 
+        return _conn;
+    }
 
     public Transaction getTransaction() {return _trans;}
 
@@ -64,7 +71,7 @@ class EntitySession
     private void checkConnection()
     {
         if (_conn is null)
-            throw new EntityException("the entity connection is poor");
+            throw new EntityException("the entity connection haved release");
     }
 
 
