@@ -144,6 +144,9 @@ class EntityManager {
     public string getPrefix() {return _option.database.prefix;}
 
     public void close() {
-        _EntitySession.close();
+        if(_EntitySession)
+        {
+            _EntitySession.destroy();
+        }
     }
 }

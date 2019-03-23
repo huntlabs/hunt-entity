@@ -68,8 +68,10 @@ class EntitySession
 
     public void close()
     {
-        if (_conn)
+        if (_conn && _manager && _manager.getDatabase())
+        {
             _manager.getDatabase().closeConnection(_conn);
+        }
         _conn = null;
     }
 
