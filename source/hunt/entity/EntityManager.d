@@ -37,6 +37,10 @@ class EntityManager {
         _EntitySession = new EntitySession(this);
     }
 
+    ~this()
+    {
+        close();
+    }
 
     public T persist(T)(ref T entity) {
         QueryBuilder builder = _factory.createQueryBuilder();
