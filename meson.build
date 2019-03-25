@@ -6,8 +6,9 @@ project('hunt-entity', 'd',
 )
 
 project_soversion = '0'
-hdb_required_version = '>= 1.0.1'
-hunt_sql_required_version = '>= 1.0.1'
+hunt_database_required_version = '>= 1.2.0-beta.3'
+hunt_validation_required_version = '>= 0.1.0'
+hunt_trace_required_version = '>= 0.2.0'
 
 
 src_dir = include_directories('source/')
