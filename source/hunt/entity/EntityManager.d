@@ -39,7 +39,8 @@ class EntityManager {
 
     ~this()
     {
-        close();
+        if(_EntitySession)
+            close();
     }
 
     public T persist(T)(ref T entity) {
@@ -146,7 +147,8 @@ class EntityManager {
     public void close() {
         if(_EntitySession)
         {
-            _EntitySession.destroy();
+            _EntitySession.close();
+            _EntitySession = null;
         }
     }
 }

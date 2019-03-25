@@ -31,7 +31,8 @@ class EntitySession
 
     ~this()
     {
-        close();
+        if(_conn)
+            close();
     }
 
     public void beginTransaction()
