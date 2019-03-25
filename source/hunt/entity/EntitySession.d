@@ -29,11 +29,11 @@ class EntitySession
         _trans = manager.getDatabase().getTransaction(_conn);
     }
 
-    ~this()
-    {
-        if(_conn)
-            close();
-    }
+    // ~this()
+    // {
+    //     if(_conn)
+    //         close();
+    // }
 
     public void beginTransaction()
     {
