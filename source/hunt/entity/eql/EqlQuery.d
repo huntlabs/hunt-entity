@@ -182,6 +182,9 @@ class EqlQuery(T...)
         }
     }
 
+    /**
+    idx: It starts from 1. 
+    */
     public EqlQuery setParameter(R = string)(int idx, R param)
     {
         if (_eqlParser !is null)

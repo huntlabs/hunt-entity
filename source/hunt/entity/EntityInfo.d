@@ -11,6 +11,8 @@
  
 module hunt.entity.EntityInfo;
 
+import hunt.entity.eql.Common;
+
 import hunt.entity;
 import hunt.entity.DefaultEntityManagerFactory;
 
@@ -134,31 +136,6 @@ string makeSetPrimaryValue(T)() {
     public void setPrimaryValue(string value) {
         _data.`~name~` = value.to!`~R~`;
     }`;
-}
-
-
-
-string makeImport(T)() {
-    string str;
-    foreach(memberName; __traits(derivedMembers, T)) {
-        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
-            alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!isFunction!(memType)) {
-                static if (isArray!memType && !isSomeString!memType) {
-    str ~= `
-    import `~moduleName!(ForeachType!memType)~`;`;
-                }
-                else static if (!isBuiltinType!memType){
-    str ~= `
-    import `~moduleName!memType~`;`;          
-                }
-                
-            }
-        }
-    }
-    return str;
-    // return `
-    // import `~moduleName!T~`;`;
 }
 
 
