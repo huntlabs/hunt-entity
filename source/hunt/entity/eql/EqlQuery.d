@@ -18,13 +18,14 @@ import hunt.collection;
 import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
-import std.exception;
-import std.algorithm.searching;
 import hunt.entity.eql.EqlCache;
 
 import hunt.trace.Constrants;
 import hunt.trace.Plugin;
 import hunt.trace.Span;
+
+import std.exception;
+import std.algorithm.searching;
 import std.traits;
 
 class EqlQuery(T...)
@@ -112,6 +113,9 @@ class EqlQuery(T...)
         {
             throw new Exception("not support dbtype : %s".format(opt.url().scheme));
         }
+        version(HUNT_DEBUG) {
+            info(_eql);
+        }
 
         auto parsedEql = eqlCache.get(_eql);
         if (parsedEql is null)
@@ -126,7 +130,7 @@ class EqlQuery(T...)
         }
         else
         {
-            logInfo("EQL Cache Hit : ", _eql);
+            logInfo("EQL Cache Hit");
             _eqlParser.setParsedEql(parsedEql);
         }
 

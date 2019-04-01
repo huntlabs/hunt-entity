@@ -589,9 +589,16 @@ class EqlParse
         {
             _params[idx] = new Integer(param);
         }
-        else static if (is(R == string) || is(R == char) || is(R == byte[]))
+        else static if (is(R == char))
+        {
+            _params[idx] = new String(cast(string)[param]);
+        }
+        else static if (is(R == string))
         {
             _params[idx] = new String(param);
+        }
+        else static if(is(R == byte[]) || is(R == ubyte[])) {
+            _params[idx] = new Bytes(cast(byte[])param);
         }
         else static if (is(R == bool))
         {

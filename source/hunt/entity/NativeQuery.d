@@ -12,6 +12,9 @@
 module hunt.entity.NativeQuery;
 
 import hunt.entity;
+import hunt.collection.ArrayList;
+import hunt.collection.List;
+import hunt.logging.ConsoleLogger;
 import hunt.Number;
 import hunt.String;
 import hunt.Integer;
@@ -24,16 +27,21 @@ import hunt.Boolean;
 import hunt.Nullable;
 import std.regex;
 import hunt.entity.EntityException;
+import hunt.sql.util.DBType;
+import hunt.sql.SQLUtils;
 
 import hunt.trace.Constrants;
 import hunt.trace.Plugin;
 import hunt.trace.Span;
+
+import std.algorithm;
 
 class NativeQuery
 {
 
     private string _nativeSql;
     private EntityManager _manager;
+    private Object[int] _params;
     private Object[string] _parameters;
     private int _lastInsertId = -1;
     private int _affectRows = 0;
@@ -112,6 +120,58 @@ class NativeQuery
         return _affectRows;
     }
 
+
+    public void setParameter(R)(int idx, R param)
+    {
+        static if (is(R == int) || is(R == uint))
+        {
+            _params[idx] = new Integer(param);
+        }
+        else static if (is(R == char))
+        {
+            _params[idx] = new String(cast(string)[param]);
+        }
+        else static if (is(R == string))
+        {
+            _params[idx] = new String(param);
+        }
+        else static if(is(R == byte[]) || is(R == ubyte[])) {
+            _params[idx] = new Bytes(cast(byte[])param);
+        }
+        else static if (is(R == bool))
+        {
+            _params[idx] = new Boolean(param);
+        }
+        else static if (is(R == double))
+        {
+            _params[idx] = new Double(param);
+        }
+        else static if (is(R == float))
+        {
+            _params[idx] = new Float(param);
+        }
+        else static if (is(R == short) || is(R == ushort))
+        {
+            _params[idx] = new Short(param);
+        }
+        else static if (is(R == long) || is(R == ulong))
+        {
+            _params[idx] = new Long(param);
+        }
+        else static if (is(R == byte) || is(R == ubyte))
+        {
+            _params[idx] = new Byte(param);
+        }
+        else static if (is(R == class))
+        {
+            _params[key] = param;
+        }
+        else
+        {
+            throw new EntityException("IllegalArgument not support : " ~ R.stringof);
+        }
+    }
+
     public void setParameter(R)(string key, R param)
     {
         static if (is(R == int) || is(R == uint))
@@ -158,6 +218,8 @@ class NativeQuery
 
     private string paramedSql()
     {
+        version(HUNT_DEBUG) info(_nativeSql);
+
         string str = _nativeSql;
         foreach (k, v; _parameters)
         {
@@ -171,6 +233,41 @@ class NativeQuery
                 str = str.replaceAll(re, v.toString() ~ "$1");
             }
         }
+
+
+        if (_params.length > 0)
+        {
+            auto keys = _params.keys;
+            sort!("a < b")(keys);
+            List!Object params = new ArrayList!Object();
+            foreach (e; keys)
+            {
+                params.add(_params[e]);
+            }
+
+            auto opt = _manager.getDatabase().getOption();
+            string dbtype;
+            if (opt.isMysql())
+            {
+                dbtype = DBType.MYSQL.name;
+            }
+            else if (opt.isPgsql())
+            {
+                dbtype = DBType.POSTGRESQL.name;
+            }
+            else if (opt.isSqlite())
+            {
+                dbtype = DBType.SQLITE.name;
+
+            }
+            else
+            {
+                throw new Exception("not support dbtype : %s".format(opt.url().scheme));
+            }
+                str = SQLUtils.format(str, DBType.MYSQL.name, params);
+            }
+
+        version(HUNT_DEBUG) info(str);
         return str;
     }
 
