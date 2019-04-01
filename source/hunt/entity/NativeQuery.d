@@ -25,14 +25,18 @@ import hunt.Short;
 import hunt.Byte;
 import hunt.Boolean;
 import hunt.Nullable;
-import std.regex;
 import hunt.entity.EntityException;
 import hunt.sql.util.DBType;
 import hunt.sql.SQLUtils;
 
-import hunt.trace.Constrants;
-import hunt.trace.Plugin;
-import hunt.trace.Span;
+import std.regex;
+
+version(WITH_HUNT_TRACE)
+{
+    import hunt.trace.Constrants;
+    import hunt.trace.Plugin;
+    import hunt.trace.Span;
+}
 
 import std.algorithm;
 
@@ -46,7 +50,7 @@ class NativeQuery
     private int _lastInsertId = -1;
     private int _affectRows = 0;
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private Span _span;
         private string[string] _tags;
@@ -58,7 +62,7 @@ class NativeQuery
         _nativeSql = sql;
     }
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private void beginTrace(string name)
         {
@@ -78,7 +82,7 @@ class NativeQuery
     public ResultSet getResultList()
     {
         auto sql = paramedSql();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("NativeQuery getResultList");
             scope (exit)
@@ -94,7 +98,7 @@ class NativeQuery
     public int executeUpdate()
     {
         auto sql = paramedSql();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("NativeQuery executeUpdate");
             scope (exit)

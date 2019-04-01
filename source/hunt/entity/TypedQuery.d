@@ -13,9 +13,12 @@ module hunt.entity.TypedQuery;
 
 import hunt.entity;
 
-import hunt.trace.Constrants;
-import hunt.trace.Plugin;
-import hunt.trace.Span;
+version(WITH_HUNT_TRACE)
+{
+    import hunt.trace.Constrants;
+    import hunt.trace.Plugin;
+    import hunt.trace.Span;
+}
 
 class TypedQuery(T : Object, F : Object = T)
 {
@@ -24,7 +27,7 @@ class TypedQuery(T : Object, F : Object = T)
     private CriteriaQuery!(T, F) _query;
     private EntityManager _manager;
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private Span _span;
         private string[string] _tags;
@@ -36,7 +39,7 @@ class TypedQuery(T : Object, F : Object = T)
         _manager = manager;
     }
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private void beginTrace(string name)
         {
@@ -86,7 +89,7 @@ class TypedQuery(T : Object, F : Object = T)
     private Object[] _getResultList()
     {
         auto sql = _query.toString();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("TypeQuery _getResultList");
             scope (exit)

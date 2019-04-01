@@ -88,6 +88,7 @@ class EqlParse
     {
         try
         {
+            version(HUNT_DEBUG)logInfo("-----> :",_parsedEql);
             _stmtList = SQLUtils.parseStatements(_parsedEql, _dbtype);
 
             foreach (stmt; _stmtList)
@@ -167,9 +168,14 @@ class EqlParse
             // logDebug("EQL do_delete_parse");
             doDeleteParse();
         }
+        else if (cast(SQLInsertStatement)(_stmtList.get(0)) !is null)
+        {
+            version (HUNT_DEBUG)logDebug("EQL do_insert_parse");
+            doInsertParse();
+        }
         else
         {
-            eql_throw("Statement", " unknown sql statement");
+            eql_throw("Statement", " unknown sql statement : " ~ typeid(cast(Object)(_stmtList.get(0))).toString);
         }
 
         // logDebug("init eql : %s".format(_parsedEql));
@@ -292,12 +298,12 @@ class EqlParse
 
     private void doUpdateParse()
     {
-        auto updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
+        SQLUpdateStatement updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
         /// update item
         foreach (updateItem; updateBlock.getItems())
         {
             // logDebug("clone selcet : ( %s , %s ) ".format(SQLUtils.toSQLString(selectItem.getExpr()),selectItem.computeAlias()));
-            logInfo("update item :", SQLUtils.toSQLString(updateItem.getValue));
+            version(HUNT_DEBUG)logInfo("update item :", SQLUtils.toSQLString(updateItem.getValue));
             auto expr = updateItem.getColumn();
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -388,6 +394,77 @@ class EqlParse
         }
 
         _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype);
+    }
+
+    private void doInsertParse()
+    {
+        SQLInsertStatement insertBlock = cast(SQLInsertStatement)(_stmtList.get(0));
+
+        List!SQLExpr newColumns = new ArrayList!SQLExpr();
+
+        /// insert item
+        foreach (expr; insertBlock.getColumns())
+        {
+            version(HUNT_DEBUG)logInfo("insert item :", SQLUtils.toSQLString(expr));
+            if (cast(SQLIdentifierExpr) expr !is null)
+            {
+                newColumns.add(expr);
+            }
+            if (cast(SQLPropertyExpr) expr !is null)
+            {
+                SQLPropertyExpr pExpr = cast(SQLPropertyExpr) expr;
+                auto eqlObj = _eqlObj.get(pExpr.getOwnernName(), null);
+                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                if (eqlObj !is null)
+                {
+                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    if (fields !is null)
+                    {
+                        foreach (clsFiled, entFiled; fields)
+                        {
+                            if (clsFiled == clsFieldName)
+                            {
+                                newColumns.add(new SQLIdentifierExpr(entFiled.getColumnName()));
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            insertBlock.getColumns().clear();
+            insertBlock.getColumns().addAll(newColumns);
+
+            // auto valueExpr = updateItem.getValue();
+            // if (cast(SQLPropertyExpr) valueExpr !is null)
+            // {
+            //     auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) valueExpr).getOwnernName(), null);
+            //     auto clsFieldName = (cast(SQLPropertyExpr) valueExpr).getName();
+            //     if (eqlObj !is null)
+            //     {
+            //         auto fields = _tableFields.get(eqlObj.className(), null);
+            //         if (fields !is null)
+            //         {
+            //             foreach (clsFiled, entFiled; fields)
+            //             {
+            //                 if (clsFiled == clsFieldName)
+            //                 {
+            //                     updateItem.setValue(new SQLPropertyExpr(eqlObj.tableName(),
+            //                             entFiled.getColumnName()));
+            //                     break;
+            //                 }
+            //                 // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+            //             }
+            //         }
+            //     }
+            // }
+        }
+
+        ///from
+        auto fromExpr = insertBlock.getTableSource();
+        version(HUNT_DEBUG)logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
+        parseFromTable(fromExpr);
+
+        _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
     }
 
     /// a.id  --- > Class.id , a is instance of Class
@@ -713,7 +790,11 @@ class EqlParse
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
             if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                sql = sql.replaceAll(re, quoteSqlString(v.toString()) ~ "$1");
+                logInfo("-----: ",v.toString);
+                if(_dbtype == DBType.POSTGRESQL.name)
+                    sql = sql.replaceAll(re, quoteSqlString(v.toString(),"'") ~ "$1");
+                else
+                    sql = sql.replaceAll(re, quoteSqlString(v.toString()) ~ "$1");
             }
             else
             {

@@ -100,6 +100,25 @@ void test_delete(EntityManager em)
 	logDebug(" del result : ",del.exec());
 }
 
+void test_insert(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// insert statement
+	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (:name,:age)"); 
+	insert.setParameter("name","momomo");
+	insert.setParameter("age",666);
+	logDebug(" insert result : ",insert.exec());
+}
+
+void test_insert2(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// insert statement
+	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (?,?)"); 
+	insert.setParameter(1,"Jons");
+	insert.setParameter(2,2355);
+	logDebug(" insert result : ",insert.exec());
+}
 
 void main()
 {
@@ -112,16 +131,17 @@ void main()
     option.database.database = "eql_test";
     option.database.username = "root";
     option.database.password = "123456";
-	// option.database.prefix = "hc_";
-
     
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql", option);
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("db", option);
     EntityManager em = entityManagerFactory.createEntityManager();
 
-	test_select(em);
+	// test_select(em);
 
-	test_update(em);
+	// test_update(em);
 
-	test_delete(em);
+	// test_delete(em);
+
+	test_insert(em);
+	test_insert2(em);
 	
 }

@@ -20,12 +20,13 @@ import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
 import hunt.entity.eql.EqlCache;
 
-import hunt.trace.Constrants;
-import hunt.trace.Plugin;
-import hunt.trace.Span;
+version(WITH_HUNT_TRACE)
+{
+    import hunt.trace.Constrants;
+    import hunt.trace.Plugin;
+    import hunt.trace.Span;
+}
 
-import std.exception;
-import std.algorithm.searching;
 import std.traits;
 
 class EqlQuery(T...)
@@ -46,7 +47,7 @@ class EqlQuery(T...)
     private int _lastInsertId = -1;
     private int _affectRows = 0;
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private Span _span;
         private string[string] _tags;
@@ -70,7 +71,7 @@ class EqlQuery(T...)
         parseEql();
     }
 
-    version (WITH_TRACE)
+    version (WITH_HUNT_TRACE)
     {
         private void beginTrace(string name)
         {
@@ -90,7 +91,7 @@ class EqlQuery(T...)
 
     private void parseEql()
     {
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("EQL PARSE");
             scope (exit)
@@ -251,7 +252,7 @@ class EqlQuery(T...)
     public int exec()
     {
         auto sql = getExecSql();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("EqlQuery exec");
             scope (exit)
@@ -311,7 +312,7 @@ class EqlQuery(T...)
     private Object[] _getResultList()
     {
         auto sql = getExecSql();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("EqlQuery _getResultList");
             scope (exit)
@@ -362,7 +363,7 @@ class EqlQuery(T...)
     public ResultSet getNativeResult()
     {
         auto sql = getExecSql();
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("EqlQuery getNativeResult");
             scope (exit)
@@ -378,7 +379,7 @@ class EqlQuery(T...)
 
     private long count(string sql)
     {
-        version (WITH_TRACE)
+        version (WITH_HUNT_TRACE)
         {
             beginTrace("EqlQuery count");
             scope (exit)

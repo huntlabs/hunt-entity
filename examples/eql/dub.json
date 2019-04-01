@@ -5,10 +5,18 @@
 	],
 	"targetType": "executable",
 	"dependencies": {
-		"hunt-entity": "~>2.1.0"
+		"hunt-entity": "~>2.3.0"
 	},
 	"description": "test for eql",
 	"copyright": "Copyright © 2018, Huntlabs.cn",
 	"license": "Apache-2.0",
-	"versions": ["HUNT_DEBUG"]
+	"versions": ["HUNT_DEBUG"],
+	"configurations": [
+		{
+			"name": "mysql",
+			"subConfigurations": {
+				"hunt-entity": "mysql"
+			}
+		}
+	]
 }
