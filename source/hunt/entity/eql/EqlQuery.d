@@ -27,6 +27,7 @@ version(WITH_HUNT_TRACE)
     import hunt.trace.Span;
 }
 
+import std.algorithm;
 import std.traits;
 
 class EqlQuery(T...)
