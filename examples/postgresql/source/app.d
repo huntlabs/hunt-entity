@@ -67,6 +67,7 @@ void test_comparison(EntityManager em)
 
 	auto rep = new EntityRepository!(UserInfo, int)(em);
 	string name = "Jame\"s Ha'Deng";
+	
 	auto uinfos = rep.findAll(new Expr().eq("nickName", name));
 	foreach (u; uinfos)
 	{
@@ -166,7 +167,8 @@ void test_eql_select(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
+	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a where a.nickName = :name ;");
+	query1.setParameter("name","tom's");
 	foreach (d; query1.getResultList())
 	{
 		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
@@ -272,6 +274,26 @@ void test_count(EntityManager em)
 	logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
 }
 
+void test_eql_insert(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// insert statement
+	auto insert = em.createQuery!(UserInfo)("  INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age)"); 
+	insert.setParameter("name","momomo");
+	insert.setParameter("age",666);
+	logDebug(" insert result : ",insert.exec());
+}
+
+void test_eql_insert2(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// insert statement
+	auto insert = em.createQuery!(UserInfo)("  INSERT INTO UserInfo u(u.nickName,u.age) values (?,?)"); 
+	insert.setParameter(1,"Jons");
+	insert.setParameter(2,2355);
+	logDebug(" insert result : ",insert.exec());
+}
+
 void main()
 {
 	writeln("Edit source/app.d to start your project.");
@@ -289,34 +311,37 @@ void main()
 	EntityManager em = entityManagerFactory.createEntityManager();
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	test_OneToOne(em);
+	// test_OneToOne(em);
 
-	test_OneToMany(em);
+	// test_OneToMany(em);
 
-	test_ManyToOne(em);
+	// test_ManyToOne(em);
 
-	test_ManyToMany(em);
+	// test_ManyToMany(em);
 
-	test_eql_select(em);
+	// test_eql_select(em);
 
-	test_merge(em);
+	// test_merge(em);
 
-	test_persist(em);
+	// test_persist(em);
 
-	test_comparison(em);
+	// test_comparison(em);
 
-	test_delete(em);
+	// test_delete(em);
 
-	test_CriteriaQuery(em);
+	// test_CriteriaQuery(em);
 
-	test_nativeQuery(em);
+	// test_nativeQuery(em);
 
-	test_create_eql_by_queryBuilder(em);
+	// test_create_eql_by_queryBuilder(em);
 
-	test_statement(em);
+	// test_statement(em);
 
-	test_pagination(em);
+	// test_pagination(em);
 
-	test_pagination_1(em);
+	// test_pagination_1(em);
 
+	test_eql_insert(em);
+
+	test_eql_insert2(em);
 }

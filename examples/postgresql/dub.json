@@ -15,5 +15,6 @@
 		"subConfigurations": {
 			"hunt-entity": "postgresql"
 		}
-	}]
+	}],
+	"versions": ["HUNT_DEBUG"]
 }
