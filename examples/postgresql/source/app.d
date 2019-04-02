@@ -294,6 +294,15 @@ void test_eql_insert2(EntityManager em)
 	logDebug(" insert result : ",insert.exec());
 }
 
+void test_eql_delete(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// insert statement
+	auto insert = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = ?"); 
+	insert.setParameter(1,"momomo");
+	logDebug(" insert result : ",insert.exec());
+}
+
 void main()
 {
 	EntityOption option = new EntityOption();
@@ -325,7 +334,7 @@ void main()
 
 	// test_comparison(em);
 
-	test_delete(em);
+	// test_delete(em);
 
 	// test_CriteriaQuery(em);
 
@@ -339,7 +348,9 @@ void main()
 
 	// test_pagination_1(em);
 
-	test_eql_insert(em);
+	// test_eql_insert(em);
 
-	test_eql_insert2(em);
+	// test_eql_insert2(em);
+
+	test_eql_delete(em);
 }
