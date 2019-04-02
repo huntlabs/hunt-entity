@@ -296,8 +296,6 @@ void test_eql_insert2(EntityManager em)
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
-
 	EntityOption option = new EntityOption();
 	option.database.driver = "postgresql";
 	option.database.host = "10.1.11.34";
@@ -327,7 +325,7 @@ void main()
 
 	// test_comparison(em);
 
-	// test_delete(em);
+	test_delete(em);
 
 	// test_CriteriaQuery(em);
 

@@ -88,7 +88,7 @@ class EqlParse
     {
         try
         {
-            version(HUNT_DEBUG)logInfo("-----> :",_parsedEql);
+            // version(HUNT_DEBUG)logInfo("-----> :",_parsedEql);
             _stmtList = SQLUtils.parseStatements(_parsedEql, _dbtype);
 
             foreach (stmt; _stmtList)

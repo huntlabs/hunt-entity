@@ -139,7 +139,7 @@ void main()
 
 	// test_update(em);
 
-	// test_delete(em);
+	test_delete(em);
 
 	test_insert(em);
 	test_insert2(em);
