@@ -11,8 +11,10 @@
 
 module hunt.entity.eql.EqlParse;
 
+import hunt.entity.eql.EqlInfo;
 import hunt.entity;
 import hunt.sql;
+
 import hunt.logging;
 import hunt.collection;
 import hunt.math;
@@ -27,8 +29,8 @@ import hunt.Byte;
 import hunt.Boolean;
 import hunt.database;
 import hunt.Nullable;
+
 import std.algorithm.sorting;
-import hunt.entity.eql.EqlInfo;
 import std.regex;
 
 void eql_throw(string type, string message)
@@ -703,7 +705,7 @@ class EqlParse
         }
         else static if (is(R == class))
         {
-            _params[key] = param;
+            _params[idx] = param;
         }
         else
         {
@@ -717,10 +719,21 @@ class EqlParse
         {
             _parameters[key] = new Integer(param);
         }
-        else static if (is(R == string) || is(R == char) || is(R == byte[]))
+        else static if (is(R == char))
+        {
+            _parameters[key] = new String(cast(string)[param]);
+        }
+        else static if (is(R == string))
         {
             _parameters[key] = new String(param);
         }
+        else static if(is(R == byte[]) || is(R == ubyte[])) {
+            _parameters[key] = new Bytes(cast(byte[])param);
+        }
+        // else static if (is(R == string) || is(R == char) || is(R == byte[]))
+        // {
+        //     _parameters[key] = new String(param);
+        // }
         else static if (is(R == bool))
         {
             _parameters[key] = new Boolean(param);

@@ -19,6 +19,7 @@ import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
 import hunt.entity.eql.EqlCache;
+import hunt.Long;
 
 version(WITH_HUNT_TRACE)
 {

@@ -41,7 +41,6 @@ public import hunt.entity.EntityFieldObject;
 public import hunt.entity.EntityTransaction;
 public import hunt.entity.EntityManagerFactory;
 public import hunt.entity.criteria.Join;
-public import hunt.entity.criteria.Long;
 public import hunt.entity.criteria.Root;
 public import hunt.entity.criteria.Order;
 public import hunt.entity.criteria.Predicate;

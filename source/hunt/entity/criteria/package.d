@@ -15,7 +15,6 @@ public import hunt.entity.criteria.CriteriaDelete;
 public import hunt.entity.criteria.CriteriaQuery;
 public import hunt.entity.criteria.CriteriaUpdate;
 public import hunt.entity.criteria.Join;
-public import hunt.entity.criteria.Long;
 public import hunt.entity.criteria.Order;
 public import hunt.entity.criteria.Predicate;
 public import hunt.entity.criteria.Root;
