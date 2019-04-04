@@ -14,6 +14,7 @@ module hunt.entity.repository.CrudRepository;
 import hunt.entity.Persistence;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity;
+import hunt.Long;
 import std.traits;
 
 public import hunt.entity.repository.Repository;

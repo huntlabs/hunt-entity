@@ -14,6 +14,7 @@ module hunt.entity.repository.EntityRepository;
 import hunt.entity;
 import hunt.entity.repository.CrudRepository;
 import hunt.entity.DefaultEntityManagerFactory;
+import hunt.Long;
 
 public import hunt.entity.domain;
 

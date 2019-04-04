@@ -12,6 +12,7 @@
 module hunt.entity.TypedQuery;
 
 import hunt.entity;
+import hunt.Long;
 
 version(WITH_HUNT_TRACE)
 {
