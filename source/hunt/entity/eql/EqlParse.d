@@ -44,12 +44,12 @@ class EqlParse
     private string _eql;
     private string _parsedEql;
     private string _dbtype;
-    private ExportTableAliasVisitor _aliasVistor; //表 与 别名
+    private ExportTableAliasVisitor _aliasVistor; //Table and alias
     private SchemaStatVisitor _schemaVistor;
     private List!SQLStatement _stmtList;
     private string[string] _clsNameToTbName;
 
-    private EntityField[string] _tableFields; //类名 与 表字段
+    private EntityField[string] _tableFields; //Class name and field name
     private EqlObject[string] _eqlObj;
     public string[string] _objType;
     private Object[string] _joinConds;
@@ -172,7 +172,7 @@ class EqlParse
         }
         else if (cast(SQLInsertStatement)(_stmtList.get(0)) !is null)
         {
-            version (HUNT_DEBUG)logDebug("EQL do_insert_parse");
+            version(HUNT_SQL_DEBUG)logDebug("EQL do_insert_parse");
             doInsertParse();
         }
         else
@@ -264,14 +264,14 @@ class EqlParse
             foreach (item; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
-                version (HUNT_DEBUG)
+                version(HUNT_SQL_DEBUG)
                     logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
         else
         {
-            version (HUNT_DEBUG)
+            version(HUNT_SQL_DEBUG)
                 logDebug("order by item is null");
         }
 
@@ -302,10 +302,12 @@ class EqlParse
     {
         SQLUpdateStatement updateBlock = cast(SQLUpdateStatement)(_stmtList.get(0));
         /// update item
-        foreach (updateItem; updateBlock.getItems())
+        foreach (SQLUpdateSetItem updateItem; updateBlock.getItems())
         {
-            // logDebug("clone selcet : ( %s , %s ) ".format(SQLUtils.toSQLString(selectItem.getExpr()),selectItem.computeAlias()));
-            version(HUNT_DEBUG)logInfo("update item :", SQLUtils.toSQLString(updateItem.getValue));
+            version(HUNT_SQL_DEBUG) {
+                tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()), 
+                    SQLUtils.toSQLString(updateItem.getValue));
+            }
             auto expr = updateItem.getColumn();
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -313,22 +315,34 @@ class EqlParse
             }
             if (cast(SQLPropertyExpr) expr !is null)
             {
-                auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
-                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                EqlObject eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
+                string clsFieldName = (cast(SQLPropertyExpr) expr).getName();
                 if (eqlObj !is null)
                 {
-                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (clsFiled, entFiled; fields)
+                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
+                            version(HUNT_SQL_DEBUG) {
+                                tracef("sql replace %s with %s, table: %s ", clsFiled, 
+                                    entFiled.getColumnName(), eqlObj.tableName());
+                            }
+
                             if (clsFiled == clsFieldName)
                             {
-                                updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
-                                        entFiled.getColumnName()));
+                                if(_dbtype == DBType.POSTGRESQL.name) { // PostgreSQL
+                                    // https://www.postgresql.org/docs/9.1/sql-update.html
+                                    updateItem.setColumn(new SQLPropertyExpr("",
+                                            entFiled.getColumnName()));
+                                    // updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
+                                    //         entFiled.getColumnName()));
+                                } else {
+                                    updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
+                                            entFiled.getColumnName()));
+                                }
                                 break;
                             }
-                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
                         }
                     }
                 }
@@ -341,10 +355,10 @@ class EqlParse
                 auto clsFieldName = (cast(SQLPropertyExpr) valueExpr).getName();
                 if (eqlObj !is null)
                 {
-                    auto fields = _tableFields.get(eqlObj.className(), null);
+                    EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (clsFiled, entFiled; fields)
+                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
                             if (clsFiled == clsFieldName)
                             {
@@ -352,7 +366,7 @@ class EqlParse
                                         entFiled.getColumnName()));
                                 break;
                             }
-                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+                            // tracef("sql replace : (%s ,%s) ", clsFiled, entFiled.getColumnName());
                         }
                     }
                 }
@@ -374,6 +388,8 @@ class EqlParse
         }
 
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
+
+        trace(_parsedEql);
     }
 
     private void doDeleteParse()
@@ -795,7 +811,7 @@ class EqlParse
     {
         string sql = _parsedEql;
 
-        version (HUNT_DEBUG)
+        version(HUNT_SQL_DEBUG)
             logDebug("EQL params : ", _parameters);
 
         foreach (k, v; _parameters)
@@ -803,7 +819,7 @@ class EqlParse
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
             if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                logInfo("-----: ",v.toString);
+                version(HUNT_SQL_DEBUG) logInfo("-----: ",v.toString);
                 if(_dbtype == DBType.POSTGRESQL.name)
                     sql = sql.replaceAll(re, quoteSqlString(v.toString(),"'") ~ "$1");
                 else

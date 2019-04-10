@@ -8,7 +8,7 @@
 	"copyright": "Copyright © 2018, gaoxincheng",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"hunt-entity": "~>2.1.0"
+		"hunt-entity": {"path": "../../"}
 	},
 	"configurations": [{
 		"name": "postgresql",
@@ -16,5 +16,5 @@
 			"hunt-entity": "postgresql"
 		}
 	}],
-	"versions": ["HUNT_DEBUG"]
+	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG"]
 }

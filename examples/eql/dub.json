@@ -1,16 +1,13 @@
 {
 	"name": "eql-test",
-	"authors": [
-		"gaoxincheng"
-	],
 	"targetType": "executable",
 	"dependencies": {
-		"hunt-entity": "~>2.3.0"
+		"hunt-entity": {"path": "../../"}
 	},
 	"description": "test for eql",
 	"copyright": "Copyright © 2018, Huntlabs.cn",
 	"license": "Apache-2.0",
-	"versions": ["HUNT_DEBUG"],
+	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG"],
 	"configurations": [
 		{
 			"name": "mysql",

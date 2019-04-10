@@ -294,6 +294,21 @@ void test_eql_insert2(EntityManager em)
 	logDebug(" insert result : ",insert.exec());
 }
 
+void test_eql_update(EntityManager em)
+{
+	import std.random;
+	// mixin(DO_TEST);
+	/// update statement
+	auto sql = em.createQuery!(UserInfo)(" UPDATE UserInfo u set u.nickName = ?, u.age = ?  WHERE u.id = ?"); 
+	sql.setParameter(1,"Jons");
+	sql.setParameter(2, uniform(1, 100));
+	sql.setParameter(3, 1);
+	// int a = sql.exec();
+	trace(" Update result : ", sql.exec());
+	// logDebug(" Update result : ", sql.exec());
+}
+
+
 void test_eql_delete(EntityManager em)
 {
 	mixin(DO_TEST);
@@ -316,7 +331,7 @@ void main()
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("postgresql",
 			option);
 	EntityManager em = entityManagerFactory.createEntityManager();
-	CriteriaBuilder builder = em.getCriteriaBuilder();
+	// CriteriaBuilder builder = em.getCriteriaBuilder();
 
 	// test_OneToOne(em);
 
@@ -352,5 +367,7 @@ void main()
 
 	// test_eql_insert2(em);
 
-	test_eql_delete(em);
+	test_eql_update(em);
+	// test_eql_delete(em);
+	getchar();
 }
