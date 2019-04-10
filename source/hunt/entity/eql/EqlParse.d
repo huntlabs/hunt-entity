@@ -35,7 +35,7 @@ import std.regex;
 
 void eql_throw(string type, string message)
 {
-    throw new Exception("[EQL PARSE EXCEPTION." ~ type ~ "] " ~ message);
+    throw new Exception("[EQL PARSE EXCEPTION. " ~ type ~ "] " ~ message);
 }
 
 class EqlParse
@@ -423,7 +423,7 @@ class EqlParse
         /// insert item
         foreach (expr; insertBlock.getColumns())
         {
-            version(HUNT_DEBUG)logInfo("insert item :", SQLUtils.toSQLString(expr));
+            version(HUNT_SQL_DEBUG) trace("insert item :", SQLUtils.toSQLString(expr));
             if (cast(SQLIdentifierExpr) expr !is null)
             {
                 newColumns.add(expr);
