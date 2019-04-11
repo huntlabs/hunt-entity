@@ -104,7 +104,7 @@ class EqlParse
 
             init();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             throw e;
         }
@@ -172,12 +172,14 @@ class EqlParse
         }
         else if (cast(SQLInsertStatement)(_stmtList.get(0)) !is null)
         {
-            version(HUNT_SQL_DEBUG)logDebug("EQL do_insert_parse");
+            version (HUNT_SQL_DEBUG)
+                logDebug("EQL do_insert_parse");
             doInsertParse();
         }
         else
         {
-            eql_throw("Statement", " unknown sql statement : " ~ typeid(cast(Object)(_stmtList.get(0))).toString);
+            eql_throw("Statement",
+                    " unknown sql statement : " ~ typeid(cast(Object)(_stmtList.get(0))).toString);
         }
 
         // logDebug("init eql : %s".format(_parsedEql));
@@ -192,6 +194,10 @@ class EqlParse
         foreach (selectItem; queryBlock.getSelectList())
         {
             auto expr = selectItem.getExpr();
+            
+            auto oo = cast(Object)expr;
+            version(HUNT_DEBUG) infof("Expr: %s, item: %s", typeid(oo).name, SQLUtils.toSQLString(selectItem));
+
             if (cast(SQLIdentifierExpr) expr !is null)
             {
                 auto eqlObj = _eqlObj.get((cast(SQLIdentifierExpr) expr).getName(), null);
@@ -237,6 +243,43 @@ class EqlParse
                     }
                 }
             }
+            else if (cast(SQLAggregateExpr) expr !is null)
+            {
+                SQLAggregateExpr aggreExpr = cast(SQLAggregateExpr) expr;
+                List!SQLExpr newArgs = new ArrayList!SQLExpr();
+                foreach (subExpr; aggreExpr.getArguments())
+                {
+                    if (cast(SQLIdentifierExpr) subExpr !is null)
+                    {
+                        newArgs.add(subExpr);
+                    }
+                    if (cast(SQLPropertyExpr) subExpr !is null)
+                    {
+                        SQLPropertyExpr pExpr = cast(SQLPropertyExpr) subExpr;
+                        auto eqlObj = _eqlObj.get(pExpr.getOwnernName(), null);
+                        auto clsFieldName = (cast(SQLPropertyExpr) subExpr).getName();
+                        if (eqlObj !is null)
+                        {
+                            auto fields = _tableFields.get(eqlObj.className(), null);
+                            if (fields !is null)
+                            {
+                                foreach (clsFiled, entFiled; fields)
+                                {
+                                    if (clsFiled == clsFieldName)
+                                    {
+                                        newArgs.add(new SQLPropertyExpr(eqlObj.tableName(),
+                                                entFiled.getColumnName()));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    aggreExpr.getArguments().clear();
+                    aggreExpr.getArguments().addAll(newArgs);
+                }
+                select_copy.addSelectItem(aggreExpr);
+            }
             else
             {
                 version(HUNT_DEBUG) {
@@ -267,14 +310,14 @@ class EqlParse
             foreach (item; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
-                version(HUNT_SQL_DEBUG)
+                version (HUNT_SQL_DEBUG)
                     logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
         else
         {
-            version(HUNT_SQL_DEBUG)
+            version (HUNT_SQL_DEBUG)
                 logDebug("order by item is null");
         }
 
@@ -307,9 +350,10 @@ class EqlParse
         /// update item
         foreach (SQLUpdateSetItem updateItem; updateBlock.getItems())
         {
-            version(HUNT_SQL_DEBUG) {
-                tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()), 
-                    SQLUtils.toSQLString(updateItem.getValue));
+            version (HUNT_SQL_DEBUG)
+            {
+                tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()),
+                        SQLUtils.toSQLString(updateItem.getValue));
             }
             auto expr = updateItem.getColumn();
             if (cast(SQLIdentifierExpr) expr !is null)
@@ -327,20 +371,24 @@ class EqlParse
                     {
                         foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
-                            version(HUNT_SQL_DEBUG) {
-                                tracef("sql replace %s with %s, table: %s ", clsFiled, 
-                                    entFiled.getColumnName(), eqlObj.tableName());
+                            version (HUNT_SQL_DEBUG)
+                            {
+                                tracef("sql replace %s with %s, table: %s ", clsFiled,
+                                        entFiled.getColumnName(), eqlObj.tableName());
                             }
 
                             if (clsFiled == clsFieldName)
                             {
-                                if(_dbtype == DBType.POSTGRESQL.name) { // PostgreSQL
+                                if (_dbtype == DBType.POSTGRESQL.name)
+                                { // PostgreSQL
                                     // https://www.postgresql.org/docs/9.1/sql-update.html
                                     updateItem.setColumn(new SQLPropertyExpr("",
                                             entFiled.getColumnName()));
                                     // updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
                                     //         entFiled.getColumnName()));
-                                } else {
+                                }
+                                else
+                                {
                                     updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
                                             entFiled.getColumnName()));
                                 }
@@ -392,7 +440,8 @@ class EqlParse
 
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
 
-        version(HUNT_SQL_DEBUG)trace(_parsedEql);
+        version (HUNT_SQL_DEBUG)
+            trace(_parsedEql);
     }
 
     private void doDeleteParse()
@@ -426,7 +475,8 @@ class EqlParse
         /// insert item
         foreach (expr; insertBlock.getColumns())
         {
-            version(HUNT_SQL_DEBUG) trace("insert item :", SQLUtils.toSQLString(expr));
+            version (HUNT_SQL_DEBUG)
+                trace("insert item :", SQLUtils.toSQLString(expr));
             if (cast(SQLIdentifierExpr) expr !is null)
             {
                 newColumns.add(expr);
@@ -482,7 +532,8 @@ class EqlParse
 
         ///from
         auto fromExpr = insertBlock.getTableSource();
-        version(HUNT_DEBUG)logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
+        version (HUNT_DEBUG)
+            logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
         parseFromTable(fromExpr);
 
         _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
@@ -695,8 +746,9 @@ class EqlParse
         {
             _params[idx] = new String(param);
         }
-        else static if(is(R == byte[]) || is(R == ubyte[])) {
-            _params[idx] = new Bytes(cast(byte[])param);
+        else static if (is(R == byte[]) || is(R == ubyte[]))
+        {
+            _params[idx] = new Bytes(cast(byte[]) param);
         }
         else static if (is(R == bool))
         {
@@ -746,8 +798,9 @@ class EqlParse
         {
             _parameters[key] = new String(param);
         }
-        else static if(is(R == byte[]) || is(R == ubyte[])) {
-            _parameters[key] = new Bytes(cast(byte[])param);
+        else static if (is(R == byte[]) || is(R == ubyte[]))
+        {
+            _parameters[key] = new Bytes(cast(byte[]) param);
         }
         // else static if (is(R == string) || is(R == char) || is(R == byte[]))
         // {
@@ -814,7 +867,7 @@ class EqlParse
     {
         string sql = _parsedEql;
 
-        version(HUNT_SQL_DEBUG)
+        version (HUNT_SQL_DEBUG)
             logDebug("EQL params : ", _parameters);
 
         foreach (k, v; _parameters)
@@ -822,9 +875,10 @@ class EqlParse
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
             if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                version(HUNT_SQL_DEBUG) logInfo("-----: ",v.toString);
-                if(_dbtype == DBType.POSTGRESQL.name)
-                    sql = sql.replaceAll(re, quoteSqlString(v.toString(),"'") ~ "$1");
+                version (HUNT_SQL_DEBUG)
+                    logInfo("-----: ", v.toString);
+                if (_dbtype == DBType.POSTGRESQL.name)
+                    sql = sql.replaceAll(re, quoteSqlString(v.toString(), "'") ~ "$1");
                 else
                     sql = sql.replaceAll(re, quoteSqlString(v.toString()) ~ "$1");
             }
@@ -845,7 +899,7 @@ class EqlParse
             }
             sql = SQLUtils.format(sql, _dbtype, params);
         }
-        if(_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
+        if (_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
             sql = SQLUtils.format(sql, _dbtype);
 
         // logDebug("native sql : %s".format(sql));
