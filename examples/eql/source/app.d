@@ -95,8 +95,8 @@ void test_delete(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// delete statement
-	auto del = em.createQuery!(UInfo)(" delete from UInfo u where u.id = ? "); 
-	del.setParameter(1,3);
+	auto del = em.createQuery!(UInfo)(" delete from UInfo u where u.id = 3 "); 
+	// del.setParameter(1,3);
 	logDebug(" del result : ",del.exec());
 }
 
@@ -137,9 +137,9 @@ void main()
 
 	// test_select(em);
 
-	test_update(em);
+	// test_update(em);
 
-	// test_delete(em);
+	test_delete(em);
 
 	// test_insert(em);
 	// test_insert2(em);

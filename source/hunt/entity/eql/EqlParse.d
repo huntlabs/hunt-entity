@@ -389,7 +389,7 @@ class EqlParse
 
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
 
-        trace(_parsedEql);
+        version(HUNT_SQL_DEBUG)trace(_parsedEql);
     }
 
     private void doDeleteParse()
@@ -842,6 +842,8 @@ class EqlParse
             }
             sql = SQLUtils.format(sql, _dbtype, params);
         }
+        if(_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
+            sql = SQLUtils.format(sql, _dbtype);
 
         // logDebug("native sql : %s".format(sql));
         return sql;

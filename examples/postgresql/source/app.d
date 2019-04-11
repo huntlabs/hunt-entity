@@ -313,8 +313,8 @@ void test_eql_delete(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// insert statement
-	auto insert = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = ?"); 
-	insert.setParameter(1,"momomo");
+	auto insert = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = 'dddd'"); 
+	// insert.setParameter(1,"momomo");
 	logDebug(" insert result : ",insert.exec());
 }
 
@@ -367,7 +367,7 @@ void main()
 
 	// test_eql_insert2(em);
 
-	test_eql_update(em);
-	// test_eql_delete(em);
+	// test_eql_update(em);
+	test_eql_delete(em);
 	getchar();
 }
