@@ -67,7 +67,7 @@ void test_comparison(EntityManager em)
 
 	auto rep = new EntityRepository!(UserInfo, int)(em);
 	string name = "Jame\"s Ha'Deng";
-	
+
 	auto uinfos = rep.findAll(new Expr().eq("nickName", name));
 	foreach (u; uinfos)
 	{
@@ -107,10 +107,8 @@ void test_create_eql_by_queryBuilder(EntityManager em)
 	queryBuider.where(" u.id > :id").setParameter("id", 4);
 	queryBuider.orderBy("u.id desc");
 
-	assert("SELECT u\n" ~ 
-			"FROM UserInfo u\n" ~ 
-			"WHERE u.id > 4\n" ~ 
-			"ORDER BY u.id DESC" == queryBuider.toString);
+	assert("SELECT u\n" ~ "FROM UserInfo u\n" ~ "WHERE u.id > 4\n"
+			~ "ORDER BY u.id DESC" == queryBuider.toString);
 }
 
 void test_OneToOne(EntityManager em)
@@ -167,8 +165,9 @@ void test_eql_select(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a where a.nickName = :name ;");
-	query1.setParameter("name","tom's");
+	auto query1 = em.createQuery!(UserInfo)(
+			" select a from UserInfo a where a.nickName = :name ;");
+	query1.setParameter("name", "tom's");
 	foreach (d; query1.getResultList())
 	{
 		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
@@ -232,23 +231,27 @@ void test_statement(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto db =em.getDatabase();
-	Statement statement = db.prepare(`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :email, :firstName, :lastName )`);
+	auto db = em.getDatabase();
+	Statement statement = db.prepare(
+			`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :email, :firstName, :lastName )`);
 	statement.setParameter(`age`, 16);
 	statement.setParameter(`email`, "me@example.com");
 	statement.setParameter(`firstName`, "John");
 	statement.setParameter(`lastName`, "Doe");
-	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
+	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )"
+			== statement.sql);
 }
 
 void test_pagination(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a where a.age > :age order by a.id ",new Pageable(0,2)).setParameter("age",10);
+	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a where a.age > :age order by a.id ",
+			new Pageable(0, 2)).setParameter("age", 10);
 	auto page = query.getPageResult();
-	logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),page.getSize(),page.getTotalPages(),page.getTotalElements()));
-	foreach(d ; page.getContent())
+	logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),
+			page.getSize(), page.getTotalPages(), page.getTotalElements()));
+	foreach (d; page.getContent())
 	{
 		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
 	}
@@ -258,7 +261,8 @@ void test_pagination_1(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a ").setFirstResult(1).setMaxResults(2);
+	auto query = em.createQuery!(UserInfo)(" select a from UserInfo a ")
+		.setFirstResult(1).setMaxResults(2);
 	foreach (d; query.getResultList())
 	{
 		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
@@ -269,8 +273,7 @@ void test_count(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query = em.createQuery!(UserInfo)(
-			" select count(UserInfo.id) as num from UserInfo a ");
+	auto query = em.createQuery!(UserInfo)(" select count(UserInfo.id) as num from UserInfo a ");
 	logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
 }
 
@@ -278,29 +281,33 @@ void test_eql_insert(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// insert statement
-	auto insert = em.createQuery!(UserInfo)("  INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age)"); 
-	insert.setParameter("name","momomo");
-	insert.setParameter("age",666);
-	logDebug(" insert result : ",insert.exec());
+	auto insert = em.createQuery!(UserInfo)(
+			"  INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age)");
+	insert.setParameter("name", "momomo");
+	insert.setParameter("age", 666);
+	logDebug(" insert result : ", insert.exec());
 }
 
 void test_eql_insert2(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// insert statement
-	auto insert = em.createQuery!(UserInfo)("  INSERT INTO UserInfo u(u.nickName,u.age) values (?,?)"); 
-	insert.setParameter(1,"Jons");
-	insert.setParameter(2,2355);
-	logDebug(" insert result : ",insert.exec());
+	auto insert = em.createQuery!(UserInfo)(
+			"  INSERT INTO UserInfo u(u.nickName,u.age) values (?,?)");
+	insert.setParameter(1, "Jons");
+	insert.setParameter(2, 2355);
+	logDebug(" insert result : ", insert.exec());
 }
 
 void test_eql_update(EntityManager em)
 {
 	import std.random;
+
 	// mixin(DO_TEST);
 	/// update statement
-	auto sql = em.createQuery!(UserInfo)(" UPDATE UserInfo u set u.nickName = ?, u.age = ?  WHERE u.id = ?"); 
-	sql.setParameter(1,"Jons");
+	auto sql = em.createQuery!(UserInfo)(
+			" UPDATE UserInfo u set u.nickName = ?, u.age = ?  WHERE u.id = ?");
+	sql.setParameter(1, "Jons");
 	sql.setParameter(2, uniform(1, 100));
 	sql.setParameter(3, 1);
 	// int a = sql.exec();
@@ -308,14 +315,23 @@ void test_eql_update(EntityManager em)
 	// logDebug(" Update result : ", sql.exec());
 }
 
-
 void test_eql_delete(EntityManager em)
 {
 	mixin(DO_TEST);
-	/// insert statement
-	auto insert = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = 'dddd'"); 
-	// insert.setParameter(1,"momomo");
-	logDebug(" insert result : ",insert.exec());
+	/// del statement
+	auto del = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = ?");
+	del.setParameter(1, "momomo");
+	logDebug(" del result : ", del.exec());
+}
+
+void test_eql_func(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// func statement
+	auto func = em.createQuery!(UserInfo)(
+			"SELECT count(u.id) FROM UserInfo u where u.nickName = 'dddd'");
+	// func.setParameter(1, "momomo");
+	logDebug(" func result : ", func.getNativeResult());
 }
 
 void main()
@@ -328,46 +344,49 @@ void main()
 	option.database.username = "postgres";
 	option.database.password = "123456";
 
-	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("postgresql",
-			option);
+	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(
+			"postgresql", option);
 	EntityManager em = entityManagerFactory.createEntityManager();
-	// CriteriaBuilder builder = em.getCriteriaBuilder();
+	CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	// test_OneToOne(em);
+	test_OneToOne(em);
 
-	// test_OneToMany(em);
+	test_OneToMany(em);
 
-	// test_ManyToOne(em);
+	test_ManyToOne(em);
 
-	// test_ManyToMany(em);
+	test_ManyToMany(em);
 
-	// test_eql_select(em);
+	test_eql_select(em);
 
-	// test_merge(em);
+	test_merge(em);
 
-	// test_persist(em);
+	test_persist(em);
 
-	// test_comparison(em);
+	test_comparison(em);
 
-	// test_delete(em);
+	test_delete(em);
 
-	// test_CriteriaQuery(em);
+	test_CriteriaQuery(em);
 
-	// test_nativeQuery(em);
+	test_nativeQuery(em);
 
-	// test_create_eql_by_queryBuilder(em);
+	test_create_eql_by_queryBuilder(em);
 
-	// test_statement(em);
+	test_statement(em);
 
-	// test_pagination(em);
+	test_pagination(em);
 
-	// test_pagination_1(em);
+	test_pagination_1(em);
 
-	// test_eql_insert(em);
+	test_eql_insert(em);
 
-	// test_eql_insert2(em);
+	test_eql_insert2(em);
 
-	// test_eql_update(em);
+	test_eql_update(em);
 	test_eql_delete(em);
+
+	test_eql_func(em);
+
 	getchar();
 }
