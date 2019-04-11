@@ -323,6 +323,25 @@ void test_eql_delete(EntityManager em)
 	logDebug(" delete result : ",r);
 }
 
+
+void test_eql_function_count(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// delete statement
+	auto sql = em.createQuery!(UserInfo)("SELECT COUNT(u.nickName) FROM UserInfo u where u.nickName='abc' "); 
+	
+	ResultSet rs = sql.getNativeResult();
+
+	 if (rs is null || rs.empty()) {
+		 warning("no return");
+	 } else {
+		Row r = rs.front;
+		int count = r.getAs!int(0);
+
+		tracef("count: %s", count);
+    }
+}
+
 void main()
 {
 	EntityOption option = new EntityOption();
@@ -373,6 +392,7 @@ void main()
 	// test_eql_insert2(em);
 
 	// test_eql_update(em);
-	test_eql_delete(em);
+	// test_eql_delete(em);
+	test_eql_function_count(em);
 	getchar();
 }

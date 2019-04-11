@@ -239,7 +239,10 @@ class EqlParse
             }
             else
             {
-                // logError("------> :",SQLUtils.toSQLString(selectItem));
+                version(HUNT_DEBUG) {
+                    auto o = cast(Object)expr;
+                    warningf("Expr: %s, item: %s", typeid(o).name, SQLUtils.toSQLString(selectItem));
+                }
                 select_copy.addSelectItem(selectItem);
             }
         }
