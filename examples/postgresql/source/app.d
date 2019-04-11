@@ -312,10 +312,15 @@ void test_eql_update(EntityManager em)
 void test_eql_delete(EntityManager em)
 {
 	mixin(DO_TEST);
-	/// insert statement
-	auto insert = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = 'dddd'"); 
-	// insert.setParameter(1,"momomo");
-	logDebug(" insert result : ",insert.exec());
+	/// delete statement
+	auto sql = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = 'nonename'"); 
+	int r = sql.exec();
+	logDebug(" delete result : ",r);
+
+	sql = em.createQuery!(UserInfo)("  DELETE FROM UserInfo u where u.nickName = ?"); 
+	sql.setParameter(1,"momomo");
+	r = sql.exec();
+	logDebug(" delete result : ",r);
 }
 
 void main()
