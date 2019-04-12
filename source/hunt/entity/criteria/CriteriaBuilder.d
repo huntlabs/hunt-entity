@@ -110,13 +110,13 @@ public class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
-                return new Predicate().addValue(info.getFullColumn(), "=", quoteSqlStringIfNeed(t));
+                return new Predicate().addValue(info.getFullColumn(), "=", quoteSqlfNeed(t));
         }
         else {
             Predicate p;
             if (info.getJoinColumn() != "") {
                 auto entityInfo = new EntityInfo!(T,T)(_manager, t);
-                p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlStringIfNeed(entityInfo.getPrimaryValue()));
+                p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
                 throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
@@ -137,7 +137,7 @@ public class CriteriaBuilder
             Predicate p;
             if (info.getJoinColumn() != "") {
                 auto entityInfo = new EntityInfo!(T,T)(_manager, t);
-                p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlStringIfNeed(entityInfo.getPrimaryValue()));
+                p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
                 throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
@@ -161,7 +161,7 @@ public class CriteriaBuilder
             Predicate p;
             if (info.getJoinColumn() != "") {
                 auto entityInfo = new EntityInfo!(T,T)(_manager, t);
-                p = new Predicate().addValue(condTable~"."~condColumn, "=", quoteSqlStringIfNeed(entityInfo.getPrimaryValue()));
+                p = new Predicate().addValue(condTable~"."~condColumn, "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
                 throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
@@ -179,13 +179,13 @@ public class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
-            return new Predicate().addValue(info.getFullColumn(), "<>", quoteSqlStringIfNeed(t));
+            return new Predicate().addValue(info.getFullColumn(), "<>", quoteSqlfNeed(t));
         }
         else {
             Predicate p;
             if (info.getJoinColumn() != "") {
                 auto entityInfo = new EntityInfo!(T,T)(_manager, t);
-                p = new Predicate().addValue(info.getJoinColumn(), "<>", quoteSqlStringIfNeed(entityInfo.getPrimaryValue()));
+                p = new Predicate().addValue(info.getJoinColumn(), "<>", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
                 throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
@@ -200,7 +200,7 @@ public class CriteriaBuilder
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), ">", quoteSqlStringIfNeed(t));
+        return new Predicate().addValue(info.getFullColumn(), ">", quoteSqlfNeed(t));
     }
 
     public Predicate gt(EntityFieldInfo info){
@@ -209,7 +209,7 @@ public class CriteriaBuilder
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), ">=", quoteSqlStringIfNeed(t));
+        return new Predicate().addValue(info.getFullColumn(), ">=", quoteSqlfNeed(t));
     }
 
     public Predicate ge(EntityFieldInfo info){
@@ -218,7 +218,7 @@ public class CriteriaBuilder
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), "<", quoteSqlStringIfNeed(t));
+        return new Predicate().addValue(info.getFullColumn(), "<", quoteSqlfNeed(t));
     }
 
     public Predicate lt(EntityFieldInfo info){
@@ -227,7 +227,7 @@ public class CriteriaBuilder
 
     public Predicate le(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
-        return new Predicate().addValue(info.getFullColumn(), "<=", quoteSqlStringIfNeed(t));
+        return new Predicate().addValue(info.getFullColumn(), "<=", quoteSqlfNeed(t));
     }
 
     public Predicate le(EntityFieldInfo info){
@@ -235,16 +235,16 @@ public class CriteriaBuilder
     }
 
     public Predicate like(EntityFieldInfo info, string pattern) {
-        return new Predicate().addValue(info.getFullColumn(), "like", quoteSqlStringIfNeed(pattern));
+        return new Predicate().addValue(info.getFullColumn(), "like", quoteSqlfNeed(pattern));
     }
 
     public Predicate notLike(EntityFieldInfo info, string pattern) {
-        return new Predicate().addValue(info.getFullColumn(), "not like", quoteSqlStringIfNeed(pattern));
+        return new Predicate().addValue(info.getFullColumn(), "not like", quoteSqlfNeed(pattern));
     }
 
     public Predicate between(T)(EntityFieldInfo info, T t1, T t2) {
         assertType!(T)(info);
-        return new Predicate().betweenValue(info.getFullColumn(), quoteSqlStringIfNeed(t1), quoteSqlStringIfNeed(t2));
+        return new Predicate().betweenValue(info.getFullColumn(), quoteSqlfNeed(t1), quoteSqlfNeed(t2));
     }
 
     public Predicate In(T...)(EntityFieldInfo info, T args) {
@@ -271,5 +271,13 @@ public class CriteriaBuilder
         else {
             throw new EntityException("EntityFieldInfo %s is object can not be Predicate".format(info.getFileldName()));
         }   
+    }
+
+    private string quoteSqlfNeed(T)(T t)
+    {
+        static if(is(T == string))
+            return _manager.getDatabase.escapeWithQuotes(t);
+        else
+            return t.to!string;
     }
 }

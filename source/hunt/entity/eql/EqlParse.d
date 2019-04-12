@@ -242,6 +242,11 @@ class EqlParse
                         }
                     }
                 }
+                else
+                {
+                    eql_throw("Statement",
+                    " undefined sql object  '%s' in '%s': ".format((cast(SQLPropertyExpr) expr).getOwnernName(),SQLUtils.toSQLString(expr)));
+                }
             }
             else if (cast(SQLAggregateExpr) expr !is null)
             {
@@ -249,11 +254,12 @@ class EqlParse
                 List!SQLExpr newArgs = new ArrayList!SQLExpr();
                 foreach (subExpr; aggreExpr.getArguments())
                 {
+                    version(HUNT_SQL_DEBUG)warningf("arg expr : %s, arg string : %s",typeid(cast(Object)subExpr).name,SQLUtils.toSQLString(subExpr));
                     if (cast(SQLIdentifierExpr) subExpr !is null)
                     {
                         newArgs.add(subExpr);
                     }
-                    if (cast(SQLPropertyExpr) subExpr !is null)
+                    else if (cast(SQLPropertyExpr) subExpr !is null)
                     {
                         SQLPropertyExpr pExpr = cast(SQLPropertyExpr) subExpr;
                         auto eqlObj = _eqlObj.get(pExpr.getOwnernName(), null);
@@ -275,10 +281,14 @@ class EqlParse
                             }
                         }
                     }
-                    aggreExpr.getArguments().clear();
-                    aggreExpr.getArguments().addAll(newArgs);
+                    else
+                    {
+                        newArgs.add(subExpr);
+                    }
                 }
-                select_copy.addSelectItem(aggreExpr);
+                aggreExpr.getArguments().clear();
+                aggreExpr.getArguments().addAll(newArgs);
+                select_copy.addSelectItem(aggreExpr,selectItem.getAlias());
             }
             else
             {
@@ -382,7 +392,7 @@ class EqlParse
                                 if (_dbtype == DBType.POSTGRESQL.name)
                                 { // PostgreSQL
                                     // https://www.postgresql.org/docs/9.1/sql-update.html
-                                    updateItem.setColumn(new SQLPropertyExpr("",
+                                    updateItem.setColumn(new SQLIdentifierExpr(
                                             entFiled.getColumnName()));
                                     // updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
                                     //         entFiled.getColumnName()));
@@ -396,6 +406,11 @@ class EqlParse
                             }
                         }
                     }
+                }
+                else
+                {
+                    eql_throw("Statement",
+                    " undefined sql object  '%s' in '%s': ".format((cast(SQLPropertyExpr) expr).getOwnernName(),SQLUtils.toSQLString(expr)));
                 }
             }
 
@@ -500,6 +515,11 @@ class EqlParse
                             }
                         }
                     }
+                }
+                else
+                {
+                    eql_throw("Statement",
+                    " undefined sql object  '%s' in '%s': ".format(pExpr.getOwnernName(),SQLUtils.toSQLString(pExpr)));
                 }
             }
             insertBlock.getColumns().clear();

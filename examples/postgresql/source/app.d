@@ -68,7 +68,7 @@ void test_comparison(EntityManager em)
 	auto rep = new EntityRepository!(UserInfo, int)(em);
 	string name = "Ha'Deng";
 
-	auto uinfos = rep.findAll(new Expr().eq("nickName", name));
+	auto uinfos = rep.findAll(new Expr().eq("nickname", name));
 	foreach (u; uinfos)
 	{
 		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
@@ -304,9 +304,10 @@ void test_eql_insert2(EntityManager em)
 
 void test_eql_update(EntityManager em)
 {
+	mixin(DO_TEST);
+
 	import std.random;
 
-	// mixin(DO_TEST);
 	/// update statement
 	auto sql = em.createQuery!(UserInfo)(
 			" UPDATE UserInfo u set u.nickName = ?, u.age = ?  WHERE u.id = ?");
@@ -315,7 +316,6 @@ void test_eql_update(EntityManager em)
 	sql.setParameter(3, 1);
 	// int a = sql.exec();
 	trace(" Update result : ", sql.exec());
-	// logDebug(" Update result : ", sql.exec());
 }
 
 void test_eql_delete(EntityManager em)
@@ -332,17 +332,17 @@ void test_eql_function_DISTINCT(EntityManager em)
 	mixin(DO_TEST);
 	/// func statement
 	auto sql = em.createQuery!(UserInfo)(
-			"SELECT DISTINCT(u.nickName) FROM UserInfo");
+			"SELECT DISTINCT(u.nickName) as nickname FROM UserInfo u");
 	
 	ResultSet rs = sql.getNativeResult();
 
 	if (rs is null || rs.empty()) {
 		warning("no return");
 	} else {
-		Row r = rs.front;
-		int count = r.getAs!int(0);
+		// Row r = rs.front;
+		// int count = r.getAs!int(0);
 
-		tracef("count: %s", count);
+		// tracef("count: %s", count);
 	}
 }
 
@@ -388,8 +388,6 @@ void main()
 
 	test_ManyToMany(em);
 
-	test_eql_select(em);
-
 	test_merge(em);
 
 	test_persist(em);
@@ -410,15 +408,19 @@ void main()
 
 	test_pagination_1(em);
 
+	test_eql_select(em);
+
 	test_eql_insert(em);
 
 	test_eql_insert2(em);
 
 	test_eql_update(em);
+
 	test_eql_delete(em);
-	// test_eql_function_count(em);
-	// test_eql_function_DISTINCT(em);
-	// test_eql_func(em);
+
+	test_eql_function_count(em);
+
+	test_eql_function_DISTINCT(em);
 
 	getchar();
 }
