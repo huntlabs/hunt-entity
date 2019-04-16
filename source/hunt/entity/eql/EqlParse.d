@@ -196,7 +196,7 @@ class EqlParse
             auto expr = selectItem.getExpr();
             
             auto oo = cast(Object)expr;
-            version(HUNT_DEBUG) infof("Expr: %s, item: %s", typeid(oo).name, SQLUtils.toSQLString(selectItem));
+            // version(HUNT_DEBUG) infof("Expr: %s, item: %s", typeid(oo).name, SQLUtils.toSQLString(selectItem));
 
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -254,7 +254,11 @@ class EqlParse
                 List!SQLExpr newArgs = new ArrayList!SQLExpr();
                 foreach (subExpr; aggreExpr.getArguments())
                 {
-                    version(HUNT_SQL_DEBUG)warningf("arg expr : %s, arg string : %s",typeid(cast(Object)subExpr).name,SQLUtils.toSQLString(subExpr));
+                    // version(HUNT_SQL_DEBUG) {
+                    //     tracef("arg expr : %s, arg string : %s",
+                    //         typeid(cast(Object)subExpr).name, SQLUtils.toSQLString(subExpr));
+                    // }
+
                     if (cast(SQLIdentifierExpr) subExpr !is null)
                     {
                         newArgs.add(subExpr);
@@ -292,7 +296,7 @@ class EqlParse
             }
             else
             {
-                version(HUNT_DEBUG) {
+                version(HUNT_SQL_DEBUG_MORE) {
                     auto o = cast(Object)expr;
                     warningf("Expr: %s, item: %s", typeid(o).name, SQLUtils.toSQLString(selectItem));
                 }
@@ -320,8 +324,8 @@ class EqlParse
             foreach (item; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
-                version (HUNT_SQL_DEBUG)
-                    logDebug("order item : %s".format(exprStr));
+                // version (HUNT_SQL_DEBUG_MORE)
+                //     logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
@@ -360,7 +364,7 @@ class EqlParse
         /// update item
         foreach (SQLUpdateSetItem updateItem; updateBlock.getItems())
         {
-            version (HUNT_SQL_DEBUG)
+            version(HUNT_SQL_DEBUG_MORE)
             {
                 tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()),
                         SQLUtils.toSQLString(updateItem.getValue));
@@ -381,7 +385,7 @@ class EqlParse
                     {
                         foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
-                            version (HUNT_SQL_DEBUG)
+                            version(HUNT_SQL_DEBUG_MORE)
                             {
                                 tracef("sql replace %s with %s, table: %s ", clsFiled,
                                         entFiled.getColumnName(), eqlObj.tableName());
@@ -490,7 +494,7 @@ class EqlParse
         /// insert item
         foreach (expr; insertBlock.getColumns())
         {
-            version (HUNT_SQL_DEBUG)
+            version(HUNT_SQL_DEBUG_MORE)
                 trace("insert item :", SQLUtils.toSQLString(expr));
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -552,8 +556,8 @@ class EqlParse
 
         ///from
         auto fromExpr = insertBlock.getTableSource();
-        version (HUNT_DEBUG)
-            logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
+        // version (HUNT_DEBUG)
+        //     logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
         parseFromTable(fromExpr);
 
         _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
@@ -887,7 +891,7 @@ class EqlParse
     {
         string sql = _parsedEql;
 
-        version (HUNT_SQL_DEBUG)
+        version (HUNT_SQL_DEBUG_MORE)
             logDebug("EQL params : ", _parameters);
 
         foreach (k, v; _parameters)

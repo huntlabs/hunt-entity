@@ -123,3 +123,9 @@ void main()
 
     log("The number of users found is: ", users.length);
 ```
+
+## Avaliable Versions
+| Identifier | Description | 
+|--------|--------|
+| HUNT_SQL_DEBUG |  Used to log debugging messages about SQL handling|
+| HUNT_SQL_DEBUG_MORE |  Used to log more debugging messages about SQL handling|

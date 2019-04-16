@@ -116,7 +116,7 @@ class EqlQuery(T...)
         {
             throw new Exception("not support dbtype : %s".format(opt.url().scheme));
         }
-        version(HUNT_DEBUG) {
+        version(HUNT_SQL_DEBUG) {
             trace(_eql);
         }
 
@@ -133,7 +133,7 @@ class EqlQuery(T...)
         }
         else
         {
-            version(HUNT_DEBUG) trace("EQL Cache Hit");
+            // version(HUNT_SQL_DEBUG_MORE) trace("EQL Cache Hit");
             _eqlParser.setParsedEql(parsedEql);
         }
 
