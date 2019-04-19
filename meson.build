@@ -6,8 +6,8 @@ project('hunt-entity', 'd',
 )
 
 project_soversion = '0'
-hunt_database_required_version = '>= 1.2.0-beta.3'
-hunt_validation_required_version = '>= 0.1.0'
+hunt_database_required_version = '>= 1.2.0-beta.4'
+hunt_validation_required_version = '>= 0.1.1'
 hunt_trace_required_version = '>= 0.2.0'
 
 
