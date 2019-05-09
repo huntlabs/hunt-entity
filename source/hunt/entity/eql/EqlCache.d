@@ -28,7 +28,10 @@ class EqlCacheManager
         {
             auto key = cast(string)toLower(toHexString(md5Of(eql)));
             // logDebug(" Eql cache try hit eql ( %s , %s ) ".format(eql,key));
-            return _cacheMap.get(key);
+            if(_cacheMap.containsKey(key))
+                return _cacheMap.get(key);
+            else
+                return null;
         }
 
     }
