@@ -45,11 +45,15 @@ class EqlCacheManager
         {
             if(_cacheMap.size() >= MAX_TREE_MAP)
             {
-                int cnt = 100;
-                foreach(k , v; _cacheMap) {
-                    if(cnt-- > 0)
-                        _cacheMap.remove(k);
-                }
+                // FIXME: Needing refactor or cleanup -@Administrator at 2019/5/22 5:20:00 pm
+                // 
+                // int cnt = 100;
+                // foreach(k , v; _cacheMap) {
+                //     if(cnt-- > 0)
+                //         _cacheMap.remove(k);
+                // }
+
+                _cacheMap.clear();
             }
             _cacheMap.put(key , parsedEql);
             // logDebug(" Eql cache Map ( %s ) ".format(_cacheMap));
