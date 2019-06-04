@@ -1,12 +1,10 @@
 {
 	"name": "postgresql-test",
-	"authors": [
-		"gaoxincheng"
-	],
 	"targetType": "executable",
 	"description": "test for entity",
-	"copyright": "Copyright © 2018, gaoxincheng",
-	"license": "Apache-2.0",
+	"copyright": "Copyright (C) 2018-2019, HuntLabs",
+    "homepage": "https://www.huntlabs.net",
+    "license": "Apache-2.0",
 	"dependencies": {
 		"hunt-entity": {"path": "../../"}
 	},
@@ -16,5 +14,5 @@
 			"hunt-entity": "postgresql"
 		}
 	}],
-	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG"]
+	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG", "HUNT_SQL_DEBUG_MORE"]
 }
