@@ -329,11 +329,11 @@ class EqlParse
                 item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
-        else
-        {
-            version (HUNT_SQL_DEBUG)
-                logDebug("order by item is null");
-        }
+        // else
+        // {
+        //     version (HUNT_SQL_DEBUG)
+        //         logDebug("order by item is null");
+        // }
 
         /// group by 
         auto groupBy = select_copy.getGroupBy();

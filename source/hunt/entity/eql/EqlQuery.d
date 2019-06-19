@@ -336,10 +336,9 @@ class EqlQuery(T...)
 
         foreach (k, v; rows)
         {
-
             try
             {
-                Object t = _resultDes.deSerialize(rows, count, cast(int) k);
+                ResultObj t = _resultDes.deSerialize(rows, count, cast(int) k);
                 if (t is null)
                 {
                     if (count != -1)
@@ -348,13 +347,15 @@ class EqlQuery(T...)
                     }
                     else
                     {
-                        throw new EntityException("getResultList has an null data");
+                        throw new EntityException("empty row data");
                     }
                 }
                 ret ~= t;
             }
             catch (Exception e)
             {
+                version(HUNT_SQL_DEBUG) warning(e);
+                else version(HUNT_DEBUG) warning(e.msg);
                 throw new EntityException(e.msg);
             }
 

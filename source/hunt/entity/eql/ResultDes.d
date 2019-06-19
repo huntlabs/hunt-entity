@@ -12,13 +12,16 @@
 module hunt.entity.eql.ResultDes;
 
 import hunt.entity.eql.Common;
-
 import hunt.entity;
 // import hunt.entity.DefaultEntityManagerFactory;
 
 import hunt.logging;
+import hunt.util.ConverterUtils;
+
+import std.array;
 import std.conv;
 import std.traits;
+
 
 
 class ResultDes(T : Object) {
@@ -62,13 +65,16 @@ class ResultDes(T : Object) {
         return _tableName ~ "__as__" ~ col;
     }
 
-    public void deSerialize(R)(string value, ref R r) {
+    public R deSerialize(R)(string value) {
+        version(HUNT_SQL_DEBUG_MORE) tracef("type=%s, value=%s", R.stringof, value);
         if (value.length == 0) {
-            return;
+            return R.init;
         }
         if (value.length == 1 && cast(byte)(value[0]) == 0) {
-            return;
+            return R.init;
         }
+
+        R r = R.init;
         static if (is(R==bool)) {
             if( value[0] == 1 || value[0] == 't')
                 r = true;
@@ -78,6 +84,8 @@ class ResultDes(T : Object) {
         else {
             r = to!R(value);
         }
+
+        return r;
     }
 }
 
@@ -107,6 +115,7 @@ string makeDeSerialize(T)() {
 
         T _data = new T();
         RowData data = rows[startIndex].getAllRowData(_tableName);
+        string value;
         // logDebug("rows[0] : ",data);
         
         // if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
@@ -118,32 +127,74 @@ string makeDeSerialize(T)() {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
             static if (!isFunction!(memType)) {
+
+                // get the column's name
+                string columnName = memberName;
+                static if(hasUDA!(__traits(getMember, T ,memberName), Column)) {
+                    columnName = "\"" ~ getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
+                }
+
+                // get the column's value
+                str ~=`
+                    value = null;  // clear last value
+                    if (data !is null) {
+                        auto columnData = data.getData(`~ columnName ~`);
+                        if(columnData !is null) {
+                            value = columnData.value;
+                            version(HUNT_SQL_DEBUG_MORE) {
+                                if(value.length > 128) {
+                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                        ~ memType.stringof ~ `", value[0..128]);
+                                } else {
+                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                        ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
+                                }
+                            }              
+                        } else {
+                            version(HUNT_SQL_DEBUG_MORE) {
+                                    tracef("member: %s, column: %s, type: %s, value: null", "` 
+                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                        ~ memType.stringof ~ `");
+                            }
+                        }
+                    }`;
+
+                // populate the field member
                 static if (isBasicType!memType || isSomeString!memType) {
-                    static if(hasUDA!(__traits(getMember, T ,memberName), Column))
-                    {
-                        string columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
-                        str ~=`
-                            if ((data !is null ) && data.getData((`~columnName~`))){
-                                
-                                deSerialize(data.getData((`~ columnName ~`)).value,_data.`~memberName ~ `);
+                    str ~=`
+                        if(!value.empty()) {
+                            _data.` ~ memberName ~ ` = deSerialize!(` ~ memType.stringof ~ `)(value);
                         }
-                        `;
-                    }
-                    else {
-                                str ~=`
-                            if ((data !is null ) && data.getData((`~memberName.stringof~`))){
-                                
-                                deSerialize(data.getData((`~ memberName.stringof ~`)).value,_data.`~memberName ~ `);
-                        }
-                        `;
-                    }
+                    `;
                 }
                 else static if(!isArray!memType && hasUDA!(__traits(getMember, T ,memberName), JoinColumn))
                 {
                     str ~= `
-                        auto `~memberName~ ` = new ResultDes!(`~memType.stringof~`)(_em);
-                        _data.`~memberName~ ` = `~memberName~`.deSerialize(rows,count,startIndex);
+                        auto ` ~ memberName~ ` = new ResultDes!(` ~ memType.stringof ~ `)(_em);
+                        _data.` ~ memberName~ ` = ` ~ memberName ~ `.deSerialize(rows,count,startIndex);
                     `;
+                } else static if(is(memType : U[], U)) { // bytes array
+
+                    str ~=`
+                        if(value.length > 2) {
+                            // FIXME: Needing refactor or cleanup -@zhangxueping at 2019/6/18 10:27:11 AM
+                            // to handle the other format for mysql etc.
+
+                            if(value[0..2] != "\\x") { // postgresql format
+                                version(HUNT_DEBUG) warning("unrecognized data format");
+                            } else {
+                                value = value[2 .. $];
+                                _data.` ~ memberName ~ ` = ConverterUtils.toBytes!(`~ U.stringof ~`)(value);
+                            }
+                        }
+                    `;
+                        
+                    } else {
+                        version(HUNT_DEBUG) {
+                            str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
+                        }
                 }
             }
         }
