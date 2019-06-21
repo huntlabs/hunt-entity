@@ -107,7 +107,7 @@ class EntityManager {
 
     public void flush()
     {
-        //TODO 将受控态的实体数据同步到数据库中
+        //TODO 
     }
 
     public EqlQuery!(T) createQuery(T...)(string eql)

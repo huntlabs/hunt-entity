@@ -16,7 +16,9 @@ import hunt.entity;
 // import hunt.entity.DefaultEntityManagerFactory;
 
 import hunt.logging;
+
 import hunt.util.ConverterUtils;
+import hunt.util.Traits;
 
 import std.array;
 import std.conv;
@@ -129,9 +131,10 @@ string makeDeSerialize(T)() {
             static if (!isFunction!(memType)) {
 
                 // get the column's name
-                string columnName = memberName;
                 static if(hasUDA!(__traits(getMember, T ,memberName), Column)) {
-                    columnName = "\"" ~ getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
+                    string columnName = "\"" ~ getUDAs!(__traits(getMember, T ,memberName), Column)[0].name ~"\"";
+                } else {
+                    string columnName = "\"" ~ memberName ~"\"";
                 }
 
                 // get the column's value
@@ -175,7 +178,7 @@ string makeDeSerialize(T)() {
                         auto ` ~ memberName~ ` = new ResultDes!(` ~ memType.stringof ~ `)(_em);
                         _data.` ~ memberName~ ` = ` ~ memberName ~ `.deSerialize(rows,count,startIndex);
                     `;
-                } else static if(is(memType : U[], U)) { // bytes array
+                } else static if(is(memType : U[], U) && is(isByteType!U)) { // bytes array
 
                     str ~=`
                         if(value.length > 2) {

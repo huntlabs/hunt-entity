@@ -51,7 +51,9 @@ public import hunt.entity.criteria.CriteriaBuilder;
 public import hunt.entity.criteria.CriteriaUpdate;
 public import hunt.entity.EntityCreateTable;
 
-public import hunt.entity.repository;
 public import hunt.entity.domain;
+public import hunt.entity.eql;
 public import hunt.entity.Model;
+public import hunt.entity.repository;
+
 public import hunt.validation;
