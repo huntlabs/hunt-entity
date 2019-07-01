@@ -49,11 +49,19 @@ class EqlCacheManager
             if(_cacheMap.size() >= MAX_TREE_MAP)
             {
                 int cnt = 100;
+                string[] keys;
                 foreach(k , v; _cacheMap) {
                     if(cnt-- > 0)
-                        _cacheMap.remove(k);
+                    {
+                        keys ~= k;
+                    }
                 }
-            }
+                foreach(k; keys)
+                {
+                    _cacheMap.remove(k);
+                }
+            }            
+
             _cacheMap.put(key , parsedEql);
             // logDebug(" Eql cache Map ( %s ) ".format(_cacheMap));
         }
