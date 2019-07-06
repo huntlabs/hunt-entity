@@ -328,6 +328,11 @@ class EqlQuery(T...)
         long count = -1;
         auto stmt = _manager.getSession().prepare(sql);
         auto res = stmt.query();
+        if(res is null) {
+            warning("The result of query is null");
+            return null;
+        }
+
         Row[] rows;
         foreach (value; res)
         {

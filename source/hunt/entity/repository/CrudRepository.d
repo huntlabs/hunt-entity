@@ -60,6 +60,8 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public void removeAll()
     {
+        // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-7-3 10:23:27
+        // user "delete from T"
         auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
         scope(exit) {if (!_manager) em.close();}
         foreach (entity; findAll())

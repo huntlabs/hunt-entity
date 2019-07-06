@@ -343,7 +343,6 @@ void test_exception(EntityManager em)
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
 
 	EntityOption option = new EntityOption();
 	option.database.driver = "mysql";
