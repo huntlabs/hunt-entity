@@ -16,17 +16,19 @@ import hunt.entity;
 class EntitySession
 {
 
-    private EntityManager _manager;
-
+    // private EntityManager _manager;
+    private Database _db;
     private Transaction _trans;
 
     private Connection _conn;
 
-    this(EntityManager manager)
+    this(Database db)
     {
-        _manager = manager;
-        _conn = manager.getDatabase().getConnection();
-        _trans = manager.getDatabase().getTransaction(_conn);
+        // _manager = manager;
+        assert(db !is null);
+        _db = db;
+        _conn = _db.getConnection();
+        _trans = _db.getTransaction(_conn);
     }
 
     // ~this()
@@ -54,14 +56,14 @@ class EntitySession
     public TransStatement prepare(string sql)
     {
         if(_conn is null)
-           _conn = _manager.getDatabase().getConnection();  
+           _conn = _db.getConnection();  
         return new TransStatement(_conn, sql);
     }
 
     public Connection getConnection() 
     {
         if(_conn is null)
-           _conn = _manager.getDatabase().getConnection(); 
+           _conn = _db.getConnection(); 
         return _conn;
     }
 
@@ -69,9 +71,9 @@ class EntitySession
 
     public void close()
     {
-        if (_conn && _manager && _manager.getDatabase())
+        if (_conn !is null && _db !is null)
         {
-            _manager.getDatabase().closeConnection(_conn);
+            _db.relaseConnection(_conn);
         }
         _conn = null;
     }
@@ -80,6 +82,7 @@ class EntitySession
     {
         if (_conn is null)
             throw new EntityException("the entity connection haved release");
+        // _conn.ping();
     }
 
 

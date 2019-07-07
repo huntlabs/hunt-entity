@@ -43,7 +43,7 @@ class EntityManagerFactory {
 
     ~this()
     {
-        trace("EntityManagerFactory destruct");
+        version(HUNT_DB_DEBUG) info("EntityManagerFactory destruct");
         if(_db)
             _db.close();
         _db = null;

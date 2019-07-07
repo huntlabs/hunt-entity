@@ -34,7 +34,7 @@ class EntityManager {
         _db = db;
         _dialect = dialect;
         _transaction = new EntityTransaction(this);
-        _EntitySession = new EntitySession(this);
+        _EntitySession = new EntitySession(db);
     }
 
     // ~this()
@@ -49,7 +49,7 @@ class EntityManager {
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
             builder.setAutoIncrease(info.getAutoIncrementKey());
-        auto stmt = _EntitySession.prepare(builder.toString);
+        auto stmt = getSession().prepare(builder.toString);
         int r = stmt.execute();
         info.setIncreaseKey(entity, stmt.lastInsertId);
         return entity;
@@ -72,8 +72,6 @@ class EntityManager {
         return cast(T)(query.getSingleResult());
     }
 
-
-    
 
     public int remove(T,P)(P primaryKeyOrT) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
@@ -138,7 +136,13 @@ class EntityManager {
     }
 
     public Dialect getDialect() {return _dialect;}
-    public EntitySession getSession() {return _EntitySession;}
+
+    public EntitySession getSession() {
+        // trace("Creating a new session");
+        // return new EntitySession(_db);
+        return _EntitySession;
+    }
+
     public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
     public EntityTransaction getTransaction() {return _transaction;}
     public Database getDatabase() {return _db;}
@@ -148,7 +152,7 @@ class EntityManager {
         if(_EntitySession)
         {
             _EntitySession.close();
-            _EntitySession = null;
+            // _EntitySession = null;
         }
     }
 }
