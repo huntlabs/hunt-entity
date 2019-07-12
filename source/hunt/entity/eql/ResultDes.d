@@ -178,26 +178,26 @@ string makeDeSerialize(T)() {
                         auto ` ~ memberName~ ` = new ResultDes!(` ~ memType.stringof ~ `)(_em);
                         _data.` ~ memberName~ ` = ` ~ memberName ~ `.deSerialize(rows,count,startIndex);
                     `;
-                } else static if(is(memType : U[], U) && is(isByteType!U)) { // bytes array
+                } else static if(is(memType : U[], U) && isByteType!U) { // bytes array
 
                     str ~=`
                         if(value.length > 2) {
                             // FIXME: Needing refactor or cleanup -@zhangxueping at 2019/6/18 10:27:11 AM
                             // to handle the other format for mysql etc.
 
-                            if(value[0..2] != "\\x") { // postgresql format
-                                version(HUNT_DEBUG) warning("unrecognized data format");
-                            } else {
+                            if(value[0..2] != "\\x") { 
+                                version(HUNT_DEBUG) warningf("unrecognized data format: %(%02X %)", value[0..2]);
+                            } else { // postgresql format
                                 value = value[2 .. $];
                                 _data.` ~ memberName ~ ` = ConverterUtils.toBytes!(`~ U.stringof ~`)(value);
                             }
                         }
                     `;
                         
-                    } else {
-                        version(HUNT_DEBUG) {
-                            str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
-                        }
+                } else {
+                    version(HUNT_DEBUG) {
+                        str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
+                    }
                 }
             }
         }
