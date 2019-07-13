@@ -119,11 +119,6 @@ string makeDeSerialize(T)() {
         RowData data = rows[startIndex].getAllRowData(_tableName);
         string value;
         // logDebug("rows[0] : ",data);
-        
-        // if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
-        //     count = data.getData("countfor"~_tableName~"_").value.to!long;
-        //     return null;
-        // }
         `;
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
@@ -181,7 +176,7 @@ string makeDeSerialize(T)() {
                 } else static if(is(memType : U[], U) && isByteType!U) { // bytes array
 
                     str ~=`
-                        if(value.length > 2) {
+                        if(value.length >= 2) {
                             // FIXME: Needing refactor or cleanup -@zhangxueping at 2019/6/18 10:27:11 AM
                             // to handle the other format for mysql etc.
 
@@ -195,9 +190,7 @@ string makeDeSerialize(T)() {
                     `;
                         
                 } else {
-                    version(HUNT_DEBUG) {
-                        str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
-                    }
+                    str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
                 }
             }
         }
