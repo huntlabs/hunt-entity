@@ -12,7 +12,10 @@
 module hunt.entity.criteria.CriteriaBuilder;
 
 import hunt.entity;
+import hunt.entity.dialect;
+import hunt.Exceptions;
 import hunt.logging;
+
 import std.traits;
 
 public class CriteriaBuilder
@@ -275,9 +278,12 @@ public class CriteriaBuilder
 
     private string quoteSqlfNeed(T)(T t)
     {
-        static if(is(T == string))
-            return _manager.getDatabase.escapeWithQuotes(t);
-        else
+        static if(is(T == string)) {
+            // return _manager.getDatabase.escapeWithQuotes(t);
+            implementationMissing(false);
+            return t;
+        } else {
             return t.to!string;
+        }
     }
 }

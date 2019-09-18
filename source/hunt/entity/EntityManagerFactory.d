@@ -12,8 +12,10 @@
 module hunt.entity.EntityManagerFactory;
 
 import hunt.entity;
+import hunt.entity.dialect;
 import hunt.entity.EntityOption;
 import hunt.logging;
+import hunt.Exceptions;
 
 class EntityManagerFactory {
 
@@ -35,7 +37,13 @@ class EntityManagerFactory {
         databaseOptions.setConnectionTimeout(_option.pool.connectionTimeout);
 
         _db = new Database(databaseOptions);
-        _dialect = _db.createDialect();
+        
+        if(databaseOptions.isMysql()) {
+            _dialect = new MySQLDialect();
+        } else {
+            _dialect = new PostgreSQLDialect();
+        }
+
         _criteriaBuilder = new CriteriaBuilder(this);
         _exitTables = showTables();
         autoCreateTables();
@@ -72,9 +80,9 @@ class EntityManagerFactory {
         QueryBuilder builder = createQueryBuilder();
         Statement stmt = _db.prepare(builder.showTables().toString());
         ResultSet rs = stmt.query();
-        foreach(row; rs) {
-            foreach(v; row.toStringArray()) {
-                ret ~= v;
+        foreach(Row row; rs) {
+            for(int i=0; i<row.size(); i++) {
+                ret ~= row.getValue(i).toString();
             }
         }
 
@@ -87,9 +95,17 @@ class EntityManagerFactory {
         QueryBuilder builder = createQueryBuilder();
         Statement stmt = _db.prepare(builder.descTable(tableName).toString());
         ResultSet rs = stmt.query();
-        foreach(row; rs) {
-            string[string] array = row.toStringArray();
-            ret ~= "Field" in array ? array["Field"] : array["field"];
+        foreach(Row row; rs) {
+            // string[string] array = row.toStringArray();
+            // ret ~= "Field" in array ? array["Field"] : array["field"];
+
+            for(int i=0; i<row.size(); i++) {
+                ret ~= row.getColumnName(i);
+            }
+
+            // FIXME: Needing refactor or cleanup -@zxp at 9/18/2019, 2:34:02 PM
+            // 
+            // just one row??
         }
         return ret;
     }
@@ -119,6 +135,9 @@ class EntityManagerFactory {
         string[] alterRows;
         //step1:create base table
         foreach(v;flushList) {
+            // FIXME: Needing refactor or cleanup -@zxp at 9/18/2019, 1:36:04 PM
+            // 
+            
             string createSql = v(_dialect, _option.database.prefix, alterRows);
             _db.execute(createSql);
         }

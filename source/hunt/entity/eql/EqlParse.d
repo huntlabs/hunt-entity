@@ -31,7 +31,9 @@ import hunt.database;
 import hunt.Nullable;
 
 import std.algorithm.sorting;
+import std.format;
 import std.regex;
+import std.string;
 
 void eql_throw(string type, string message)
 {

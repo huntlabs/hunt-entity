@@ -12,6 +12,7 @@
 module hunt.entity.EntityManager;
 
 import hunt.entity;
+import hunt.entity.dialect;
 import hunt.entity.EntityOption;
 import hunt.entity.eql;
 import hunt.logging;

@@ -20,7 +20,7 @@ class EntitySession
     private Database _db;
     private Transaction _trans;
 
-    private Connection _conn;
+    private SqlConnection _conn;
 
     this(Database db)
     {
@@ -28,7 +28,7 @@ class EntitySession
         assert(db !is null);
         _db = db;
         _conn = _db.getConnection();
-        _trans = _db.getTransaction(_conn);
+        // _trans = _db.getTransaction(_conn);
     }
 
     // ~this()
@@ -40,7 +40,8 @@ class EntitySession
     public void beginTransaction()
     {
         checkConnection();
-        _trans.begin();
+        // _trans.begin();
+        _trans = _db.getTransaction(_conn);
     }
     public void commit()
     {
@@ -53,14 +54,13 @@ class EntitySession
         _trans.rollback();
     }
 
-    public TransStatement prepare(string sql)
+    public Statement prepare(string sql)
     {
-        if(_conn is null)
-           _conn = _db.getConnection();  
-        return new TransStatement(_conn, sql);
+        return _db.prepare(sql);
     }
 
-    public Connection getConnection() 
+
+    public SqlConnection getConnection() 
     {
         if(_conn is null)
            _conn = _db.getConnection(); 

@@ -14,7 +14,7 @@ module hunt.entity.NativeQuery;
 import hunt.entity;
 import hunt.collection.ArrayList;
 import hunt.collection.List;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 import hunt.Number;
 import hunt.String;
 import hunt.Integer;
@@ -30,6 +30,7 @@ import hunt.sql.util.DBType;
 import hunt.sql.SQLUtils;
 
 import std.regex;
+import std.format;
 
 version(WITH_HUNT_TRACE)
 {
@@ -39,6 +40,8 @@ version(WITH_HUNT_TRACE)
 }
 
 import std.algorithm;
+
+alias ResultSet = RowSet;
 
 class NativeQuery
 {
@@ -108,7 +111,7 @@ class NativeQuery
             }
         }
         auto stmt = _manager.getSession().prepare(sql);
-        //TODO update 时 返回的row line count 为 0
+        //TODO row line count is 0 for Update
         _lastInsertId = stmt.lastInsertId();
         _affectRows = stmt.affectedRows();
         return stmt.execute();
@@ -259,14 +262,14 @@ class NativeQuery
             {
                 dbtype = DBType.POSTGRESQL.name;
             }
-            else if (opt.isSqlite())
-            {
-                dbtype = DBType.SQLITE.name;
+            // else if (opt.isSqlite())
+            // {
+            //     dbtype = DBType.SQLITE.name;
 
-            }
+            // }
             else
             {
-                throw new Exception("not support dbtype : %s".format(opt.url().scheme));
+                throw new Exception("not support dbtype : %s".format(opt.schemeName()));
             }
                 str = SQLUtils.format(str, DBType.MYSQL.name, params);
             }
