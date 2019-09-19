@@ -12,8 +12,9 @@
 module hunt.entity.EntityFieldNormal;
 
 import hunt.entity;
+
+import std.conv;
 import std.math;
-// import hunt.lang;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 

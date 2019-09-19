@@ -13,6 +13,10 @@ module hunt.entity.EntityFieldOneToMany;
 
 import hunt.logging;
 import hunt.entity;
+import hunt.Exceptions;
+import std.variant;
+
+
 class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
 
 
@@ -101,13 +105,16 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     }
 
     private string getJoinKeyValue(Row row) {
-        RowData data = row.getAllRowData(getTableName());
-        if (data is null)
-            return "";
-        RowDataS rd = data.getData(_primaryKey);
-        if (rd is null)
-            return "";
-        return rd.value;
+        string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
+        Variant v = row.getValue(name);
+        if(!v.hasValue()) {
+            version(HUNT_DEBUG) warningf("Can't find value for %s", name);
+            return null;
+        }
+        
+        string value = v.toString();
+        version(HUNT_ENTITY_DEBUG) tracef("A column: %s = %s", name, value);
+        return value;        
     }
 
     private T[] getValueByJoinKeyValue(string key) {
@@ -134,13 +141,24 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     }
 
     public LazyData getLazyData(Row row) {
-        RowData data = row.getAllRowData(getTableName());
-        if (data is null)
+        // RowData data = row.getAllRowData(getTableName());
+        // if (data is null)
+        //     return null;
+        // if (data.getData(_primaryKey) is null)
+        //     return null;
+        // LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
+        // return ret;
+        string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
+        Variant v = row.getValue(name);
+        if(!v.hasValue()) {
+            version(HUNT_DEBUG) warningf("Can't find value for %s", name);
             return null;
-        if (data.getData(_primaryKey) is null)
-            return null;
-        LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
-        return ret;
+        }
+        
+        string value = v.toString();
+        version(HUNT_ENTITY_DEBUG) tracef("A column: %s=%s", name, value);
+        LazyData ret = new LazyData(_mode.mappedBy, value);
+        return ret;        
     }
 
 

@@ -12,8 +12,10 @@
 module hunt.entity.EntityFieldOneToOne;
 
 import hunt.entity;
+import hunt.Exceptions;
 import hunt.logging;
-// import hunt.lang;
+
+import std.variant;
 
 class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     
@@ -86,23 +88,61 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
     public LazyData getLazyData(Row row) {
         LazyData ret;
-        RowData data;
+        // RowData data;
+        // if (_isMappedBy) {
+        //     data = row.getAllRowData(getTableName());
+        //     if (data is null)
+        //         return null;
+        //     if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
+        //         return null;
+        //     ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
+        // }
+        // else {
+        //     data = row.getAllRowData(getTableName());
+        //     if (data is null)
+        //         return null;
+        //     if (data.getData(_joinColumn) is null)
+        //         return null;
+        //     ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
+        // }
+
+        string primaryKeyName = _entityInfo.getPrimaryKeyString();
         if (_isMappedBy) {
-            data = row.getAllRowData(getTableName());
-            if (data is null)
+            // data = row.getAllRowData(getTableName());
+            // if (data is null)
+            //     return null;
+            // if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
+            //     return null;
+            
+            string name = EntityExpression.getColumnAsName(primaryKeyName, getTableName());
+            Variant v = row.getValue(name);
+            if(!v.hasValue()) {
+                version(HUNT_DEBUG) warningf("Can't find value for %s", name);
                 return null;
-            if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
-                return null;
-            ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
+            }
+            
+            string value = v.toString();
+            version(HUNT_ENTITY_DEBUG) tracef("A column: %s = %s", name, value);
+            ret = new LazyData(_mode.mappedBy, value);
         }
         else {
-            data = row.getAllRowData(getTableName());
-            if (data is null)
+            // data = row.getAllRowData(getTableName());
+            // if (data is null)
+            //     return null;
+            // if (data.getData(_joinColumn) is null)
+            //     return null;
+
+            string name = EntityExpression.getColumnAsName(_joinColumn, getTableName());
+            Variant v = row.getValue(name);
+            if(!v.hasValue()) {
+                version(HUNT_DEBUG) warningf("Can't find value for %s", name);
                 return null;
-            if (data.getData(_joinColumn) is null)
-                return null;
-            ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
-        }
+            }
+            
+            string value = v.toString();
+            version(HUNT_DEBUG) tracef("A column: %s = %s", name, value);                
+            ret = new LazyData(primaryKeyName, value);
+        }        
         return ret;
     }
 

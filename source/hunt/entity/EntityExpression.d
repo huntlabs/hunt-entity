@@ -34,8 +34,9 @@ class EntityExpression
 
     public string getFullColumn() {return _fullColumn;}
     public string getColumnName() {return _columnName;}
-    public string getColumnAs() {return _selectColumn;}
     public string getTableName() {return _tableName;}
+    public string getColumnAs() {return _selectColumn;}
+    public string getColumnAsName() {return _columnAs;}
 
     public string getSelectColumn()
     {
@@ -60,4 +61,17 @@ class EntityExpression
             _fullColumn = _fullColumn.replace("DISTINCT ", "");
         return this;
     } 
+
+
+    static string getFullColumnName(string columnName, string tableName) {
+        return tableName ~ "." ~ columnName;
+    }
+
+    static string getColumnAsName(string columnName, string tableName) {
+        return tableName ~ "__as__" ~ columnName;
+    }
+
+    static string getColumnAs(string columnName, string tableName) {
+        return getFullColumnName(columnName, tableName) ~ " AS " ~ getColumnAsName(columnName, tableName);
+    }    
 }

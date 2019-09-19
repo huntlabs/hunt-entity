@@ -1,8 +1,11 @@
 module hunt.entity.EntityFieldManyToManyOwner;
 
-
+import hunt.Exceptions;
 import hunt.entity;
 import hunt.logging;
+
+import std.format;
+import std.variant;
 
 
 class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = "") : EntityFieldInfo {
@@ -91,17 +94,19 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     }
 
     public LazyData getLazyData(Row row) {
-        // logDebug("--- MappedBy : %s , row : %s ".format(_mode.mappedBy,row));
+        version(HUNT_DEBUG) logDebug("--- MappedBy: %s , row: %s ".format(_mode.mappedBy, row));
 
-        RowData data = row.getAllRowData(getTableName());
-        // logDebug("---data : %s , _primaryKey : %s ".format(data,_primaryKey));
-        if (data is null)
+        string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
+        Variant v = row.getValue(name);
+        if(!v.hasValue()) {
+            version(HUNT_DEBUG) warningf("Can't find value for %s", name);
             return null;
-        if (data.getData(_primaryKey) is null)
-            return null;
-        // logDebug("---------------------");
-        LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
-        return ret;
+        }
+        
+        string value = v.toString();
+        version(HUNT_ENTITY_DEBUG) tracef("A column: %s=%s", name, value);
+        LazyData ret = new LazyData(_mode.mappedBy, value);   
+        return ret;     
     }
 
 }

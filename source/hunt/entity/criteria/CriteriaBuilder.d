@@ -16,6 +16,8 @@ import hunt.entity.dialect;
 import hunt.Exceptions;
 import hunt.logging;
 
+import std.conv;
+import std.format;
 import std.traits;
 
 public class CriteriaBuilder

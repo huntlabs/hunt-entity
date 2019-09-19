@@ -15,9 +15,12 @@ import hunt.entity.eql.Common;
 
 import hunt.entity;
 import hunt.entity.DefaultEntityManagerFactory;
+import hunt.entity.dialect;
 
 import hunt.logging;
+
 import std.conv;
+import std.string;
 import std.traits;
 
 class EntityInfo(T : Object, F : Object = T) {
@@ -51,6 +54,7 @@ class EntityInfo(T : Object, F : Object = T) {
 
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
+
     mixin(makeDeSerialize!(T,F)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
@@ -327,22 +331,33 @@ string makeInitEntityData(T,F)() {
 }
 
 
-
 string makeDeSerialize(T,F)() {
+
     string str = `
+
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-        //    logDebug("deSerialize rows (%s) : %s , count : %s , index  : %s ".format(T.stringof,rows,count,startIndex));
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("Target: %s, Rows: %s, count: %s, startIndex: %d, tableName: %s ", 
+                T.stringof, rows, count, startIndex, _tableName);
+        }
+
+        import std.variant;
 
         T _data = new T();
         _data.setManager(_manager);
-        RowData data = rows[startIndex].getAllRowData(_tableName);
-        // logDebug("rows[0] : ",data);
-        if (data is null)
+        Row row = rows[startIndex];
+        string columnAsName;
+        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
+        if (row is null || row.size() == 0)
             return null;
-        if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
-            count = data.getData("countfor"~_tableName~"_").value.to!long;
+
+        Variant columnValue = row.getValue("countfor" ~ _tableName ~ "_");
+        if (columnValue.hasValue()) {
+            count = columnValue.get!(long);
             return null;
-        }`;
+        }
+        `;
+        
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
@@ -353,34 +368,41 @@ string makeDeSerialize(T,F)() {
                     mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
                 }
                 static if (isBasicType!memType || isSomeString!memType) {
-        str ~=`
-        auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
-        if (data.getData(`~memberName~`.getColumnName())) {
-            `~memberName~`.deSerialize!(`~memType.stringof~`)(data.getData(`~memberName~`.getColumnName()).value, _data.`~memberName~`);
-        }`;
+                    str ~=`
+                    auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
+                    columnAsName = `~memberName~`.getColumnAsName();
+                    columnValue = row.getValue(columnAsName);
+                    version(HUNT_ENTITY_DEBUG) {
+                        tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
+                            columnValue, columnAsName);
+                    }
+                    if (columnValue.hasValue()) {
+                        `~memberName~`.deSerialize!(`~memType.stringof~`)(columnValue.toString(), _data.`~memberName~`);
+                    }
+                    `;
                 }
                 else {
                     static if(is(F == memType)) {
-        str ~=`
-        _data.`~memberName~` = _owner;`;
+                        str ~=`
+                        _data.`~memberName~` = _owner;`;
                     }
                     else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-        str ~=`
-        auto `~memberName~` = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(this.`~memberName~`));
-        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-        _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                        str ~=`
+                        auto `~memberName~` = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(this.`~memberName~`));
+                        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
                     }
                     else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
-        str ~=`
-        auto `~memberName~` = (cast(EntityFieldManyToOne!(`~memType.stringof~`))(this.`~memberName~`));
-        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-        _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
+                        str ~=`
+                        auto `~memberName~` = (cast(EntityFieldManyToOne!(`~memType.stringof~`))(this.`~memberName~`));
+                        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
                     }
                     else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-        str ~=`
-        auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));
-        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-        _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
+                        str ~=`
+                        auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));
+                        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
                     }
                     else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
                         static if ( memType.stringof.replace("[]","") == F.stringof)
@@ -406,5 +428,6 @@ string makeDeSerialize(T,F)() {
     str ~= `
         return Common.sampleCopy(_data);
     }`;
+
     return str;
 }

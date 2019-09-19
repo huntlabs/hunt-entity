@@ -35,6 +35,7 @@ class EntityManagerFactory {
         databaseOptions.setMaximumConnection(_option.pool.maxConnection);
         databaseOptions.setMinimumConnection(_option.pool.minConnection);
         databaseOptions.setConnectionTimeout(_option.pool.connectionTimeout);
+        databaseOptions.setEncoderBufferSize(512);  // The sql string may be very long.
 
         _db = new Database(databaseOptions);
         
