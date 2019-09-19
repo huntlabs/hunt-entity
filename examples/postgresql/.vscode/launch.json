@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/postgresql-test",
+            "program": "${workspaceFolder}/postgresql-demo",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

@@ -1,18 +1,14 @@
 {
-	"name": "postgresql-test",
+	"name": "postgresql-demo",
 	"targetType": "executable",
-	"description": "test for entity",
+	"description": "A simple demo for hunt-entity based on PostgreSQL",
 	"copyright": "Copyright (C) 2018-2019, HuntLabs",
     "homepage": "https://www.huntlabs.net",
     "license": "Apache-2.0",
 	"dependencies": {
 		"hunt-entity": {"path": "../../"}
 	},
-	"configurations": [{
-		"name": "postgresql",
-		"subConfigurations": {
-			"hunt-entity": "postgresql"
-		}
-	}],
-	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG", "HUNT_SQL_DEBUG_MORE"]
+	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG", "HUNT_SQL_DEBUG_MORE1",
+		"HUNT_ENTITY_DEBUG", 
+		"HUNT_DB_DEBUG", "HUNT_NET_DEBUG"]
 }

@@ -42,3 +42,4 @@ __test__library__
 # Ignore Sublime Text workspace (project file is ok):
 *.sublime-workspace
 dub.*.json
+examples/postgresql/postgresql-demo
