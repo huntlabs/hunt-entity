@@ -29,6 +29,7 @@ import std.traits;
 class ResultDes(T : Object) {
     
     private string _tableName;
+    private string _tableNameInLower; // for PostgreSQL, the column's name will be converted to lowercase.
     private string _tablePrefix;
     private string _clsName;
     private EntityManager _em;
@@ -49,7 +50,7 @@ class ResultDes(T : Object) {
     }
 
     // pragma(msg, "T = "~T.stringof);
-    // pragma(msg,makeDeSerialize!(T));
+    pragma(msg,makeDeSerialize!(T));
     // pragma(msg,makeInitEntityData!(T));
 
 
@@ -95,6 +96,7 @@ class ResultDes(T : Object) {
 string makeInitEntityData(T)() {
     string str = `
     private void initEntityData() {
+        import std.string;
         _clsName = "`~T.stringof~`";`;
     static if (hasUDA!(T,Table)) {
         str ~= `
@@ -105,6 +107,7 @@ string makeInitEntityData(T)() {
         _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
     }
     str ~= `
+        _tableNameInLower = _tableName.toLower();
         }
     `;
     return str;
@@ -113,12 +116,21 @@ string makeInitEntityData(T)() {
 string makeDeSerialize(T)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0) {
-        //    logDebug("deSerialize rows : %s , count : %s , index  : %s , table : %s ".format(rows,count,startIndex,_tableName));
+
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("Target: %s, Rows: %s, count: %s, startIndex: %d, tableName: %s ", 
+                T.stringof, rows, count, startIndex, _tableName);
+        }
+
+        import std.variant;
 
         T _data = new T();
-        RowData data = rows[startIndex].getAllRowData(_tableName);
+        Row row = rows[startIndex];
+        string columnAsName;
+        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
+
         string value;
-        // logDebug("rows[0] : ",data);
+        Variant columnValue;
         `;
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
@@ -134,30 +146,36 @@ string makeDeSerialize(T)() {
 
                 // get the column's value
                 str ~=`
+                    // ======================== `~memberName~` =============================
                     value = null;  // clear last value
-                    if (data !is null) {
-                        auto columnData = data.getData(`~ columnName ~`);
-                        if(columnData !is null) {
-                            value = columnData.value;
-                            version(HUNT_SQL_DEBUG_MORE) {
-                                if(value.length > 128) {
-                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
-                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                        ~ memType.stringof ~ `", value[0..128]);
-                                } else {
-                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
-                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                        ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
-                                }
-                            }              
-                        } else {
-                            version(HUNT_SQL_DEBUG_MORE) {
-                                    tracef("member: %s, column: %s, type: %s, value: null", "` 
-                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                        ~ memType.stringof ~ `");
+                    columnAsName = EntityExpression.getColumnAsName(`~ columnName ~`, _tableNameInLower);
+
+                    version(HUNT_ENTITY_DEBUG_MORE) {
+                        warningf("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
+                    }
+
+                    columnValue = row.getValue(columnAsName);
+                    if (columnValue.hasValue()) {
+                        value = columnValue.toString();
+                        version(HUNT_ENTITY_DEBUG) {
+                            if(value.length > 128) {
+                                tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                    ~ memType.stringof ~ `", value[0..128]);
+                            } else {
+                                tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                    ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
                             }
+                        }              
+                    } else {
+                        version(HUNT_ENTITY_DEBUG) {
+                                warningf("member: %s, column: %s, type: %s, value: null", "` 
+                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                    ~ memType.stringof ~ `");
                         }
-                    }`;
+                    }
+                    `;
 
                 // populate the field member
                 static if (isBasicType!memType || isSomeString!memType) {

@@ -14,36 +14,32 @@ module hunt.entity.Constant;
 import hunt.String;
 import hunt.database;
 import std.format;
-//@Factory
+
+
 struct Factory
 {
     string name;
 }
 
-//@TableName
 struct Table {
     string name;
 }
 
-//@ColumnName
 struct Column {
     string name;
     bool nullable = true;
 }
 
-//@JoinColumn
 struct JoinColumn {
     string name;
     string referencedColumnName;
     bool nullable = true;
 }
 
-//@JoinTable
 struct JoinTable {
     string name;
 }
 
-//@InverseJoinColumn
 // alias InverseJoinColumn = JoinColumn;
 struct InverseJoinColumn {
     string name;
@@ -52,26 +48,27 @@ struct InverseJoinColumn {
 }
 
 
-
-//@OneToOne
 struct OneToOne {
     string mappedBy;
     FetchType fetch = FetchType.EAGER;
     CascadeType cascade = CascadeType.ALL;
 }
-//@ManyToMany
+
+
 struct ManyToMany {
     string mappedBy;
     FetchType fetch = FetchType.LAZY;
     CascadeType cascade = CascadeType.ALL;
 }
-//@OneToMany
+
+
 struct OneToMany {
     string mappedBy;
     FetchType fetch = FetchType.LAZY;
     CascadeType cascade = CascadeType.ALL;
 } 
-//@ManyToOne
+
+
 struct ManyToOne {
     FetchType fetch = FetchType.EAGER;
     CascadeType cascade = CascadeType.ALL;
@@ -98,20 +95,13 @@ enum FetchType {
     EAGER
 }
 
-
-
-
-
 enum CascadeType {
-    PERSIST, //级联新建
-    REMOVE,  //级联删除
-    REFRESH, //级联刷新
-    MERGE,   //级联更新 中选择一个或多个
-    ALL,      //所有
+    PERSIST, 
+    REMOVE,  
+    REFRESH, 
+    MERGE,  
+    ALL,      
 }
-
-//#fetch属性是该实体的加载方式，有两种：LAZY和EAGER。
-
 
 
 class JoinSqlBuild  {
@@ -147,7 +137,7 @@ class LazyData {
 
     override string toString()
     {
-        return "( %s , %s )".format(key,value);
+        return "(%s , %s)".format(key,value);
     }
 }
 

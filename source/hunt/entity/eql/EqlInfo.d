@@ -1,10 +1,13 @@
 module hunt.entity.eql.EqlInfo;
 
+import hunt.entity.eql.Common;
+
+import hunt.entity.dialect;
+
 import hunt.logging;
 import std.format;
 import std.traits;
 
-import hunt.entity.eql.Common;
 
 class EqlObject
 {
@@ -322,17 +325,28 @@ string makeInitEntityData(T,F)() {
 string makeDeSerialize(T,F)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-        //    logDebug("deSerialize rows : %s , count : %s , index  : %s ".format(rows,count,startIndex));
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("Target: %s, Rows: %s, count: %s, startIndex: %d, tableName: %s ", 
+                T.stringof, rows, count, startIndex, _tableName);
+        }
+
+        import std.variant;
 
         T _data = new T();
-        RowData data = rows[startIndex].getAllRowData(_tableName);
-        // logDebug("rows[0] : ",data);
-        if (data is null)
+
+        Row row = rows[startIndex];
+        string columnAsName;
+        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
+        if (row is null || row.size() == 0)
             return null;
-        if (data.getAllData().length == 1 && data.getData("countfor"~_tableName~"_")) {
-            count = data.getData("countfor"~_tableName~"_").value.to!long;
+
+        Variant columnValue = row.getValue("countfor" ~ _tableName ~ "_");
+        if (columnValue.hasValue()) {
+            count = columnValue.get!(long);
             return null;
-        }`;
+        }
+        `;
+        
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
@@ -340,9 +354,16 @@ string makeDeSerialize(T,F)() {
                 static if (isBasicType!memType || isSomeString!memType) {
         str ~=`
         auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
-        if (data.getData(`~memberName~`.getColumnName())) {
-            `~memberName~`.deSerialize!(`~memType.stringof~`)(data.getData(`~memberName~`.getColumnName()).value, _data.`~memberName~`);
-        }`;
+        columnAsName = `~memberName~`.getColumnAsName();
+        columnValue = row.getValue(columnAsName);
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
+                columnValue, columnAsName);
+        }
+        if (columnValue.hasValue()) {
+            `~memberName~`.deSerialize!(`~memType.stringof~`)(columnValue.toString(), _data.`~memberName~`);
+        }
+        `;
                 }
                 else {
                     static if(is(F == memType)) {

@@ -13,6 +13,9 @@ module hunt.entity.EntityFieldManyToOne;
 
 import hunt.entity;
 import hunt.Nullable;
+import hunt.logging.ConsoleLogger;
+
+import std.variant;
 
 class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
 
@@ -61,13 +64,17 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
     }
 
     public LazyData getLazyData(Row row) {
-        RowData data = row.getAllRowData(getTableName());
-        if (data is null)
+        string name = EntityExpression.getColumnAsName(_joinColumn, getTableName());
+        Variant v = row.getValue(name);
+        if(!v.hasValue()) {
+            warningf("Can't find value for %s", name);
             return null;
-        if (data.getData(_joinColumn) is null)
-            return null;
-        LazyData ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
-        return ret;
+        }
+        
+        string value = v.toString();
+        version(HUNT_DEBUG) tracef("A column: %s = %s", name, value);
+        LazyData ret = new LazyData(_entityInfo.getPrimaryKeyString(), value);
+        return ret;        
     }
 
 }

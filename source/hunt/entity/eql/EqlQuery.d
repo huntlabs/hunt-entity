@@ -29,7 +29,11 @@ version(WITH_HUNT_TRACE)
 }
 
 import std.algorithm;
+import std.conv;
+import std.format;
 import std.traits;
+import std.string;
+import std.variant;
 
 class EqlQuery(T...)
 {
@@ -99,7 +103,7 @@ class EqlQuery(T...)
             scope (exit)
                 endTrace();
         }
-        auto opt = _manager.getDatabase().getOption();
+        DatabaseOption opt = _manager.getDatabase().getOption();
         if (opt.isMysql())
         {
             _eqlParser = new EqlParse(_eql, DBType.MYSQL.name);
@@ -108,13 +112,13 @@ class EqlQuery(T...)
         {
             _eqlParser = new EqlParse(_eql, DBType.POSTGRESQL.name);
         }
-        else if (opt.isSqlite())
-        {
-            _eqlParser = new EqlParse(_eql, DBType.SQLITE.name);
-        }
+        // else if (opt.isSqlite())
+        // {
+        //     _eqlParser = new EqlParse(_eql, DBType.SQLITE.name);
+        // }
         else
         {
-            throw new Exception("not support dbtype : %s".format(opt.url().scheme));
+            throw new Exception("not support dbtype : %s".format(opt.schemeName()));
         }
         version(HUNT_SQL_DEBUG) {
             trace(_eql);
@@ -398,10 +402,12 @@ class EqlQuery(T...)
         }
         long total = 0;
         auto stmt = _manager.getSession().prepare(sql);
-        auto res = stmt.query();
-        foreach (row; res)
+        RowSet res = stmt.query();
+        foreach (Row row; res)
         {
-            total = to!int(row[0]);
+            Variant v = row.getValue(0);
+            warningf("xxxx=>%s", v);
+            total = to!int(v.toString());
         }
         return total;
     }

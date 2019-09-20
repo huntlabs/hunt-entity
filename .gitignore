@@ -43,3 +43,4 @@ __test__library__
 *.sublime-workspace
 dub.*.json
 examples/postgresql/postgresql-demo
+examples/eql/eql-demo

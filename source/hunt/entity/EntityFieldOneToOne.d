@@ -88,31 +88,9 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
     public LazyData getLazyData(Row row) {
         LazyData ret;
-        // RowData data;
-        // if (_isMappedBy) {
-        //     data = row.getAllRowData(getTableName());
-        //     if (data is null)
-        //         return null;
-        //     if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
-        //         return null;
-        //     ret = new LazyData(_mode.mappedBy, data.getData(_entityInfo.getPrimaryKeyString()).value);
-        // }
-        // else {
-        //     data = row.getAllRowData(getTableName());
-        //     if (data is null)
-        //         return null;
-        //     if (data.getData(_joinColumn) is null)
-        //         return null;
-        //     ret = new LazyData(_entityInfo.getPrimaryKeyString(), data.getData(_joinColumn).value);
-        // }
 
         string primaryKeyName = _entityInfo.getPrimaryKeyString();
         if (_isMappedBy) {
-            // data = row.getAllRowData(getTableName());
-            // if (data is null)
-            //     return null;
-            // if (data.getData(_entityInfo.getPrimaryKeyString()) is null)
-            //     return null;
             
             string name = EntityExpression.getColumnAsName(primaryKeyName, getTableName());
             Variant v = row.getValue(name);
@@ -124,14 +102,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
             string value = v.toString();
             version(HUNT_ENTITY_DEBUG) tracef("A column: %s = %s", name, value);
             ret = new LazyData(_mode.mappedBy, value);
-        }
-        else {
-            // data = row.getAllRowData(getTableName());
-            // if (data is null)
-            //     return null;
-            // if (data.getData(_joinColumn) is null)
-            //     return null;
-
+        } else {
             string name = EntityExpression.getColumnAsName(_joinColumn, getTableName());
             Variant v = row.getValue(name);
             if(!v.hasValue()) {

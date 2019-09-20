@@ -141,13 +141,6 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     }
 
     public LazyData getLazyData(Row row) {
-        // RowData data = row.getAllRowData(getTableName());
-        // if (data is null)
-        //     return null;
-        // if (data.getData(_primaryKey) is null)
-        //     return null;
-        // LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
-        // return ret;
         string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
         Variant v = row.getValue(name);
         if(!v.hasValue()) {

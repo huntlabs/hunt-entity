@@ -174,20 +174,10 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
 
     public LazyData getLazyData(Row row) {
         logDebug("--- MappedBy : %s , row : %s ".format(_mode.mappedBy, row));
-
-        // RowData data = row.getAllRowData(getTableName());
-        // // logDebug("---data : %s , _primaryKey : %s ".format(data,_primaryKey));
-        // if (data is null)
-        //     return null;
-        // if (data.getData(_primaryKey) is null)
-        //     return null;
-        // // logDebug("---------------------");
-        // LazyData ret = new LazyData(_mode.mappedBy, data.getData(_primaryKey).value);
-        // return ret;
         string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
         Variant v = row.getValue(name);
         if(!v.hasValue()) {
-            warningf("Can't find the value for %s", name);
+            warningf("Can't find value for %s", name);
             return null;
         }
         
