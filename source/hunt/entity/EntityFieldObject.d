@@ -11,8 +11,8 @@ class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
     protected EntityInfo!(T,F) _entityInfo;
     protected EntityManager _manager;
 
-    this (EntityManager manager,string fileldName, string columnName, string tableName, T fieldValue, F owner) {
-        super(fileldName, columnName, tableName);
+    this (EntityManager manager,string fieldName, string columnName, string tableName, T fieldValue, F owner) {
+        super(fieldName, columnName, tableName);
         _manager = manager;
         _value = fieldValue;
         _owner = owner;

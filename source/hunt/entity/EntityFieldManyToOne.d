@@ -22,8 +22,8 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
     private ManyToOne _mode;
     private string _findSqlStr;
 
-    this(EntityManager manager, string fileldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
-        super(manager, fileldName, columnName, tableName, fieldValue, null);
+    this(EntityManager manager, string fieldName, string columnName, string tableName, T fieldValue, ManyToOne mode) {
+        super(manager, fieldName, columnName, tableName, fieldValue, null);
         _mode = mode;      
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _joinColumn = columnName;

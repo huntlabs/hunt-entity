@@ -91,7 +91,7 @@ class EntityInfo(T : Object, F : Object = T) {
     public Object[string] getInsertString() {
         Object[string] str;
         foreach(info; _fields) {
-            if (info.getFileldName() != _autoIncrementKey) {
+            if (info.getFieldName() != _autoIncrementKey) {
                 if (info.getColumnName() != "") {
                     if(!_manager.getDatabase().getOption().isPgsql())
                         str[info.getFullColumn()] = info.getColumnFieldData().value;

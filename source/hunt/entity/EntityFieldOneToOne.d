@@ -25,11 +25,11 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
 
 
-    this(EntityManager manager, string fileldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
+    this(EntityManager manager, string fieldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
         _mode = mode;  
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _isMappedBy = _mode.mappedBy != "";
-        super(manager, fileldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner);
+        super(manager, fieldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner);
         _primaryKey = primaryKey;
         if (_isMappedBy) {
             _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();

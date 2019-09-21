@@ -403,7 +403,7 @@ class JoinCond(T : Object)
 {
     private string _joinCond;
     private EqlInfo!T _eqlInfo;
-    this(EntityManager manager, string leftTable,string fileldName, string joinCol, string referencedColumnName ,string tableName)
+    this(EntityManager manager, string leftTable,string fieldName, string joinCol, string referencedColumnName ,string tableName)
     {
         _eqlInfo = new EqlInfo!T(manager);
         if(referencedColumnName.length == 0)

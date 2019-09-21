@@ -31,19 +31,19 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
     private EntityManager _em;
 
 
-    this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {
-        // logDebug("ManyToMany(%s,%s) not main mapped ( %s , %s , %s , %s ,%s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped));
+    this(EntityManager manager, string fieldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {
+        // logDebug("ManyToMany(%s,%s) not main mapped ( %s , %s , %s , %s ,%s )".format(T.stringof,F.stringof,fieldName,primaryKey,tableName,mode,isMainMapped));
         _em = manager;
-        super(manager, fileldName, "", tableName, null, owner);
+        super(manager, fieldName, "", tableName, null, owner);
         _isMainMapped = isMainMapped;
         init(primaryKey, mode, owner);
     }
 
-    this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, 
+    this(EntityManager manager, string fieldName, string primaryKey, string tableName, ManyToMany mode, F owner, 
             bool isMainMapped ,JoinTable joinTable , JoinColumn jc  ,InverseJoinColumn ijc ) {
-        // logDebug("ManyToMany(%s,%s) main mapped( %s , %s , %s , %s ,%s , %s , %s , %s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped,joinTable,jc,ijc));
+        // logDebug("ManyToMany(%s,%s) main mapped( %s , %s , %s , %s ,%s , %s , %s , %s )".format(T.stringof,F.stringof,fieldName,primaryKey,tableName,mode,isMainMapped,joinTable,jc,ijc));
         _em = manager;
-        super(manager, fileldName, "", tableName, null, owner);
+        super(manager, fieldName, "", tableName, null, owner);
         _isMainMapped = isMainMapped;
         _joinColumn = jc.name;
         _inverseJoinColumn = ijc.name;

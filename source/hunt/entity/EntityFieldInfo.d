@@ -12,10 +12,10 @@
 module hunt.entity.EntityFieldInfo;
 
 import hunt.entity;
+import std.format;
 
 class EntityFieldInfo : EntityExpression
 {
-    private string _fileldName;
     protected string _joinColumn;
     protected string _inverseJoinColumn;
     protected string _joinTable;
@@ -23,37 +23,33 @@ class EntityFieldInfo : EntityExpression
     protected ForeignKeyData _foreignKeyData;
     protected JoinSqlBuild _joinSqlData;
     protected ColumnFieldData _columnFieldData;
- 
+    protected bool _isMainMapped;
     protected bool _enableJoin = true;
+
+    private string _fieldName;
     private bool _nullable = true;
     private bool _primary;
     private bool _auto;
 
-    
-    protected bool _isMainMapped;
-
-
-
-
-    public this(string fileldName, string columnName, string tableName) {
+    public this(string fieldName, string columnName, string tableName) {
         super(columnName, tableName);
-        _fileldName = fileldName;
+        _fieldName = fieldName;
     }
-
-
 
     public void setNullable(bool b) {_nullable = b;}
     public bool getNullable() {return _nullable;}
+
     public void setPrimary(bool b) {_primary = b;}
     public bool getPrimary() {return _primary;}
+
     public void setAuto(bool b) {_auto = b;}
     public bool getAuto() {return _auto;}
 
-
-
-
     public bool isMainMapped() {return _isMainMapped;}
-    public string getFileldName() {return _fileldName;}
+
+    deprecated("Using getFieldName instead.")
+    public string getFileldName() {return _fieldName;}
+    public string getFieldName() {return _fieldName;}
     public string getJoinColumn() {return _joinColumn;}
     public string getInverseJoinColumn() {return _inverseJoinColumn;}
     public string getJoinTable() {return _joinTable;}
@@ -61,8 +57,15 @@ class EntityFieldInfo : EntityExpression
     public ForeignKeyData getForeignKeyData() {return _foreignKeyData;}
 
     public JoinSqlBuild getJoinSqlData() {return _joinSqlData;}
+
     public bool isEnableJoin() {return _enableJoin;}
     public void setEnableJoin(bool en) { _enableJoin = en;}
+
     public ColumnFieldData getColumnFieldData() {return _columnFieldData;}
+
+    override string toString() {
+        return format("isPrimary: %s, TableName:%s, FileldName: %s, ColumnName: %s, JoinTable: %s, JoinColumn: %s, ", 
+            _primary, getTableName(), _fieldName, getColumnName(), _joinTable, _joinColumn);
+    }
 
 }

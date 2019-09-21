@@ -16,19 +16,19 @@ class EntityFieldManyToManyOwner(T : Object, F : Object = T,string MAPPEDBY = ""
     private T[][string] _decodeCache;
     private EntityManager _em;
 
-    this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {
-        // logDebug("ManyToManyOwner(%s,%s) not main mapped ( %s , %s , %s , %s ,%s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped));
+    this(EntityManager manager, string fieldName, string primaryKey, string tableName, ManyToMany mode, F owner, bool isMainMapped ) {
+        // logDebug("ManyToManyOwner(%s,%s) not main mapped ( %s , %s , %s , %s ,%s )".format(T.stringof,F.stringof,fieldName,primaryKey,tableName,mode,isMainMapped));
         _em = manager;
-        super(fileldName, "", tableName);
+        super(fieldName, "", tableName);
         _isMainMapped = isMainMapped;
         init(primaryKey, mode, owner);
     }
 
-    this(EntityManager manager, string fileldName, string primaryKey, string tableName, ManyToMany mode, F owner, 
+    this(EntityManager manager, string fieldName, string primaryKey, string tableName, ManyToMany mode, F owner, 
             bool isMainMapped ,JoinTable joinTable , JoinColumn jc  ,InverseJoinColumn ijc ) {
-        // logDebug("ManyToManyOwner(%s,%s) main mapped( %s , %s , %s , %s ,%s , %s , %s , %s )".format(T.stringof,F.stringof,fileldName,primaryKey,tableName,mode,isMainMapped,joinTable,jc,ijc));
+        // logDebug("ManyToManyOwner(%s,%s) main mapped( %s , %s , %s , %s ,%s , %s , %s , %s )".format(T.stringof,F.stringof,fieldName,primaryKey,tableName,mode,isMainMapped,joinTable,jc,ijc));
         _em = manager;
-        super(fileldName, "", tableName);
+        super(fieldName, "", tableName);
         _isMainMapped = isMainMapped;
         _joinColumn = jc.name;
         _inverseJoinColumn = ijc.name;

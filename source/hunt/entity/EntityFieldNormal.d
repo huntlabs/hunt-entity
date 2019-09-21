@@ -18,8 +18,8 @@ import std.math;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 
-    public this(EntityManager manager ,string fileldName, string columnName, string tableName, T value) {
-        super(fileldName, columnName, tableName);
+    public this(EntityManager manager ,string fieldName, string columnName, string tableName, T value) {
+        super(fieldName, columnName, tableName);
 
         _columnFieldData = new ColumnFieldData();
         _columnFieldData.valueType = typeof(value).stringof;

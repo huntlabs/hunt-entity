@@ -124,7 +124,7 @@ public class CriteriaBuilder
                 p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
-                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+                throw new EntityException("cannot compare field %s with type %".format(info.getFieldName(), typeid(T).stringof));
             }
             return p;
         }
@@ -145,7 +145,7 @@ public class CriteriaBuilder
                 p = new Predicate().addValue(info.getJoinColumn(), "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
-                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+                throw new EntityException("cannot compare field %s with type %".format(info.getFieldName(), typeid(T).stringof));
             }
             return p;
         }
@@ -169,7 +169,7 @@ public class CriteriaBuilder
                 p = new Predicate().addValue(condTable~"."~condColumn, "=", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
-                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+                throw new EntityException("cannot compare field %s with type %".format(info.getFieldName(), typeid(T).stringof));
             }
             return p;
         }
@@ -193,7 +193,7 @@ public class CriteriaBuilder
                 p = new Predicate().addValue(info.getJoinColumn(), "<>", quoteSqlfNeed(entityInfo.getPrimaryValue()));
             }
             else {
-                throw new EntityException("cannot compare field %s with type %".format(info.getFileldName(), typeid(T).stringof));
+                throw new EntityException("cannot compare field %s with type %".format(info.getFieldName(), typeid(T).stringof));
             }
             return p;
         }
@@ -265,16 +265,16 @@ public class CriteriaBuilder
         if (info.getColumnFieldData()) {
             static if (is(T == string)) {
                 if (info.getColumnFieldData().valueType != "string") {
-                    throw new EntityException("EntityFieldInfo %s type need been string not %s".format(info.getFileldName(), info.getColumnFieldData().valueType));
+                    throw new EntityException("EntityFieldInfo %s type need been string not %s".format(info.getFieldName(), info.getColumnFieldData().valueType));
                 }
             }else {
                 if (info.getColumnFieldData().valueType == "string") {
-                    throw new EntityException("EntityFieldInfo %s type need been number not string".format(info.getFileldName()));
+                    throw new EntityException("EntityFieldInfo %s type need been number not string".format(info.getFieldName()));
                 }
             }
         }
         else {
-            throw new EntityException("EntityFieldInfo %s is object can not be Predicate".format(info.getFileldName()));
+            throw new EntityException("EntityFieldInfo %s is object can not be Predicate".format(info.getFieldName()));
         }   
     }
 

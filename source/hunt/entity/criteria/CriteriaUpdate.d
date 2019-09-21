@@ -53,9 +53,9 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
         // FIXME: Needing refactor or cleanup -@zxp at Sat, 21 Sep 2019 03:02:07 GMT
         // skip field which type is non-db
         if(value is null || value.toString() == "null") {
-            version(HUNT_DEBUG) warningf("Skipped null value, field: %s", field.getFileldName());
+            version(HUNT_DEBUG) warningf("Skipped null value, field: %s", field.getFieldName());
         } else {
-            _sqlBuidler.set(field.getFileldName(), 
+            _sqlBuidler.set(field.getFieldName(), 
                 field.getColumnName(), field.getTableName(), value);
 
             // if(_criteriaBuilder.getDatabase().getOption().isPgsql())

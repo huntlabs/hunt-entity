@@ -29,8 +29,8 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
 
 
 
-    this(EntityManager manager, string fileldName, string primaryKey, string tableName, OneToMany mode, F owner) {
-        super(manager, fileldName, "", tableName, null, owner);
+    this(EntityManager manager, string fieldName, string primaryKey, string tableName, OneToMany mode, F owner) {
+        super(manager, fieldName, "", tableName, null, owner);
         init(primaryKey, mode, owner);
     }
 

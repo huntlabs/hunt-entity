@@ -6,8 +6,8 @@ import hunt.entity;
 
 class EntityFieldOwner : EntityFieldInfo {
     
-    public this(string fileldName, string columnName, string tableName) {
-        super(fileldName, columnName, tableName);
+    public this(string fieldName, string columnName, string tableName) {
+        super(fieldName, columnName, tableName);
         _joinColumn = columnName;
     }
 
