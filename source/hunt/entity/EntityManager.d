@@ -16,6 +16,8 @@ import hunt.entity.dialect;
 import hunt.entity.EntityOption;
 import hunt.entity.eql;
 import hunt.logging;
+
+import std.array;
 import std.traits;
 
 class EntityManager {
@@ -96,8 +98,14 @@ class EntityManager {
         CriteriaUpdate!T criteriaUpdate = criteriaBuilder.createCriteriaUpdate!(T);
         Root!T r = criteriaUpdate.from(entity);
         Predicate condition = criteriaBuilder.equal(r.getPrimaryField());
-        foreach(k,v; r.getEntityInfo().getFields()) {
-            if (k != r.getEntityInfo().getPrimaryKeyString() && v.getColumnName() != "") {
+
+        string primaryKey = r.getEntityInfo().getPrimaryKeyString();
+        foreach(string k, EntityFieldInfo v; r.getEntityInfo().getFields()) {
+            string columnName = v.getColumnName();
+
+            version(HUNT_ENTITY_DEBUG) tracef("Field: %s, Column: %s", k, columnName);
+
+            if (k != primaryKey && !columnName.empty()) {
                 criteriaUpdate.set(v);    
             }
         }
