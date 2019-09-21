@@ -16,6 +16,7 @@ class UserInfo : Model {
 
     @Column("nickname")
     string nickName;
+    
     int age;
 
     @ManyToMany("uinfos")

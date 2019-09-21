@@ -12,7 +12,6 @@ class Car : Model {
     @AutoIncrement @PrimaryKey 
     int id;
 
-
     string name;
 
     @ManyToOne()

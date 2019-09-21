@@ -16,6 +16,7 @@ class UInfo : Model {
     @Column("nickname")
     @Length(0,50)
     string nickName;
+    
     @Max(150)
     int age;
 

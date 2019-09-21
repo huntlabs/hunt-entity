@@ -61,19 +61,6 @@ enum DO_TEST = `
 
 // }
 
-// void test_comparison(EntityManager em)
-// {
-// 	mixin(DO_TEST);
-
-// 	auto rep = new EntityRepository!(UserInfo, int)(em);
-// 	string name = "Ha'Deng";
-
-// 	auto uinfos = rep.findAll(new Expr().eq("nickname", name));
-// 	foreach (u; uinfos)
-// 	{
-// 		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
-// 	}
-// }
 
 // void test_delete(EntityManager em)
 // {
@@ -111,32 +98,33 @@ enum DO_TEST = `
 // 			~ "ORDER BY u.id DESC" == queryBuider.toString);
 // }
 
-void test_OneToOne(EntityManager em)
-{
-	mixin(DO_TEST);
+// void test_OneToOne(EntityManager em)
+// {
+// 	mixin(DO_TEST);
 
-	UserInfo uinfo = em.find!(UserInfo)(1);
-	assert(uinfo.id == 1);
-	assert(uinfo.nickName == "Jons");
-	assert(uinfo.age == 3);
+// 	UserInfo uinfo = em.find!(UserInfo)(1);
+// 	assert(uinfo.id == 1);
+// 	assert(uinfo.nickName == "Jons");
+// 	// assert(uinfo.age == 3);
 
-	warning("Uinfo.IDCard is Lazy load : %s ".format(uinfo.card));
-	assert(uinfo.card is null);
+// 	warning("Uinfo.IDCard is Lazy load : %s ".format(uinfo.card));
+// 	assert(uinfo.card is null);
 
-	auto card = uinfo.getCard();
-	warning("Card( %s , %s ) ".format(card.id, card.desc));
-	assert(card.id == 1);
-	assert(card.desc == "China");
+// 	auto card = uinfo.getCard();
+// 	warning("Card( %s , %s ) ".format(card.id, card.desc));
+// 	assert(card.id == 1);
+// 	assert(card.desc == "China");
 
-	auto card2 = em.find!(IDCard)(1);
-	warning("Uinfo( %s , %s ) ".format(card2.user.id, card2.user.nickName));
-}
+// 	auto card2 = em.find!(IDCard)(1);
+// 	warning("Uinfo( %s , %s ) ".format(card2.user.id, card2.user.nickName));
+// }
 
 // void test_OneToMany(EntityManager em)
 // {
 // 	mixin(DO_TEST);
 
-// 	auto uinfo = em.find!(UserInfo)(1);
+// 	UserInfo uinfo = em.find!(UserInfo)(1);
+	
 // 	auto cars = uinfo.getCars();
 // 	foreach (car; cars)
 // 	{
@@ -148,7 +136,7 @@ void test_OneToOne(EntityManager em)
 // {
 // 	mixin(DO_TEST);
 
-// 	auto car = em.find!(Car)(2);
+// 	Car car = em.find!(Car)(2);
 // 	logDebug("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
 // }
 
@@ -190,7 +178,7 @@ void test_OneToOne(EntityManager em)
 // 	{
 // 		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
 // 				d.uinfo.nickName, d.uinfo.age));
-// 		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.update_time));
+// 		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
 // 	}
 
 // 	auto query3 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
@@ -216,7 +204,7 @@ void test_OneToOne(EntityManager em)
 // 		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
 // 				d.uinfo.nickName, d.uinfo.age));
 // 		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
-// 		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.update_time));
+// 		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
 // 	}
 
 // 	auto query6 = em.createQuery!(UserInfo,
@@ -373,6 +361,7 @@ void test_OneToOne(EntityManager em)
 // 	}
 // }
 
+
 void main()
 {
 	EntityOption option = new EntityOption();
@@ -388,7 +377,7 @@ void main()
 	EntityManager em = entityManagerFactory.createEntityManager();
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	test_OneToOne(em);
+	// test_OneToOne(em);
 
 	// test_OneToMany(em);
 
@@ -400,7 +389,6 @@ void main()
 
 	// test_persist(em);
 
-	// test_comparison(em);
 
 	// test_delete(em);
 
@@ -430,5 +418,57 @@ void main()
 
 	// test_eql_function_DISTINCT(em);
 
+
+	// test_EntityRepository(em);
+	test_EntityRepository_Save(em);
+
 	getchar();
 }
+
+
+
+void test_EntityRepository_Save(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	// update
+	LoginInfo loginInfo = rep.findById(1);
+	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
+
+	loginInfo.updated += 1;
+	rep.save(loginInfo);
+	// LoginInfo newInfo = rep.findById(1);
+	// logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+}
+
+
+// void test_EntityRepository(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+
+// 	EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
+
+// 	// findAll
+// 	string name = "Ha'Deng";
+// 	// string name = "Lily";
+
+// 	// UserInfo[] uinfos = rep.findAll(new Expr().eq("nickname", name));
+
+// 	// foreach (u; uinfos)
+// 	// {
+// 	// 	logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
+// 	// }
+
+// 	// update
+// 	UserInfo userInfo = rep.findById(1);
+// 	logDebug("Uinfo( %s , %s , %s ) ".format(userInfo.id, userInfo.nickName, userInfo.age));
+
+// 	userInfo.age += 1;
+// 	rep.update(userInfo);
+// 	rep.save(userInfo);
+// 	UserInfo newUserInfo = rep.findById(1);
+// 	logDebug("Uinfo( %s , %s , %s ) ".format(newUserInfo.id, newUserInfo.nickName, newUserInfo.age));
+// }
