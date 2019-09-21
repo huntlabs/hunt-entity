@@ -30,7 +30,6 @@ class Query(T) {
  
     public int executeUpdate() {
         auto stmt = _manager.getSession().prepare(_sqlSting); 
-        //TODO update 时 返回的row line count 为 0
         _lastInsertId = stmt.lastInsertId();
         _affectRows = stmt.affectedRows();
         return stmt.execute();

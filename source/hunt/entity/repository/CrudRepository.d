@@ -186,6 +186,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         em.merge!T(entity);
         return entity;
     }
+    
     public T[] updateAll(T[] entities)
     {
         auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
