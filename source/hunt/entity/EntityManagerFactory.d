@@ -60,8 +60,14 @@ class EntityManagerFactory {
 
     public EntityManager createEntityManager()
     {
-        return new EntityManager(this, _name, _option, _db, _dialect);
+        if(_entityManagerInThread is null) {
+            _entityManagerInThread = new EntityManager(this, _name, _option, _db, _dialect);
+        }
+        return _entityManagerInThread;
+        // return new EntityManager(this, _name, _option, _db, _dialect);
     }
+
+    private static EntityManager _entityManagerInThread;
     
     public QueryBuilder createQueryBuilder()
     {

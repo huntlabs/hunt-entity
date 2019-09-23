@@ -16,7 +16,7 @@ import hunt.entity;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity.EntityOption;
 
-private __gshared static EntityManagerFactory[string] _factories;
+private __gshared EntityManagerFactory[string] _factories;
 
 class Persistence
 {

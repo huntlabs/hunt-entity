@@ -28,7 +28,7 @@ class EntityManager {
     public string _name;
     private EntityManagerFactory _factory;
     private EntityTransaction _transaction;
-    private EntitySession _EntitySession;
+    private EntitySession _entitySession;
 
     this(EntityManagerFactory factory, string name, EntityOption option, Database db, Dialect dialect) {
         _factory = factory;
@@ -37,7 +37,7 @@ class EntityManager {
         _db = db;
         _dialect = dialect;
         _transaction = new EntityTransaction(this);
-        _EntitySession = new EntitySession(db);
+        _entitySession = new EntitySession(db);
     }
 
     ~this()
@@ -149,7 +149,7 @@ class EntityManager {
     public EntitySession getSession() {
         // trace("Creating a new session");
         // return new EntitySession(_db);
-        return _EntitySession;
+        return _entitySession;
     }
 
     public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
@@ -158,10 +158,10 @@ class EntityManager {
     public string getPrefix() {return _option.database.prefix;}
 
     public void close() {
-        if(_EntitySession)
+        if(_entitySession)
         {
-            _EntitySession.close();
-            // _EntitySession = null;
+            _entitySession.close();
+            // _entitySession = null;
         }
     }
 }

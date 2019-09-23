@@ -50,7 +50,7 @@ class ResultDes(T : Object) {
     }
 
     // pragma(msg, "T = "~T.stringof);
-    pragma(msg,makeDeSerialize!(T));
+    // pragma(msg,makeDeSerialize!(T));
     // pragma(msg,makeInitEntityData!(T));
 
 
