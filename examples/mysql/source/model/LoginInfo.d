@@ -15,12 +15,17 @@ class LoginInfo : Model
     int id;
 
     int create_time;
-    int update_time;
     
-    // int uid;
+    @Column("update_time")
+    int updated;
+    
+    int uid;
+
     @JoinColumn("uid")
     UserInfo uinfo;
 
     @JoinColumn("appid")
     AppInfo app;
+
+    string location;
 }

@@ -422,10 +422,10 @@ void main()
 	// test_eql_function_DISTINCT(em);
 
 
-	test_EntityRepository(em);
-	// test_EntityRepository_Save(em);
+	// test_EntityRepository_Query(em);
+	test_EntityRepository_Save(em);
 
-	getchar();
+	// getchar();
 }
 
 
@@ -447,7 +447,7 @@ void test_EntityRepository_Save(EntityManager em)
 }
 
 
-void test_EntityRepository(EntityManager em)
+void test_EntityRepository_Query(EntityManager em)
 {
 	mixin(DO_TEST);
 

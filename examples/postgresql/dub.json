@@ -8,7 +8,8 @@
 	"dependencies": {
 		"hunt-entity": {"path": "../../"}
 	},
-	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG", "HUNT_SQL_DEBUG_MORE1",
+	"versions": ["HUNT_DEBUG", "HUNT_NET_DEBUG1", 
+		"HUNT_SQL_DEBUG1", 
 		"HUNT_ENTITY_DEBUG", 
-		"HUNT_DB_DEBUG", "HUNT_NET_DEBUG1"]
+		"HUNT_DB_DEBUG", "HUNT_DB_DEBUG_MORE"]
 }

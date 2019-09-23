@@ -1,14 +1,16 @@
 {
 	"name": "mysql-test",
-	"authors": [
-		"gaoxincheng"
-	],
 	"targetType": "executable",
-	"description": "test for entity",
-	"copyright": "Copyright © 2018, gaoxincheng",
+	"description": "entity tests for mysql",
+	"copyright": "Copyright (C) 2018-2019, HuntLabs",
+	"homepage": "https://www.huntlabs.net",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"hunt-entity": "~>2.2.0"
+		"hunt-entity": {
+			"path": "../../"
+		}
 	},
-	"versions": ["HUNT_DEBUG"]
+	"versions": ["HUNT_DEBUG", 
+		"HUNT_ENTITY_DEBUG", 
+		"HUNT_DB_DEBUG", "HUNT_NET_DEBUG1"]
 }
