@@ -49,6 +49,7 @@ class ResultDes(T : Object) {
         _fields = fields;
     }
 
+
     // pragma(msg, "T = "~T.stringof);
     // pragma(msg,makeDeSerialize!(T));
     // pragma(msg,makeInitEntityData!(T));
@@ -66,6 +67,14 @@ class ResultDes(T : Object) {
     string formatSelectItem(string col)
     {
         return _tableName ~ "__as__" ~ col;
+    }
+
+    private string getColumnAsName(string name) {
+        if(_em.getDatabase().getOption().isPgsql()) {
+            return EntityExpression.getColumnAsName(name, _tableNameInLower);
+        } else {
+            return EntityExpression.getColumnAsName(name, _tableName);
+        }
     }
 
     public R deSerialize(R)(string value) {
@@ -148,10 +157,10 @@ string makeDeSerialize(T)() {
                 str ~=`
                     // ======================== `~memberName~` =============================
                     value = null;  // clear last value
-                    columnAsName = EntityExpression.getColumnAsName(`~ columnName ~`, _tableNameInLower);
+                    columnAsName = getColumnAsName(`~ columnName ~`);
 
-                    version(HUNT_ENTITY_DEBUG_MORE) {
-                        warningf("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
+                    version(HUNT_ENTITY_DEBUG) {
+                        tracef("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
                     }
 
                     columnValue = row.getValue(columnAsName);
