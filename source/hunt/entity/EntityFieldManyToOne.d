@@ -27,10 +27,11 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         _mode = mode;      
         _enableJoin = _mode.fetch == FetchType.EAGER;    
         _joinColumn = columnName;
-        _columnFieldData = new ColumnFieldData();
-        _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
+        // _columnFieldData = new ColumnFieldData();
+        // _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
 
-        _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
+        // _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
+        _columnFieldData = Variant(_entityInfo.getPrimaryValue());
 
         initJoinData(tableName, columnName);
     }

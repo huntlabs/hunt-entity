@@ -1,0 +1,17 @@
+{
+	"name": "unittest",
+	"targetType":"executable",
+    "description": "Some unit tests for hunt-entity.",
+    "copyright": "Copyright (C) 2018-2019, HuntLabs",
+    "homepage": "https://www.huntlabs.net",
+    "license": "Apache-2.0",
+	"dependencies":{
+		"hunt-entity":{
+			"path" :"../../"
+		}
+	},
+	"versions": ["HUNT_DEBUG", "HUNT_NET_DEBUG1", 
+		"HUNT_SQL_DEBUG1", 
+		"HUNT_ENTITY_DEBUG", 
+		"HUNT_DB_DEBUG", "HUNT_DB_DEBUG_MORE"]
+}

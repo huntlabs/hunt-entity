@@ -44,3 +44,4 @@ __test__library__
 dub.*.json
 examples/postgresql/postgresql-demo
 examples/eql/eql-demo
+examples/UnitTest/unittest

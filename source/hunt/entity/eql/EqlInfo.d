@@ -1,10 +1,10 @@
 module hunt.entity.eql.EqlInfo;
 
 import hunt.entity.eql.Common;
-
 import hunt.entity.dialect;
-
 import hunt.logging;
+
+import std.array;
 import std.format;
 import std.traits;
 
