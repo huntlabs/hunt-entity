@@ -39,8 +39,12 @@ __test__library__
 # Ignore Intellij IDEA folder:
 .idea
 
+
 # Ignore Sublime Text workspace (project file is ok):
 *.sublime-workspace
+
+# Others
+backup/
 dub.*.json
 examples/postgresql/postgresql-demo
 examples/eql/eql-demo

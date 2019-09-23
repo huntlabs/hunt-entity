@@ -70,7 +70,7 @@ void main()
 	// test_OneToMany(em);
 	// test_ManyToOne(em);
 	// test_ManyToMany(em);
-	// test_eql_select(em);
+	test_eql_select(em);
 	// test_merge(em);
 	// test_persist(em);
 	// test_comparison(em);
@@ -231,84 +231,6 @@ void test_ManyToMany(EntityManager em)
 		logDebug("UserInfo.AppInfo( %s , %s , %s ) ".format(app2.id, app2.name, app2.desc));
 }
 
-void test_eql_select(EntityManager em)
-{
-	mixin(DO_TEST);
-	/// select statement
-
-	auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
-	foreach (d; query1.getResultList())
-	{
-		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
-	}
-
-	auto query2 = em.createQuery!(LoginInfo)(
-			" select a,b  from LoginInfo a left join a.uinfo b ;");
-	foreach (d; query2.getResultList())
-	{
-		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
-				d.uinfo.nickName, d.uinfo.age));
-		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
-	}
-
-	auto query3 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
-	foreach (d; query3.getResultList())
-	{
-		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
-				d.uinfo.nickName, d.uinfo.age));
-
-	}
-
-	auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
-	query4.setParameter(1, 2).setParameter(2, 1);
-	foreach (d; query4.getResultList())
-	{
-		logDebug("Mixed Results( %s , %s , %s ) ".format(d.id, d.create_time, d.uinfo.nickName));
-	}
-
-	auto query5 = em.createQuery!(LoginInfo)(
-			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
-	query5.setParameter("id", 2);
-	foreach (d; query5.getResultList())
-	{
-		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
-				d.uinfo.nickName, d.uinfo.age));
-		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
-		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
-	}
-
-	auto query6 = em.createQuery!(UserInfo,
-			AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id ;");
-	foreach (d; query6.getResultList())
-	{
-		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
-	}
-
-	auto query7 = em.createQuery!(UserInfo)(
-			" select a.nickName as name ,count(*) as num from UserInfo a group by a.nickName;");
-	logDebug("UserInfo( %s ) ".format(query7.getNativeResult()));
-
-	auto query8 = em.createQuery!(IDCard)(
-			" select distinct b from IDCard a join a.user b where b.id = 2;");
-	foreach (d; query8.getResultList())
-	{
-		logDebug("IDCard.UserInfo( %s , %s , %s ) ".format(d.user.id, d.user.nickName, d.user.age));
-	}
-}
-
-// void test_statement(EntityManager em)
-// {
-// 	mixin(DO_TEST);
-
-// 	auto db =em.getDatabase();
-// 	Statement statement = db.prepare(`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :email, :firstName, :lastName )`);
-// 	statement.setParameter(`age`, 16);
-// 	statement.setParameter(`email`, "me@example.com");
-// 	statement.setParameter(`firstName`, "John");
-// 	statement.setParameter(`lastName`, "Doe");
-// 	logInfo("sql :",statement.sql);
-// 	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
-// }
 
 void test_valid(EntityManager em)
 {
@@ -424,4 +346,148 @@ void test_EntityRepository_Save(EntityManager em)
 	rep.save(loginInfo);
 	LoginInfo newInfo = rep.findById(1);
 	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+}
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*                                                      EQL tests                                                     */
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+
+
+void test_eql_select(EntityManager em)
+{
+	mixin(DO_TEST);
+	/// select statement
+
+	// auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
+	// foreach (d; query1.getResultList())
+	// {
+	// 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	// }
+
+	// auto query2 = em.createQuery!(LoginInfo)(
+	// 		" select a,b  from LoginInfo a left join a.uinfo b ;");
+	// foreach (d; query2.getResultList())
+	// {
+	// 	logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
+	// 			d.uinfo.nickName, d.uinfo.age));
+	// 	logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
+	// }
+
+	// auto query3 = em.createQuery!(LoginInfo)(" select b  from LoginInfo a left join a.uinfo b ;");
+	// foreach (d; query3.getResultList())
+	// {
+	// 	logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
+	// 			d.uinfo.nickName, d.uinfo.age));
+
+	// }
+
+	// auto query4 = em.createQuery!(LoginInfo)(" select a.id, a.create_time ,b.nickName  from LoginInfo a left join a.uinfo b where a.id in (?,?) order by a.id desc limit 0 ,1 ;");
+	// query4.setParameter(1, 2).setParameter(2, 1);
+	// foreach (d; query4.getResultList())
+	// {
+	// 	logDebug("Mixed Results( %s , %s , %s ) ".format(d.id, d.create_time, d.uinfo.nickName));
+	// }
+
+	auto query5 = em.createQuery!(LoginInfo)(
+			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
+	query5.setParameter("id", 2);
+	foreach (d; query5.getResultList())
+	{
+		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
+				d.uinfo.nickName, d.uinfo.age));
+		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
+		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
+	}
+
+	// auto query6 = em.createQuery!(UserInfo,
+	// 		AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id ;");
+	// foreach (d; query6.getResultList())
+	// {
+	// 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+	// }
+
+	// auto query7 = em.createQuery!(UserInfo)(
+	// 		" select a.nickName as name ,count(*) as num from UserInfo a group by a.nickName;");
+	// logDebug("UserInfo( %s ) ".format(query7.getNativeResult()));
+
+	// auto query8 = em.createQuery!(IDCard)(
+	// 		" select distinct b from IDCard a join a.user b where b.id = 2;");
+	// foreach (d; query8.getResultList())
+	// {
+	// 	logDebug("IDCard.UserInfo( %s , %s , %s ) ".format(d.user.id, d.user.nickName, d.user.age));
+	// }
+}
+
+
+// void test_eql_update(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+// 	/// update statement
+// 	auto update = em.createQuery!(UInfo)(" update UInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
+// 		"u.age > 2 and u.age < :age2 and u.id = :id and u.nickName = :name " ); 
+// 		// update UInfo u set u.age = 5 where u.id = 2
+
+// 	update.setParameter("age",2);
+// 	update.setParameter("age2",55);
+// 	update.setParameter("id",1);
+// 	update.setParameter("name","tom");
+// 	logDebug(" update result : ",update.exec());
+// }
+
+
+// void test_eql_delete(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+// 	/// delete statement
+// 	auto del = em.createQuery!(UInfo)(" delete from UInfo u where u.id = 3 "); 
+// 	// del.setParameter(1,3);
+// 	logDebug(" del result : ",del.exec());
+// }
+
+// void test_eql_insert(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+// 	/// insert statement
+// 	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (:name,:age)"); 
+// 	insert.setParameter("name","momomo");
+// 	insert.setParameter("age",666);
+// 	logDebug(" insert result : ",insert.exec());
+// }
+
+// void test_eql_insert2(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+// 	/// insert statement
+// 	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (?,?)"); 
+// 	insert.setParameter(1,"Jons");
+// 	insert.setParameter(2,2355);
+// 	logDebug(" insert result : ",insert.exec());
+// }
+
+// void test_statement(EntityManager em)
+// {
+// 	mixin(DO_TEST);
+
+// 	auto db =em.getDatabase();
+// 	Statement statement = db.prepare(`INSERT INTO users ( age , email, first_name, last_name) VALUES ( :age, :email, :firstName, :lastName )`);
+// 	statement.setParameter(`age`, 16);
+// 	statement.setParameter(`email`, "me@example.com");
+// 	statement.setParameter(`firstName`, "John");
+// 	statement.setParameter(`lastName`, "Doe");
+// 	logInfo("sql :",statement.sql);
+// 	assert("INSERT INTO users ( age , email, first_name, last_name) VALUES ( 16, 'me@example.com', 'John', 'Doe' )" == statement.sql);
+// }
+
+
+void test_eql_ManyToOne(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	// Car car = em.find!(Car)(2);
+	// logDebug("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
+
+	// car = em.createQuery!(Car)(("SELECT u,f FROM Car u LEFT JOIN UserInfo f ON f.id=u.uid;");
+
+	// warning("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
 }
