@@ -12,11 +12,11 @@
 module hunt.entity.EntitySession;
 
 import hunt.entity;
+import hunt.logging.ConsoleLogger;
 
 class EntitySession
 {
 
-    // private EntityManager _manager;
     private Database _db;
     private Transaction _trans;
 
@@ -24,18 +24,16 @@ class EntitySession
 
     this(Database db)
     {
-        // _manager = manager;
         assert(db !is null);
         _db = db;
         _conn = _db.getConnection();
-        // _trans = _db.getTransaction(_conn);
     }
 
-    // ~this()
-    // {
-    //     if(_conn)
-    //         close();
-    // }
+    ~this()
+    {
+        version(HUNT_ENTITY_DEBUG) infof("Closing EntitySession in ~this()");
+        close();
+    }
 
     public void beginTransaction()
     {
@@ -82,7 +80,6 @@ class EntitySession
     {
         if (_conn is null)
             throw new EntityException("the entity connection haved release");
-        // _conn.ping();
     }
 
 

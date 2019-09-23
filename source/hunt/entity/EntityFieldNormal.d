@@ -15,15 +15,17 @@ import hunt.entity;
 
 import std.conv;
 import std.math;
+import std.variant;
 
 class EntityFieldNormal(T) : EntityFieldInfo {
 
     public this(EntityManager manager ,string fieldName, string columnName, string tableName, T value) {
         super(fieldName, columnName, tableName);
 
-        _columnFieldData = new ColumnFieldData();
-        _columnFieldData.valueType = typeof(value).stringof;
-        _columnFieldData.value = new hunt.Nullable.Nullable!(T)(value);
+        _columnFieldData = Variant(value);
+        // _columnFieldData = new ColumnFieldData();
+        // _columnFieldData.valueType = typeof(value).stringof;
+        // _columnFieldData.value = new hunt.Nullable.Nullable!(T)(value);
         // static if (isSomeString!T) {
         //     if( manager !is null)
         //         _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(value);

@@ -13,6 +13,7 @@ module hunt.entity.EntityFieldInfo;
 
 import hunt.entity;
 import std.format;
+import std.variant;
 
 class EntityFieldInfo : EntityExpression
 {
@@ -22,7 +23,8 @@ class EntityFieldInfo : EntityExpression
     protected string _joinPrimaryKey;
     protected ForeignKeyData _foreignKeyData;
     protected JoinSqlBuild _joinSqlData;
-    protected ColumnFieldData _columnFieldData;
+    // protected ColumnFieldData _columnFieldData;
+    protected Variant _columnFieldData;
     protected bool _isMainMapped;
     protected bool _enableJoin = true;
 
@@ -61,7 +63,7 @@ class EntityFieldInfo : EntityExpression
     public bool isEnableJoin() {return _enableJoin;}
     public void setEnableJoin(bool en) { _enableJoin = en;}
 
-    public ColumnFieldData getColumnFieldData() {return _columnFieldData;}
+    public Variant getColumnFieldData() {return _columnFieldData;}
 
     override string toString() {
         return format("isPrimary: %s, TableName:%s, FileldName: %s, ColumnName: %s, JoinTable: %s, JoinColumn: %s, ", 

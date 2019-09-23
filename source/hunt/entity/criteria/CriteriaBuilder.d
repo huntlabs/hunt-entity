@@ -19,6 +19,7 @@ import hunt.logging;
 import std.conv;
 import std.format;
 import std.traits;
+import std.variant;
 
 public class CriteriaBuilder
 {
@@ -176,7 +177,7 @@ public class CriteriaBuilder
     }
 
     public Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().toString());
     }
 
     public Predicate notEqual(T)(EntityFieldInfo info, T t){
@@ -200,7 +201,7 @@ public class CriteriaBuilder
     }
 
     public Predicate notEqual(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().toString());
     }
 
     public Predicate gt(T)(EntityFieldInfo info, T t){
@@ -209,7 +210,7 @@ public class CriteriaBuilder
     }
 
     public Predicate gt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().toString());
     }
 
     public Predicate ge(T)(EntityFieldInfo info, T t){
@@ -218,7 +219,7 @@ public class CriteriaBuilder
     }
 
     public Predicate ge(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().toString());
     }
 
     public Predicate lt(T)(EntityFieldInfo info, T t){
@@ -227,7 +228,7 @@ public class CriteriaBuilder
     }
 
     public Predicate lt(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().toString());
     }
 
     public Predicate le(T)(EntityFieldInfo info, T t){
@@ -236,7 +237,7 @@ public class CriteriaBuilder
     }
 
     public Predicate le(EntityFieldInfo info){
-        return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().valueString);
+        return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().toString());
     }
 
     public Predicate like(EntityFieldInfo info, string pattern) {
@@ -262,13 +263,13 @@ public class CriteriaBuilder
     }
 
     public void assertType(T)(EntityFieldInfo info) {
-        if (info.getColumnFieldData()) {
+        if (info.getColumnFieldData().hasValue()) {
             static if (is(T == string)) {
-                if (info.getColumnFieldData().valueType != "string") {
-                    throw new EntityException("EntityFieldInfo %s type need been string not %s".format(info.getFieldName(), info.getColumnFieldData().valueType));
+                if (info.getColumnFieldData().type != typeid(string)) {
+                    throw new EntityException("EntityFieldInfo %s type need been string not %s".format(info.getFieldName(), info.getColumnFieldData().type));
                 }
             }else {
-                if (info.getColumnFieldData().valueType == "string") {
+                if (info.getColumnFieldData().type == typeid(string)) {
                     throw new EntityException("EntityFieldInfo %s type need been number not string".format(info.getFieldName()));
                 }
             }

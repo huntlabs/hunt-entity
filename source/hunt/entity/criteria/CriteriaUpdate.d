@@ -13,6 +13,7 @@ module hunt.entity.criteria.CriteriaUpdate;
 
 import hunt.entity;
 import hunt.logging;
+import std.variant;
 
 class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
 {
@@ -43,7 +44,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
 
     public CriteriaUpdate!(T,F) set(EntityFieldInfo field) {
-        Object value = field.getColumnFieldData().value;
+        Variant value = field.getColumnFieldData();
 
         version(HUNT_ENTITY_DEBUG_MORE) {
             tracef("EntityFieldInfo: (%s ), ColumnFieldData: (%s, %s)", field.toString(), value, 
@@ -52,8 +53,9 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
 
         // FIXME: Needing refactor or cleanup -@zxp at Sat, 21 Sep 2019 03:02:07 GMT
         // skip field which type is non-db
-        if(value is null || value.toString() == "null") {
-            version(HUNT_DEBUG) warningf("Skipped null value, field: %s", field.getFieldName());
+        TypeInfo valueTypeInfo = typeid(value.type);
+        if(valueTypeInfo == typeid(TypeInfo_Class) || valueTypeInfo == typeid(TypeInfo_Interface)) {
+            version(HUNT_DEBUG) warningf("Skipped Object field, field: %s", field.getFieldName());
         } else {
             _sqlBuidler.set(field.getFieldName(), 
                 field.getColumnName(), field.getTableName(), value);

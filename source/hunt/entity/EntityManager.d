@@ -40,11 +40,11 @@ class EntityManager {
         _EntitySession = new EntitySession(db);
     }
 
-    // ~this()
-    // {
-    //     if(_EntitySession)
-    //         close();
-    // }
+    ~this()
+    {
+        version(HUNT_ENTITY_DEBUG) infof("Closing EntityManager in ~this()");
+        close();
+    }
 
     public T persist(T)(ref T entity) {
         QueryBuilder builder = _factory.createQueryBuilder();

@@ -22,6 +22,7 @@ import hunt.logging;
 import std.conv;
 import std.string;
 import std.traits;
+import std.variant;
 
 class EntityInfo(T : Object, F : Object = T) {
     
@@ -88,15 +89,15 @@ class EntityInfo(T : Object, F : Object = T) {
         return null;
     }
 
-    public Object[string] getInsertString() {
-        Object[string] str;
+    public Variant[string] getInsertString() {
+        Variant[string] str;
         foreach(info; _fields) {
             if (info.getFieldName() != _autoIncrementKey) {
                 if (info.getColumnName() != "") {
                     if(!_manager.getDatabase().getOption().isPgsql())
-                        str[info.getFullColumn()] = info.getColumnFieldData().value;
+                        str[info.getFullColumn()] = info.getColumnFieldData();
                     else
-                        str[info.getColumnName()] = info.getColumnFieldData().value;
+                        str[info.getColumnName()] = info.getColumnFieldData();
                 }
             }
         }

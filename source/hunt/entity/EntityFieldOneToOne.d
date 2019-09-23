@@ -36,14 +36,15 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         }
         else {
             _joinColumn = columnOrjoin;
+            _columnFieldData = Variant(_entityInfo.getPrimaryValue());
 
-            _columnFieldData = new ColumnFieldData();
-            _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
-            // if (_columnFieldData.valueType == "string" && manager !is null)
-            //     _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(_entityInfo.getPrimaryValue().to!string);
-            // else
-            //     _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
-             _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
+            // _columnFieldData = new ColumnFieldData();
+            // _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
+            // // if (_columnFieldData.valueType == "string" && manager !is null)
+            // //     _columnFieldData.value = /*manager.getDatabase().escapeLiteral*/(_entityInfo.getPrimaryValue().to!string);
+            // // else
+            // //     _columnFieldData.value = _entityInfo.getPrimaryValue().to!string;
+            //  _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
 
             _foreignKeyData = new ForeignKeyData();
             _foreignKeyData.columnName = columnOrjoin;

@@ -141,25 +141,25 @@ class LazyData {
     }
 }
 
-class ColumnFieldData {
-    Object value;
-    string valueType;
+// class ColumnFieldData {
+//     Object value;
+//     string valueType;
 
-    public string valueString()
-    {
-        if(cast(String)value !is null)
-            return quoteSqlString(value.toString);
-        else 
-        {
-            return value !is null ? value.toString : "";
-        }
-    }
+//     public string valueString()
+//     {
+//         if(cast(String)value !is null)
+//             return quoteSqlString(value.toString);
+//         else 
+//         {
+//             return value !is null ? value.toString : "";
+//         }
+//     }
 
-    override string toString()
-    {
-        return value !is null ? value.toString : "";
-    }
-}
+//     override string toString()
+//     {
+//         return value !is null ? value.toString : "";
+//     }
+// }
 
 
 
