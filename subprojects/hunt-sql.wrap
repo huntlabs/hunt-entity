@@ -1,4 +1,0 @@
-[wrap-git]
-directory = hunt-sql
-url       = https://github.com/huntlabs/hunt-sql.git
-revision  = head
