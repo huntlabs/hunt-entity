@@ -356,6 +356,11 @@ void main()
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",
 			option);
 	EntityManager em = entityManagerFactory.createEntityManager();
+
+	scope(exit) {
+		em.close();
+	}
+
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 
 	test_OneToOne(em);

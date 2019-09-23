@@ -1,4 +1,6 @@
 /*
+ Navicat Premium Data Transfer
+
  Source Server Type    : PostgreSQL
  Source Server Version : 100005
  Source Catalog        : exampledb
@@ -8,7 +10,7 @@
  Target Server Version : 100005
  File Encoding         : 65001
 
- Date: 18/09/2019 15:01:14
+ Date: 23/09/2019 14:49:08
 */
 
 
@@ -157,7 +159,8 @@ CREATE TABLE "logininfo" (
   "uid" int4,
   "appid" int4,
   "create_time" int4,
-  "update_time" int4
+  "update_time" int4,
+  "location" varchar(255) COLLATE "pg_catalog"."default"
 )
 ;
 
@@ -165,10 +168,10 @@ CREATE TABLE "logininfo" (
 -- Records of logininfo
 -- ----------------------------
 BEGIN;
-INSERT INTO "logininfo" VALUES (1, 2, 2, 1539155655, 1539155658);
-INSERT INTO "logininfo" VALUES (2, 1, 2, 1539156242, 1539156252);
-INSERT INTO "logininfo" VALUES (3, 1, 1, 1540462504, 1540462504);
-INSERT INTO "logininfo" VALUES (4, 4, 1, 1540462505, 1540462506);
+INSERT INTO "logininfo" VALUES (3, 1, 1, 1540462504, 1540462504, NULL);
+INSERT INTO "logininfo" VALUES (4, 4, 1, 1540462505, 1540462506, NULL);
+INSERT INTO "logininfo" VALUES (2, 1, 2, 1539156242, 1539156252, 'Shanghai');
+INSERT INTO "logininfo" VALUES (1, 2, 2, 1539155655, 1539155668, 'null');
 COMMIT;
 
 -- ----------------------------
@@ -217,7 +220,7 @@ INSERT INTO "userinfo" VALUES (113, 'Jons', 2355);
 INSERT INTO "userinfo" VALUES (116, 'Jons', 2355);
 INSERT INTO "userinfo" VALUES (85, 'Ha''Deng', 30);
 INSERT INTO "userinfo" VALUES (119, 'Jons', 2355);
-INSERT INTO "userinfo" VALUES (1, 'Jons', 3);
+INSERT INTO "userinfo" VALUES (1, 'Jons', 5);
 INSERT INTO "userinfo" VALUES (50, 'Jons', 2355);
 INSERT INTO "userinfo" VALUES (52, 'Jons', 2355);
 INSERT INTO "userinfo" VALUES (54, 'Jons', 2355);

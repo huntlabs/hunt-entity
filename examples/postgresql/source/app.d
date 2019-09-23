@@ -375,6 +375,9 @@ void main()
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(
 			"postgresql", option);
 	EntityManager em = entityManagerFactory.createEntityManager();
+	scope(exit) {
+		em.close();
+	}
 	CriteriaBuilder builder = em.getCriteriaBuilder();
 
 	// test_OneToOne(em);
@@ -419,8 +422,8 @@ void main()
 	// test_eql_function_DISTINCT(em);
 
 
-	// test_EntityRepository(em);
-	test_EntityRepository_Save(em);
+	test_EntityRepository(em);
+	// test_EntityRepository_Save(em);
 
 	getchar();
 }
@@ -433,42 +436,31 @@ void test_EntityRepository_Save(EntityManager em)
 
 	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
 
-	// update
 	LoginInfo loginInfo = rep.findById(1);
 	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
 		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
 
 	loginInfo.updated += 1;
 	rep.save(loginInfo);
-	// LoginInfo newInfo = rep.findById(1);
-	// logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+	LoginInfo newInfo = rep.findById(1);
+	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
 }
 
 
-// void test_EntityRepository(EntityManager em)
-// {
-// 	mixin(DO_TEST);
+void test_EntityRepository(EntityManager em)
+{
+	mixin(DO_TEST);
 
-// 	EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
+	EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
 
-// 	// findAll
-// 	string name = "Ha'Deng";
-// 	// string name = "Lily";
+	// findAll
+	string name = "Ha'Deng";
+	// string name = "Lily";
 
-// 	// UserInfo[] uinfos = rep.findAll(new Expr().eq("nickname", name));
+	UserInfo[] uinfos = rep.findAll(new Expr().eq("nickname", name));
 
-// 	// foreach (u; uinfos)
-// 	// {
-// 	// 	logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
-// 	// }
-
-// 	// update
-// 	UserInfo userInfo = rep.findById(1);
-// 	logDebug("Uinfo( %s , %s , %s ) ".format(userInfo.id, userInfo.nickName, userInfo.age));
-
-// 	userInfo.age += 1;
-// 	rep.update(userInfo);
-// 	rep.save(userInfo);
-// 	UserInfo newUserInfo = rep.findById(1);
-// 	logDebug("Uinfo( %s , %s , %s ) ".format(newUserInfo.id, newUserInfo.nickName, newUserInfo.age));
-// }
+	foreach (u; uinfos)
+	{
+		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
+	}
+}
