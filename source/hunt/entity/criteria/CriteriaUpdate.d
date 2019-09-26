@@ -12,6 +12,7 @@
 module hunt.entity.criteria.CriteriaUpdate;
 
 import hunt.entity;
+import hunt.logging;
 
 class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
 {
@@ -33,7 +34,6 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
     public CriteriaUpdate!(T,F) set(P)(EntityFieldInfo field, P p) {
         _criteriaBuilder.assertType!(P)(field);
-        import hunt.logging;
         // logDebug("set value : %s".format(_criteriaBuilder.getDialect().toSqlValue(p)));
         if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
             _sqlBuidler.set(field.getFullColumn(), p);
@@ -43,16 +43,27 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
 
     public CriteriaUpdate!(T,F) set(EntityFieldInfo field) {
-         import hunt.logging;
-        // logDebug("set value : (%s , %s )".format(field.getColumnFieldData().value,field.getColumnFieldData().valueType));
-         if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
-         {  
+        Object value = field.getColumnFieldData().value;
+
+        version(HUNT_ENTITY_DEBUG_MORE) {
+            tracef("EntityFieldInfo: (%s ), ColumnFieldData: (%s, %s)", field.toString(), value, 
+                field.getColumnFieldData().valueType);
+        }
+
+        // FIXME: Needing refactor or cleanup -@zxp at Sat, 21 Sep 2019 03:02:07 GMT
+        // skip field which type is non-db
+        if(value is null || value.toString() == "null") {
+            version(HUNT_DEBUG) warningf("Skipped null value, field: %s", field.getFileldName());
+        } else {        
+            if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
+            {  
                 _sqlBuidler.set(field.getFullColumn(), field.getColumnFieldData().value);
-         }
-         else
-         {
+            }
+            else
+            {
                 _sqlBuidler.set(field.getColumnName(), field.getColumnFieldData().value);
-         }
+            }
+        }
         return this;
     }    
 }

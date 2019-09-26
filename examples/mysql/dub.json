@@ -8,7 +8,9 @@
 	"copyright": "Copyright © 2018, gaoxincheng",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"hunt-entity": "~>2.2.0"
+		"hunt-entity":{
+			"path" :"../../"
+		}
 	},
-	"versions": ["HUNT_DEBUG"]
+	"versions": ["HUNT_DEBUG", "HUNT_SQL_DEBUG", "HUNT_ENTITY_DEBUG"]
 }

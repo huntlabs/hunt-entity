@@ -24,8 +24,10 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
     public CriteriaQuery!(T,F) select(Root!(T,F) root)
     {
         string[] selectColumn = root.getAllSelectColumn();
+        // version(HUNT_ENTITY_DEBUG) warning(selectColumn);
+
         foreach(value; root.getJoins()) {
-            // logDebug("####join sql : %s".format(value));
+            version(HUNT_ENTITY_DEBUG) logDebug("####join sql : %s".format(value));
             if (value.joinType == JoinType.INNER) {
                 _sqlBuidler.innerJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {

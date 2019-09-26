@@ -18,6 +18,8 @@ import core.thread;
 import std.conv;
 import hunt.database;
 
+import std.format;
+
 enum DO_TEST = `
     logInfo("BEGIN ----------------" ~ __FUNCTION__ ~ "--------------------");
     scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
@@ -356,45 +358,67 @@ void main()
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("mysql",
 			option);
 	EntityManager em = entityManagerFactory.createEntityManager();
-	CriteriaBuilder builder = em.getCriteriaBuilder();
 
-	test_OneToOne(em);
+	scope(exit) {
+		em.close();
+	}
 
-	test_OneToMany(em);
+	// test_OneToOne(em);
 
-	test_ManyToOne(em);
+	// test_OneToMany(em);
 
-	test_ManyToMany(em);
+	// test_ManyToOne(em);
 
-	test_eql_select(em);
+	// test_ManyToMany(em);
 
-	test_merge(em);
+	// test_eql_select(em);
 
-	test_persist(em);
+	// test_merge(em);
 
-	test_comparison(em);
+	// test_persist(em);
 
-	test_delete(em);
+	// test_comparison(em);
 
-	test_CriteriaQuery(em);
+	// test_delete(em);
 
-	test_nativeQuery(em);
+	// test_CriteriaQuery(em);
 
-	test_create_eql_by_queryBuilder(em);
+	// test_nativeQuery(em);
 
-	test_statement(em);
+	// test_create_eql_by_queryBuilder(em);
 
-	test_valid(em);
+	// test_statement(em);
 
-	test_pagination(em);
+	// test_valid(em);
 
-	test_pagination_1(em);
+	// test_pagination(em);
 
-	test_count(em);
+	// test_pagination_1(em);
 
-	test_transaction(em);
+	// test_count(em);
 
-	test_other(em);
+	// test_transaction(em);
 
-	test_exception(em);
+	// test_other(em);
+
+	// test_exception(em);
+
+	test_EntityRepository_Save(em);
+
+}
+
+void test_EntityRepository_Save(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	LoginInfo loginInfo = rep.findById(1);
+	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+		loginInfo.uid, loginInfo.update_time, loginInfo.uinfo));
+
+	loginInfo.update_time += 1;
+	rep.save(loginInfo);
+	LoginInfo newInfo = rep.findById(1);
+	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.update_time, loginInfo.uinfo));
 }

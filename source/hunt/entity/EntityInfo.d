@@ -205,6 +205,7 @@ string makeInitEntityData(T,F)() {
                 //columnName nullable
                 string nullable;
                 string columnName;
+                string joinColumnName;
                 string mappedBy;
                 static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
                 {
@@ -216,6 +217,7 @@ string makeInitEntityData(T,F)() {
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
+                    joinColumnName = columnName;
                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
                 } 
                 else {
