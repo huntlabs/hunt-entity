@@ -121,10 +121,6 @@ class EntityInfo(T : Object, F : Object = T) {
     public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
 }
 
-
-
-
-
 string makeSetPrimaryValue(T)() {
     string R;
     string name;
@@ -337,9 +333,9 @@ string makeDeSerialize(T,F)() {
     string str = `
 
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
-        version(HUNT_ENTITY_DEBUG) {
-            tracef("Target: %s, Rows: %s, count: %s, startIndex: %d, tableName: %s ", 
-                T.stringof, rows, count, startIndex, _tableName);
+        version(HUNT_ENTITY_DEBUG_MORE) {
+            tracef("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
+                T.stringof, rows.length, count, startIndex, _tableName);
         }
 
         import std.variant;
@@ -348,7 +344,7 @@ string makeDeSerialize(T,F)() {
         _data.setManager(_manager);
         Row row = rows[startIndex];
         string columnAsName;
-        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
+        version(HUNT_ENTITY_DEBUG_MORE) logDebugf("rows[%d]: %s", startIndex, row);
         if (row is null || row.size() == 0)
             return null;
 
@@ -373,7 +369,7 @@ string makeDeSerialize(T,F)() {
                     auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
                     columnAsName = `~memberName~`.getColumnAsName();
                     columnValue = row.getValue(columnAsName);
-                    version(HUNT_ENTITY_DEBUG) {
+                    version(HUNT_ENTITY_DEBUG_DEBUG) {
                         tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
                             columnValue, columnAsName);
                     }

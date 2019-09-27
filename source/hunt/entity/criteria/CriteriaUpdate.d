@@ -48,7 +48,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
 
         version(HUNT_ENTITY_DEBUG_MORE) {
             tracef("EntityFieldInfo: (%s ), ColumnFieldData: (%s, %s)", field.toString(), value, 
-                field.getColumnFieldData().valueType);
+                field.getColumnFieldData().type);
         }
 
         // FIXME: Needing refactor or cleanup -@zxp at Sat, 21 Sep 2019 03:02:07 GMT

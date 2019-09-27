@@ -67,13 +67,23 @@ class Root(T : Object, F : Object = T)
     }
     
     public string[] getAllSelectColumn() {
+        import std.algorithm;
         string[] ret;
-        foreach(value; _entityInfo.getFields()) {
-            if (value.getSelectColumn() != "") {
-                ret ~= value.getSelectColumn();
+        foreach(EntityFieldInfo value; _entityInfo.getFields()) {
+            string name = value.getSelectColumn();
+            version(HUNT_ENTITY_DEBUG_MORE) {
+                infof("FileldName: %s, JoinPrimaryKey: %s, joinColumn: %s, selectColumn: %s, ",  
+                    value.getFieldName(), value.getJoinPrimaryKey(), value.getJoinColumn(), name);
+            }
+            if(ret.canFind(name)) {
+                version(HUNT_DEBUG) warningf("duplicated column: %s", name);
+                continue;
+            }
+            if (name != "") {
+                ret ~= name;
             }
         }
-        return ret;
+        return ret;        
     }
 
     public Root!(T, F) autoJoin() {

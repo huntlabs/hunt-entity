@@ -336,6 +336,7 @@ string makeDeSerialize(T,F)() {
 
         Row row = rows[startIndex];
         string columnAsName;
+        string columnName;
         version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
         if (row is null || row.size() == 0)
             return null;
@@ -355,9 +356,14 @@ string makeDeSerialize(T,F)() {
         str ~=`
         auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
         columnAsName = `~memberName~`.getColumnAsName();
-        columnValue = row.getValue(columnAsName);
+        columnName = `~memberName~`.getColumnName();
+
+        columnValue = row.getValue(columnName);
+        if (!columnValue.hasValue()) // try use columnAsName to get the value
+            columnValue = row.getValue(columnAsName);
+
         version(HUNT_ENTITY_DEBUG) {
-            tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
+            tracef("A column: %s = %s, As Name: %s", columnName, 
                 columnValue, columnAsName);
         }
         if (columnValue.hasValue()) {

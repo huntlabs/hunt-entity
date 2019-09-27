@@ -30,10 +30,14 @@ class EntityManagerFactory {
     {
         _name = name;
         _option = option;
+
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("maxPoolSize: %d", _option.pool.maxPoolSize);
+        }
         
         auto databaseOptions = new DatabaseOption(_option.database.url);
-        databaseOptions.setMaximumConnection(_option.pool.maxConnection);
-        databaseOptions.setMinimumConnection(_option.pool.minConnection);
+        databaseOptions.maximumPoolSize(_option.pool.maxPoolSize);
+        databaseOptions.minimumPoolSize(_option.pool.minPoolSize);
         databaseOptions.setConnectionTimeout(_option.pool.connectionTimeout);
         databaseOptions.setEncoderBufferSize(512);  // The sql string may be very long.
 
@@ -60,14 +64,14 @@ class EntityManagerFactory {
 
     public EntityManager createEntityManager()
     {
-        if(_entityManagerInThread is null) {
-            _entityManagerInThread = new EntityManager(this, _name, _option, _db, _dialect);
-        }
-        return _entityManagerInThread;
-        // return new EntityManager(this, _name, _option, _db, _dialect);
+        // if(_entityManagerInThread is null) {
+        //     _entityManagerInThread = new EntityManager(this, _name, _option, _db, _dialect);
+        // }
+        // return _entityManagerInThread;
+        return new EntityManager(this, _name, _option, _db, _dialect);
     }
 
-    private static EntityManager _entityManagerInThread;
+    // private static EntityManager _entityManagerInThread;
     
     public QueryBuilder createQueryBuilder()
     {
@@ -86,7 +90,7 @@ class EntityManagerFactory {
         string[] ret;
         QueryBuilder builder = createQueryBuilder();
         Statement stmt = _db.prepare(builder.showTables().toString());
-        ResultSet rs = stmt.query();
+        RowSet rs = stmt.query();
         foreach(Row row; rs) {
             for(int i=0; i<row.size(); i++) {
                 ret ~= row.getValue(i).toString();
@@ -101,7 +105,7 @@ class EntityManagerFactory {
         string[] ret;
         QueryBuilder builder = createQueryBuilder();
         Statement stmt = _db.prepare(builder.descTable(tableName).toString());
-        ResultSet rs = stmt.query();
+        RowSet rs = stmt.query();
         foreach(Row row; rs) {
             // string[string] array = row.toStringArray();
             // ret ~= "Field" in array ? array["Field"] : array["field"];

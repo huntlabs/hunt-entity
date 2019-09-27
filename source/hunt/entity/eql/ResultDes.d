@@ -22,8 +22,17 @@ import hunt.util.Traits;
 
 import std.array;
 import std.conv;
+import std.string;
 import std.traits;
 
+
+string getTableName(T)() if(is(T == class) || is(T == struct) ) {
+    static if (hasUDA!(T,Table)) {
+        return getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name;
+    } else {
+        return T.stringof;
+    }
+}
 
 
 class ResultDes(T : Object) {
@@ -77,8 +86,16 @@ class ResultDes(T : Object) {
         }
     }
 
+    private string getColumnAsName(string name, string tableName) {
+        if(_em.getDatabase().getOption().isPgsql()) {
+            return EntityExpression.getColumnAsName(name, tableName.toLower());
+        } else {
+            return EntityExpression.getColumnAsName(name, tableName);
+        }
+    }    
+
     public R deSerialize(R)(string value) {
-        version(HUNT_SQL_DEBUG_MORE) tracef("type=%s, value=%s", R.stringof, value);
+        version(HUNT_ENTITY_DEBUG_MORE) tracef("type=%s, value=%s", R.stringof, value);
         if (value.length == 0) {
             return R.init;
         }
@@ -107,14 +124,19 @@ string makeInitEntityData(T)() {
     private void initEntityData() {
         import std.string;
         _clsName = "`~T.stringof~`";`;
-    static if (hasUDA!(T,Table)) {
-        str ~= `
-        _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
-    }
-    else {
-        str ~= `
-        _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
-    }
+    // static if (hasUDA!(T,Table)) {
+    //     str ~= `
+    //     _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
+    // }
+    // else {
+    //     str ~= `
+    //     _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
+    // }
+
+    str ~= `
+    _tableName = _tablePrefix ~ "` ~ getTableName!(T) ~ `";`;
+    
+
     str ~= `
         _tableNameInLower = _tableName.toLower();
         }
@@ -126,9 +148,9 @@ string makeDeSerialize(T)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0) {
 
-        version(HUNT_ENTITY_DEBUG) {
-            tracef("Target: %s, Rows: %s, count: %s, startIndex: %d, tableName: %s ", 
-                T.stringof, rows, count, startIndex, _tableName);
+        version(HUNT_ENTITY_DEBUG_MORE) {
+            tracef("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
+                T.stringof, rows.length, count, startIndex, _tableName);
         }
 
         import std.variant;
@@ -136,9 +158,8 @@ string makeDeSerialize(T)() {
         T _data = new T();
         Row row = rows[startIndex];
         string columnAsName;
-        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
+        version(HUNT_ENTITY_DEBUG_MORE) logDebugf("rows[%d]: %s", startIndex, row);
 
-        string value;
         Variant columnValue;
         `;
     foreach(memberName; __traits(derivedMembers, T)) {
@@ -153,71 +174,85 @@ string makeDeSerialize(T)() {
                     string columnName = "\"" ~ memberName ~"\"";
                 }
 
-                // get the column's value
                 str ~=`
                     // ======================== `~memberName~` =============================
-                    value = null;  // clear last value
-                    columnAsName = getColumnAsName(`~ columnName ~`);
-
-                    version(HUNT_ENTITY_DEBUG) {
-                        tracef("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
-                    }
-
-                    columnValue = row.getValue(columnAsName);
-                    if (columnValue.hasValue()) {
-                        value = columnValue.toString();
-                        version(HUNT_ENTITY_DEBUG) {
-                            if(value.length > 128) {
-                                tracef("member: %s, column: %s, type: %s, value: %s", "` 
-                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                    ~ memType.stringof ~ `", value[0..128]);
-                            } else {
-                                tracef("member: %s, column: %s, type: %s, value: %s", "` 
-                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                    ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
-                            }
-                        }              
-                    } else {
-                        version(HUNT_ENTITY_DEBUG) {
-                                warningf("member: %s, column: %s, type: %s, value: null", "` 
-                                    ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                    ~ memType.stringof ~ `");
-                        }
-                    }
                     `;
 
-                // populate the field member
-                static if (isBasicType!memType || isSomeString!memType) {
-                    str ~=`
-                        if(!value.empty()) {
-                            _data.` ~ memberName ~ ` = deSerialize!(` ~ memType.stringof ~ `)(value);
-                        }
-                    `;
-                }
-                else static if(!isArray!memType && hasUDA!(__traits(getMember, T ,memberName), JoinColumn))
+                static if(!isArray!memType && hasUDA!(__traits(getMember, T ,memberName), JoinColumn))
                 {
                     str ~= `
                         auto ` ~ memberName~ ` = new ResultDes!(` ~ memType.stringof ~ `)(_em);
                         _data.` ~ memberName~ ` = ` ~ memberName ~ `.deSerialize(rows,count,startIndex);
                     `;
-                } else static if(is(memType : U[], U) && isByteType!U) { // bytes array
+                } else {
 
                     str ~=`
-                        if(value.length >= 2) {
-                            // FIXME: Needing refactor or cleanup -@zhangxueping at 2019/6/18 10:27:11 AM
-                            // to handle the other format for mysql etc.
+                        columnAsName = getColumnAsName(`~ columnName ~`);`;
 
-                            if(value[0..2] != "\\x") { 
-                                version(HUNT_DEBUG) warningf("unrecognized data format: %(%02X %)", value[0..2]);
-                            } else { // postgresql format
-                                value = value[2 .. $];
-                                _data.` ~ memberName ~ ` = ConverterUtils.toBytes!(`~ U.stringof ~`)(value);
+                    // get the column's value
+                    str ~=`
+                        version(HUNT_ENTITY_DEBUG_MORE) {
+                            tracef("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
+                        }
+
+                        columnValue = row.getValue(`~ columnName ~`);
+                        if (!columnValue.hasValue()) { // try use columnAsName to get the value
+                            version(HUNT_ENTITY_DEBUG_MORE) warningf("No value for %s.", `~ columnName ~`);
+                            columnValue = row.getValue(columnAsName);
+                        }
+
+                        version(HUNT_ENTITY_DEBUG) {
+                            if (columnValue.hasValue()) {
+                                string value = columnValue.toString();
+                                if(value.length > 128) {
+                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                        ~ memType.stringof ~ `", value[0..128]);
+                                } else {
+                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                        ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
+                                }
+                            } else {
+                                warningf("member: %s, column: %s / %s, type: %s, value: (null)", "` 
+                                    ~ memberName ~ `", ` ~ columnName ~ `, columnAsName, "` 
+                                    ~ memType.stringof ~ `");
                             }
                         }
+                        `;
+
+                    // populate the field member
+                    // 1) The types are same.
+                    str ~=`
+                        if(columnValue.hasValue()) {
+                            if(typeid(` ~ memType.stringof ~ `) == columnValue.type) {
+                                _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
+                            } else {
                     `;
-                        
-                } else {
-                    str ~= `warning("do nothing for ` ~ memberName ~ `, type=` ~ memType.stringof ~ `");`;
+
+                    // 2) convert to string type
+                    static if (isSomeString!memType) {
+                        str ~=`
+                            _data.` ~ memberName ~ ` = columnValue.toString();
+                        `;
+                    } else static if (isNumeric!memType) {
+                    // 3) convert to number type
+                        str ~=`
+                            version(HUNT_ENTITY_DEBUG) 
+                                warningf("Try to convert to a number from %s", columnValue.type.toString());
+
+                            try { _data.` ~ memberName ~ ` = columnValue.toString().to!(` ~ memType.stringof ~ `); }
+                            catch(Exception) { 
+                                warningf("Can't convert to a number from %s", columnValue.type.toString());
+                            }
+                        `;
+                    } else {
+                    // 4) unmatched type
+                        str ~= `warningf("unmatched type for field ` ~ memberName ~ `: fieldType=` ~ memType.stringof ~ 
+                            `, columnType = %s", columnValue.type.toString());`;
+                    }
+
+                    str ~=`} }`;
                 }
             }
         }

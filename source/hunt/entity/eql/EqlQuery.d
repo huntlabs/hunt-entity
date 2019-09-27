@@ -372,7 +372,7 @@ class EqlQuery(T...)
         return ret;
     }
 
-    public ResultSet getNativeResult()
+    public RowSet getNativeResult()
     {
         auto sql = getExecSql();
         version (WITH_HUNT_TRACE)

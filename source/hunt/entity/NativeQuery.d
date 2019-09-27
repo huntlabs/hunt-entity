@@ -41,6 +41,7 @@ version(WITH_HUNT_TRACE)
 
 import std.algorithm;
 
+deprecated("Using RowSet instead.")
 alias ResultSet = RowSet;
 
 class NativeQuery
@@ -82,7 +83,7 @@ class NativeQuery
         }
     }
 
-    public ResultSet getResultList()
+    public RowSet getResultList()
     {
         auto sql = paramedSql();
         version (WITH_HUNT_TRACE)
