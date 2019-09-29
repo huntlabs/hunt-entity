@@ -352,12 +352,22 @@ void test_EntityRepository_Save(EntityManager em)
 /*                                                      EQL tests                                                     */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-
-
 void test_eql_select(EntityManager em)
 {
 	mixin(DO_TEST);
 	/// select statement
+
+
+// SELECT Car.uid AS Car__as__uid, Car.id AS Car__as__id, Car.name AS Car__as__name
+// FROM Car 
+// WHERE Car.id = 1
+	auto query0 = em.createQuery!(Car)(" select a from Car a where a.id = 1;");
+	foreach (Car d; query0.getResultList())
+	{
+		logDebug("Car( %s , %s , %s ) ".format(d.id, d.name, d.uid));
+	}
+
+
 
 	// auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
 	// foreach (d; query1.getResultList())
@@ -389,16 +399,24 @@ void test_eql_select(EntityManager em)
 	// 	logDebug("Mixed Results( %s , %s , %s ) ".format(d.id, d.create_time, d.uinfo.nickName));
 	// }
 
-	auto query5 = em.createQuery!(LoginInfo)(
-			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
-	query5.setParameter("id", 2);
-	foreach (d; query5.getResultList())
-	{
-		logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
-				d.uinfo.nickName, d.uinfo.age));
-		logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
-		logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
-	}
+	// auto query5 = em.createQuery!(LoginInfo)(
+	// 		" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
+	// query5.setParameter("id", 2);
+	// foreach (d; query5.getResultList())
+	// {
+	// 	logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
+	// 			d.uinfo.nickName, d.uinfo.age));
+	// 	logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
+	// 	logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
+	// }
+
+// SELECT LoginInfo.location AS LoginInfo__as__location, LoginInfo.id AS LoginInfo__as__id, LoginInfo.uid AS LoginInfo__as__uid, LoginInfo.update_time AS LoginInfo__as__update_time, LoginInfo.create_time AS LoginInfo__as__create_time
+//         , UserInfo.nickname AS UserInfo__as__nickname, UserInfo.age AS UserInfo__as__age, UserInfo.id AS UserInfo__as__id, AppInfo.desc AS AppInfo__as__desc, AppInfo.id AS AppInfo__as__id
+//         , AppInfo.name AS AppInfo__as__name
+// FROM LoginInfo 
+//         LEFT JOIN UserInfo  ON LoginInfo.uid = UserInfo.id
+//         JOIN AppInfo  ON LoginInfo.appid = AppInfo.id
+// WHERE LoginInfo.id = 2	
 
 	// auto query6 = em.createQuery!(UserInfo,
 	// 		AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id ;");

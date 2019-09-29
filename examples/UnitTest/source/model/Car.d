@@ -15,6 +15,8 @@ class Car : Model {
 
     string name;
 
+    int uid;
+
     @ManyToOne()
     @JoinColumn("uid","id")
     UserInfo user;
