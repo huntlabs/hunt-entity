@@ -369,12 +369,23 @@ string makeDeSerialize(T,F)() {
                     auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
                     columnAsName = `~memberName~`.getColumnAsName();
                     columnValue = row.getValue(columnAsName);
-                    version(HUNT_ENTITY_DEBUG_DEBUG) {
+                    version(HUNT_ENTITY_DEBUG_MORE) {
                         tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
                             columnValue, columnAsName);
                     }
-                    if (columnValue.hasValue()) {
-                        `~memberName~`.deSerialize!(`~memType.stringof~`)(columnValue.toString(), _data.`~memberName~`);
+                    if(columnValue.type == typeid(null)) {
+                        version(HUNT_DEBUG) {
+                            warningf("It's a null value for a number: %s. So use it's default.", "` 
+                                ~ memberName ~ `");
+                        }
+                    } else if (columnValue.hasValue()) {
+                        string cvalue = columnValue.toString();
+                        version(HUNT_ENTITY_DEBUG_MORE) { 
+                            tracef("field: name=%s, type=%s; column: name=%s, type=%s; value: %s", "` 
+                                        ~ memberName ~ `", "` ~ memType.stringof ~ `", columnAsName, columnValue.type,` 
+                                        ~ ` cvalue.empty() ? "(empty)" : cvalue);
+                        }
+                        `~memberName~`.deSerialize!(`~memType.stringof~`)(cvalue, _data.`~memberName~`);
                     }
                     `;
                 }

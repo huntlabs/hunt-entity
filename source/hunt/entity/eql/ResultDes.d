@@ -201,22 +201,23 @@ string makeDeSerialize(T)() {
                             columnValue = row.getValue(columnAsName);
                         }
 
-                        version(HUNT_ENTITY_DEBUG) {
+                        version(HUNT_ENTITY_DEBUG_MORE) {
                             if (columnValue.hasValue()) {
                                 string value = columnValue.toString();
                                 if(value.length > 128) {
-                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
+                                    tracef("field: %s, column: %s, type: %s, value: %s", "` 
                                         ~ memberName ~ `", ` ~ columnName ~ `, "` 
                                         ~ memType.stringof ~ `", value[0..128]);
                                 } else {
-                                    tracef("member: %s, column: %s, type: %s, value: %s", "` 
-                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                        ~ memType.stringof ~ `", value.empty() ? "(empty)" : value);
+                                    tracef("field: name=%s, type=%s; column: name=%s / %s, type=%s; value: %s", "` 
+                                        ~ memberName ~ `", "` ~ memType.stringof ~ `", ` 
+                                        ~ columnName ~ `, columnAsName, columnValue.type,` 
+                                        ~ ` value.empty() ? "(empty)" : value);
                                 }
                             } else {
-                                warningf("member: %s, column: %s / %s, type: %s, value: (null)", "` 
-                                    ~ memberName ~ `", ` ~ columnName ~ `, columnAsName, "` 
-                                    ~ memType.stringof ~ `");
+                                warningf("field: name=%s, type=%s;, column: %s / %s, value: (null)", "` 
+                                    ~ memberName ~ `", "` ~ memType.stringof ~ `", ` ~ columnName 
+                                    ~ `, columnAsName);
                             }
                         }
                         `;
@@ -224,7 +225,12 @@ string makeDeSerialize(T)() {
                     // populate the field member
                     // 1) The types are same.
                     str ~=`
-                        if(columnValue.hasValue()) {
+                        if(columnValue.type == typeid(null)) {
+                            version(HUNT_DEBUG) {
+                                warningf("It's a null value for a number: %s. So use it's default.", "` 
+                                    ~ memberName ~ `");
+                            }
+                        } else if(columnValue.hasValue()) {
                             if(typeid(` ~ memType.stringof ~ `) == columnValue.type) {
                                 _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
                             } else {
@@ -239,7 +245,7 @@ string makeDeSerialize(T)() {
                     // 3) convert to number type
                         str ~=`
                             version(HUNT_ENTITY_DEBUG) 
-                                warningf("Try to convert to a number from %s", columnValue.type.toString());
+                                infof("Try to convert to a number from %s", columnValue.type.toString());
 
                             try { _data.` ~ memberName ~ ` = columnValue.toString().to!(` ~ memType.stringof ~ `); }
                             catch(Exception) { 
