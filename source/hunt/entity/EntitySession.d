@@ -31,8 +31,8 @@ class EntitySession
 
     ~this()
     {
-        version(HUNT_ENTITY_DEBUG) infof("Closing EntitySession in ~this()");
-        close();
+        // version(HUNT_ENTITY_DEBUG) infof("Closing EntitySession in ~this()"); // bug
+        // close();
     }
 
     public void beginTransaction()

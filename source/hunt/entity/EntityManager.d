@@ -42,8 +42,8 @@ class EntityManager {
 
     ~this()
     {
-        version(HUNT_ENTITY_DEBUG) infof("Closing EntityManager in ~this()");
-        close();
+        // version(HUNT_ENTITY_DEBUG) infof("Closing EntityManager in ~this()"); // bug
+        // close();
     }
 
     public T persist(T)(ref T entity) {

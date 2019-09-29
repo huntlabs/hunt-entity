@@ -56,10 +56,9 @@ class EntityManagerFactory {
 
     ~this()
     {
-        version(HUNT_DB_DEBUG) info("EntityManagerFactory destruct");
-        if(_db)
-            _db.close();
-        _db = null;
+        // if(_db)
+        //     _db.close();
+        // _db = null;
     }   
 
     public EntityManager createEntityManager()
