@@ -46,6 +46,7 @@ __test__library__
 # Others
 backup/
 dub.*.json
+*-test-library
 examples/postgresql/postgresql-demo
 examples/eql/eql-demo
 examples/UnitTest/unittest

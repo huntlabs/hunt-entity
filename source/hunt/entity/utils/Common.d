@@ -5,6 +5,7 @@ import std.traits;
 import hunt.entity.Entity;
 import hunt.entity.Constant;
 
+import std.format;
 
 class Common {
     static T sampleCopy(T)(T t) {
