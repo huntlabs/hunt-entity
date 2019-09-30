@@ -1,54 +1,16 @@
 {
     "name": "hunt-entity",
-    "description": "Entity is an object-relational mapping (ORM) tool for the D programming language. Referring to the design idea of JPA. support PostgreSQL / MySQL / SQLite.",
+    "description": "Entity is an object-relational mapping (ORM) tool for the D programming language. Referring to the design idea of JPA. support PostgreSQL / MySQL.",
     "copyright": "Copyright (C) 2018-2019, HuntLabs",
     "homepage": "https://www.huntlabs.net",
     "license": "Apache-2.0",
     "versions": ["WITH_HUNT_ENTITY"],
     "dependencies": {
-        "hunt-database": "~>1.3.0",
-        "hunt-sql": "~>1.2.0",
-        "hunt-validation" : "~>0.2.0"
+        "hunt-database": {"path": "../hunt-database"},
+        "hunt-validation" : {"path": "../hunt-validation"}
     },
-    "configurations": [
-        {
-            "name": "default",
-            "targetType": "library",    
-            "subConfigurations": {
-                "hunt-database": "mysql"
-            }
-        },
-        {
-            "name": "empty",
-            "targetType": "library" 
-        },
-        {
-            "name": "full",
-            "targetType": "library",    
-            "subConfigurations": {
-                "hunt-database": "full"
-            }
-        },
-        {
-            "name": "mysql",
-            "targetType": "library",
-            "subConfigurations": {
-                "hunt-database": "mysql"
-            }
-        },
-        {
-            "name": "postgresql",
-            "targetType": "library",
-            "subConfigurations": {
-                "hunt-database": "postgresql"
-            }
-        },
-        {
-            "name": "sqlite",
-            "targetType": "library",
-            "subConfigurations": {
-                "hunt-database": "sqlite"
-            }
-        }
-    ]
+    "subConfigurations": {
+        "hunt-database": "ssl"
+    }
 }
+
