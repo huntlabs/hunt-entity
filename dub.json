@@ -6,8 +6,8 @@
     "license": "Apache-2.0",
     "versions": ["WITH_HUNT_ENTITY"],
     "dependencies": {
-        "hunt-database": {"path": "../hunt-database"},
-        "hunt-validation" : {"path": "../hunt-validation"}
+        "hunt-database": "~>2.0.0-beta.1",
+        "hunt-validation" : "~>0.2.1"
     },
     "subConfigurations": {
         "hunt-database": "ssl"
