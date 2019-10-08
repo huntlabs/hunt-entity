@@ -65,12 +65,14 @@ void main()
 	scope(exit) {
 		em.close();
 	}
+	// test_eql_select(em);
+	// test_eql_select_with_reserved_word(em);
+	test_eql_update_with_reserved_word(em);
 
 	// test_OneToOne(em);
 	// test_OneToMany(em);
 	// test_ManyToOne(em);
 	// test_ManyToMany(em);
-	test_eql_select(em);
 	// test_merge(em);
 	// test_persist(em);
 	// test_comparison(em);
@@ -87,6 +89,7 @@ void main()
 	// test_other(em);
 	// test_exception(em);
 	// test_EntityRepository_Save(em);
+	test_EntityRepository_Save_with_reserved_word(em);
 
 	getchar();
 }
@@ -348,6 +351,28 @@ void test_EntityRepository_Save(EntityManager em)
 	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
 }
 
+
+void test_EntityRepository_Save_with_reserved_word(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
+
+	AppInfo info = rep.findById(1);
+	infof("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
+
+	info.desc = "test1";
+	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-08T11:45:09+08:00
+	// Can't handle reserved word.
+	rep.save(info);
+	// UPDATE AppInfo
+	// SET desc = 'test1', name = 'Vitis'
+	// WHERE AppInfo.id = 1	
+	
+	// info = rep.findById(1);
+	// warning("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
+}
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 /*                                                      EQL tests                                                     */
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -437,6 +462,38 @@ void test_eql_select(EntityManager em)
 	// }
 }
 
+
+void test_eql_select_with_reserved_word(EntityManager em)
+{
+	mixin(DO_TEST);
+	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-08T10:21:38+08:00
+	// DCD crashed AppInfo
+	string sql = "select a from AppInfo a where a.id = 1;";
+	// sql = "select a from AppInfo a where a.desc = 'it\'s a IM service';"; // bug  it's a IM service
+
+	
+	sql = "select a from AppInfo a where a.desc = 'service';"; 
+// SELECT AppInfo.desc AS AppInfo__as__desc, AppInfo.id AS AppInfo__as__id, AppInfo.name AS AppInfo__as__name
+// FROM AppInfo 
+// WHERE AppInfo.`desc` = 'service'	
+	auto query0 = em.createQuery!(AppInfo)(sql);
+	foreach (AppInfo info; query0.getResultList())
+	{
+		logDebug("AppInfo( %s , %s , %s ) ".format(info.id, info.name, info.desc));
+	}
+}
+
+void test_eql_update_with_reserved_word(EntityManager em)
+{
+	mixin(DO_TEST);
+	string sql = "update AppInfo a set a.desc = 'test' where a.id = 1;";
+	auto update = em.createQuery!(AppInfo)(sql);
+	logDebug(" update result : ",update.exec());
+
+	// UPDATE AppInfo 
+	// SET AppInfo.desc = 'test'
+	// WHERE AppInfo.id = 1
+}
 
 // void test_eql_update(EntityManager em)
 // {
