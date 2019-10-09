@@ -174,7 +174,7 @@ class EqlParse
         }
         else if (cast(SQLInsertStatement)(_stmtList.get(0)) !is null)
         {
-            version (HUNT_SQL_DEBUG)
+            version (HUNT_ENTITY_MORE)
                 logDebug("EQL do_insert_parse");
             doInsertParse();
         }
@@ -256,7 +256,7 @@ class EqlParse
                 List!SQLExpr newArgs = new ArrayList!SQLExpr();
                 foreach (subExpr; aggreExpr.getArguments())
                 {
-                    // version(HUNT_SQL_DEBUG) {
+                    // version(HUNT_ENTITY_MORE) {
                     //     tracef("arg expr : %s, arg string : %s",
                     //         typeid(cast(Object)subExpr).name, SQLUtils.toSQLString(subExpr));
                     // }
@@ -298,7 +298,7 @@ class EqlParse
             }
             else
             {
-                version(HUNT_SQL_DEBUG_MORE) {
+                version(HUNT_ENTITY_DEBUG_MORE) {
                     auto o = cast(Object)expr;
                     warningf("Expr: %s, item: %s", typeid(o).name, SQLUtils.toSQLString(selectItem));
                 }
@@ -326,14 +326,14 @@ class EqlParse
             foreach (item; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
-                // version (HUNT_SQL_DEBUG_MORE)
+                // version (HUNT_ENTITY_DEBUG_MORE)
                 //     logDebug("order item : %s".format(exprStr));
                 item.replace(item.getExpr(), SQLUtils.toSQLExpr(convertAttrExpr(exprStr), _dbtype));
             }
         }
         // else
         // {
-        //     version (HUNT_SQL_DEBUG)
+        //     version (HUNT_ENTITY_MORE)
         //         logDebug("order by item is null");
         // }
 
@@ -366,7 +366,7 @@ class EqlParse
         /// update item
         foreach (SQLUpdateSetItem updateItem; updateBlock.getItems())
         {
-            version(HUNT_SQL_DEBUG_MORE)
+            version(HUNT_ENTITY_DEBUG_MORE)
             {
                 tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()),
                         SQLUtils.toSQLString(updateItem.getValue));
@@ -387,7 +387,7 @@ class EqlParse
                     {
                         foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
-                            version(HUNT_SQL_DEBUG_MORE)
+                            version(HUNT_ENTITY_DEBUG_MORE)
                             {
                                 tracef("sql replace %s with %s, table: %s ", clsFiled,
                                         entFiled.getColumnName(), eqlObj.tableName());
@@ -461,7 +461,7 @@ class EqlParse
 
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
 
-        version (HUNT_SQL_DEBUG)
+        version (HUNT_ENTITY_MORE)
             trace(_parsedEql);
     }
 
@@ -496,7 +496,7 @@ class EqlParse
         /// insert item
         foreach (expr; insertBlock.getColumns())
         {
-            version(HUNT_SQL_DEBUG_MORE)
+            version(HUNT_ENTITY_DEBUG_MORE)
                 trace("insert item :", SQLUtils.toSQLString(expr));
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -893,7 +893,7 @@ class EqlParse
     {
         string sql = _parsedEql;
 
-        version (HUNT_SQL_DEBUG_MORE)
+        version (HUNT_ENTITY_DEBUG_MORE)
             logDebug("EQL params : ", _parameters);
 
         foreach (k, v; _parameters)
@@ -901,7 +901,7 @@ class EqlParse
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
             if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                version (HUNT_SQL_DEBUG)
+                version (HUNT_ENTITY_MORE)
                     logInfo("-----: ", v.toString);
                 if (_dbtype == DBType.POSTGRESQL.name)
                     sql = sql.replaceAll(re, quoteSqlString(v.toString(), "'") ~ "$1");
@@ -925,10 +925,13 @@ class EqlParse
             }
             sql = SQLUtils.format(sql, _dbtype, params);
         }
+
+        // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T14:41:55+08:00
+        // why?
         if (_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
             sql = SQLUtils.format(sql, _dbtype);
 
-        // logDebug("native sql : %s".format(sql));
+        version(HUNT_ENTITY_DEBUG) infof("native sql : %s", sql);
         return sql;
     }
 }

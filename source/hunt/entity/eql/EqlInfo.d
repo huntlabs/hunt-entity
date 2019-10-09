@@ -63,6 +63,7 @@ class EqlInfo(T : Object, F : Object = T) {
     private EntityFieldInfo[string] _fields;
     private string _factoryName = defaultEntityManagerFactoryName();
     private string _tableName;
+    private string _tableNameInLower; // for PostgreSQL, the column's name will be converted to lowercase.
     private string _entityClassName;
     private string _autoIncrementKey;
     private string _primaryKey;
@@ -141,10 +142,15 @@ class EqlInfo(T : Object, F : Object = T) {
     public Object[string] getJoinConds() { 
         return _joinConds;
     }
+
+    private string getCountAsName() {
+        if(_manager.getDatabase().getOption().isPgsql()) {
+            return EntityExpression.getCountAsName(_tableNameInLower);
+        } else {
+            return EntityExpression.getCountAsName(_tableName);
+        }
+    }
 }
-
-
-
 
 
 string makeSetPrimaryValue(T)() {
@@ -341,9 +347,11 @@ string makeDeSerialize(T,F)() {
         if (row is null || row.size() == 0)
             return null;
 
-        Variant columnValue = row.getValue("countfor" ~ _tableName ~ "_");
+        columnAsName = getCountAsName();
+        Variant columnValue = row.getValue(columnAsName);
         if (columnValue.hasValue()) {
-            count = columnValue.get!(long);
+            version(HUNT_ENTITY_DEBUG) tracef("count: %s", columnValue.toString());
+            count = columnValue.coerce!(long);
             return null;
         }
         `;

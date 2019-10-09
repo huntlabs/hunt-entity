@@ -406,7 +406,6 @@ class EqlQuery(T...)
         foreach (Row row; res)
         {
             Variant v = row.getValue(0);
-            warningf("xxxx=>%s", v);
             total = to!int(v.toString());
         }
         return total;

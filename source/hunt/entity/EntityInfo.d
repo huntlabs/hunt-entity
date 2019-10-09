@@ -29,6 +29,7 @@ class EntityInfo(T : Object, F : Object = T) {
     private EntityFieldInfo[string] _fields;
     private string _factoryName = defaultEntityManagerFactoryName();
     private string _tableName;
+    private string _tableNameInLower; // for PostgreSQL, the column's name will be converted to lowercase.
     private string _entityClassName;
     private string _autoIncrementKey;
     private string _primaryKey;
@@ -119,6 +120,14 @@ class EntityInfo(T : Object, F : Object = T) {
     public EntityFieldInfo[string] getFields() { return _fields; }
     public string getPrimaryKeyString() { return _primaryKey; }
     public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
+
+    private string getCountAsName() {
+        if(_manager.getDatabase().getOption().isPgsql()) {
+            return EntityExpression.getCountAsName(_tableNameInLower);
+        } else {
+            return EntityExpression.getCountAsName(_tableName);
+        }
+    }
 }
 
 string makeSetPrimaryValue(T)() {
@@ -163,7 +172,8 @@ string makeSetIncreaseKey(T)() {
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!isFunction!(memType) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto))) {
+            static if (!isFunction!(memType) && (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || 
+                    hasUDA!(__traits(getMember, T ,memberName), Auto))) {
                 name = memberName;
             }
         }
@@ -192,6 +202,10 @@ string makeInitEntityData(T,F)() {
         str ~= `
         _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
     }
+
+    str ~= `
+        _tableNameInLower = _tableName.toLower();
+    `;
 
     static if (hasUDA!(T, Factory))
     {
@@ -348,9 +362,11 @@ string makeDeSerialize(T,F)() {
         if (row is null || row.size() == 0)
             return null;
 
-        Variant columnValue = row.getValue("countfor" ~ _tableName ~ "_");
+        columnAsName = getCountAsName();
+        Variant columnValue = row.getValue(columnAsName);
         if (columnValue.hasValue()) {
-            count = columnValue.get!(long);
+            version(HUNT_ENTITY_DEBUG) tracef("count: %s", columnValue.toString());
+            count = columnValue.coerce!(long);
             return null;
         }
         `;

@@ -15,6 +15,8 @@ import hunt.entity.Persistence;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity;
 import hunt.Long;
+import hunt.logging.ConsoleLogger;
+
 import std.traits;
 
 public import hunt.entity.repository.Repository;
@@ -38,17 +40,32 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public long count()
     {
-        auto em = _manager ? _manager : createEntityManager();
+        EntityManager em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
 
         CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();
         criteriaQuery.select(builder.count(root));
-        
-        Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
-        
-        return result.longValue();
+
+        // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T17:18:45+08:00
+        // 
+        auto result = em.createQuery(criteriaQuery).getSingleResult();
+        Long r = cast(Long)result;
+        if(r is null) {
+            warning(typeid(result));
+            return 0;
+        }
+        return r.longValue();
+
+        // RowSet rs = em.createQuery(criteriaQuery).getNativeResult();
+        // if(rs.size() == 0) {
+        //     warning("No data returned.");
+        //     return 0;
+        // }
+
+        // Row row = rs.iterator.front();
+        // return row.getLong(0);
     }
 
     public void remove(T entity)

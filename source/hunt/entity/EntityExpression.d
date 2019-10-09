@@ -74,4 +74,8 @@ class EntityExpression
     static string getColumnAs(string columnName, string tableName) {
         return getFullColumnName(columnName, tableName) ~ " AS " ~ getColumnAsName(columnName, tableName);
     }    
+
+    static string getCountAsName(string tableName) {
+        return tableName ~ "__as__countfor" ~ tableName ~ "_";
+    }
 }

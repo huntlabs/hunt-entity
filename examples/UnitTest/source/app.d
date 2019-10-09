@@ -56,8 +56,8 @@ EntityOption getPgOptions() {
 void main()
 {
 
-	EntityOption option = getMysqlOptions();
-	// EntityOption option = getPgOptions();
+	// EntityOption option = getMysqlOptions();
+	EntityOption option = getPgOptions();
 
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
 	EntityManager em = entityManagerFactory.createEntityManager();
@@ -67,7 +67,7 @@ void main()
 	}
 	// test_eql_select(em);
 	// test_eql_select_with_reserved_word(em);
-	test_eql_update_with_reserved_word(em);
+	// test_eql_update_with_reserved_word(em);
 
 	// test_OneToOne(em);
 	// test_OneToMany(em);
@@ -88,11 +88,18 @@ void main()
 	// test_transaction(em);
 	// test_other(em);
 	// test_exception(em);
+
+	test_EntityRepository_Count(em);
 	// test_EntityRepository_Save(em);
-	test_EntityRepository_Save_with_reserved_word(em);
+	// test_EntityRepository_Save_with_reserved_word(em);
 
 	getchar();
 }
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*                                                      EQL tests                                                     */
+/* ------------------------------------------------------------------------------------------------------------------ */
 
 // void test_persist(EntityManager em)
 // {
@@ -274,9 +281,19 @@ void test_count(EntityManager em)
 {
 	mixin(DO_TEST);
 
-	auto query = em.createQuery!(UserInfo)(
-			" select count(UserInfo.id) as num from UserInfo a ");
+	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T15:23:59+08:00
+	// Give some warning message.
+	string sql = " select count(UserInfo.id) as num from UserInfo a "; // bug
+	// sql = " select count(a.id) as num from UserInfo a "; 
+	sql = " select count(*) as num from UserInfo a "; 
+
+	auto query = em.createQuery!(UserInfo)(sql);
 	logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
+	RowSet rs = query.getNativeResult();
+	assert(rs.size() > 0);
+	Row row = rs.iterator.front();
+	long count = row.getLong(0);
+	infof("count: %d", count);
 }
 
 void test_transaction(EntityManager em)
@@ -333,49 +350,6 @@ void test_exception(EntityManager em)
 		logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
 	}
 }
-
-
-void test_EntityRepository_Save(EntityManager em)
-{
-	mixin(DO_TEST);
-
-	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
-
-	LoginInfo loginInfo = rep.findById(1);
-	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
-		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
-
-	loginInfo.updated += 1;
-	rep.save(loginInfo);
-	LoginInfo newInfo = rep.findById(1);
-	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
-}
-
-
-void test_EntityRepository_Save_with_reserved_word(EntityManager em)
-{
-	mixin(DO_TEST);
-
-	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
-
-	AppInfo info = rep.findById(1);
-	infof("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
-
-	info.desc = "test1";
-	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-08T11:45:09+08:00
-	// Can't handle reserved word.
-	rep.save(info);
-	// UPDATE AppInfo
-	// SET desc = 'test1', name = 'Vitis'
-	// WHERE AppInfo.id = 1	
-	
-	// info = rep.findById(1);
-	// warning("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
-}
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-/*                                                      EQL tests                                                     */
-/* ------------------------------------------------------------------------------------------------------------------ */
 
 void test_eql_select(EntityManager em)
 {
@@ -565,4 +539,58 @@ void test_eql_ManyToOne(EntityManager em)
 	// car = em.createQuery!(Car)(("SELECT u,f FROM Car u LEFT JOIN UserInfo f ON f.id=u.uid;");
 
 	// warning("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
+}
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*                                               Entity Repository                                                    */
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+void test_EntityRepository_Count(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	long count = rep.count();
+	tracef("count: %d", count);
+}
+
+
+void test_EntityRepository_Save(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	LoginInfo loginInfo = rep.findById(1);
+	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
+
+	loginInfo.updated += 1;
+	rep.save(loginInfo);
+	LoginInfo newInfo = rep.findById(1);
+	logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+}
+
+
+void test_EntityRepository_Save_with_reserved_word(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
+
+	AppInfo info = rep.findById(1);
+	infof("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
+
+	info.desc = "test1";
+	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-08T11:45:09+08:00
+	// Can't handle reserved word.
+	rep.save(info);
+	// UPDATE AppInfo
+	// SET desc = 'test1', name = 'Vitis'
+	// WHERE AppInfo.id = 1	
+	
+	// info = rep.findById(1);
+	// warning("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
 }

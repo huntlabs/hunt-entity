@@ -13,6 +13,7 @@ module hunt.entity.TypedQuery;
 
 import hunt.entity;
 import hunt.Long;
+import hunt.logging.ConsoleLogger;
 
 version(WITH_HUNT_TRACE)
 {
@@ -101,8 +102,12 @@ class TypedQuery(T : Object, F : Object = T)
         }
         Object[] ret;
         long count = -1;
-        auto stmt = _manager.getSession().prepare(sql);
-        auto res = stmt.query();
+        Statement stmt = _manager.getSession().prepare(sql);
+        RowSet res = stmt.query();
+        version(HUNT_ENTITY_DEBUG) {
+            infof("columns: %s", res.columnsNames());
+        }
+
         Row[] rows;
         foreach (value; res)
         {
