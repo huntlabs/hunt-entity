@@ -56,8 +56,8 @@ EntityOption getPgOptions() {
 void main()
 {
 
-	// EntityOption option = getMysqlOptions();
-	EntityOption option = getPgOptions();
+	EntityOption option = getMysqlOptions();
+	// EntityOption option = getPgOptions();
 
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
 	EntityManager em = entityManagerFactory.createEntityManager();
@@ -89,8 +89,9 @@ void main()
 	// test_other(em);
 	// test_exception(em);
 
-	test_EntityRepository_Count(em);
-	// test_EntityRepository_Save(em);
+	// test_EntityRepository_Count(em);
+	// test_EntityRepository_Insert(em);
+	test_EntityRepository_Save(em);
 	// test_EntityRepository_Save_with_reserved_word(em);
 
 	getchar();
@@ -556,6 +557,18 @@ void test_EntityRepository_Count(EntityManager em)
 	tracef("count: %d", count);
 }
 
+
+void test_EntityRepository_Insert(EntityManager em)
+{
+	mixin(DO_TEST);
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	LoginInfo loginInfo = new LoginInfo();
+	loginInfo.location = "new location";
+
+	rep.insert(loginInfo);
+}
 
 void test_EntityRepository_Save(EntityManager em)
 {

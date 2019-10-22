@@ -92,15 +92,39 @@ class EntityInfo(T : Object, F : Object = T) {
 
     public Variant[string] getInsertString() {
         Variant[string] str;
-        foreach(info; _fields) {
-            if (info.getFieldName() != _autoIncrementKey) {
-                if (info.getColumnName() != "") {
-                    if(!_manager.getDatabase().getOption().isPgsql())
-                        str[info.getFullColumn()] = info.getColumnFieldData();
-                    else
-                        str[info.getColumnName()] = info.getColumnFieldData();
-                }
+        foreach(string fieldName, EntityFieldInfo info; _fields) {
+            string columnName = info.getColumnName();
+            Variant currentValue = info.getColumnFieldData();
+            version(HUNT_DB_DEBUG_MORE) {
+                tracef("fieldName: %s, columnName: %s, type: %s", fieldName, columnName, currentValue.type);
             }
+            
+            if (fieldName == _autoIncrementKey) 
+                continue;
+            
+            // version(HUNT_DB_DEBUG) trace(currentValue.type);
+
+            // skip Object member
+            if(typeid(currentValue.type) == typeid(TypeInfo_Class) || 
+                typeid(currentValue.type) == typeid(TypeInfo_Struct) ) {
+                version(HUNT_DB_DEBUG) warningf("Object member skipped: %s", fieldName);
+                continue;
+            }
+
+            if (columnName.empty()) {
+                version(HUNT_DEBUG) warningf("columnName is empty for field %s", fieldName);
+                continue;
+            }
+
+            if(!_manager.getDatabase().getOption().isPgsql()) {
+                columnName = info.getFullColumn();
+            }
+
+            if(columnName in str) {
+                version(HUNT_DEBUG) warning("column already exists: ", columnName);
+            }
+
+            str[columnName] = currentValue;
         }
         return str;
     }
@@ -238,6 +262,7 @@ string makeInitEntityData(T,F)() {
                 }
                 //value 
                 string value = "_data."~memberName;
+                // use member name as the key
                 string fieldName = "_fields["~memberName.stringof~"]";
                 static if (is(F == memType) ) {
                     str ~= `

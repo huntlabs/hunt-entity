@@ -24,6 +24,8 @@ class LoginInfo : Model
     @JoinColumn("uid")
     UserInfo uinfo;
 
+    int appid;
+
     @JoinColumn("appid")
     AppInfo app;
 
