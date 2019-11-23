@@ -91,8 +91,8 @@ void main()
 
 	// test_EntityRepository_Count(em);
 	// test_EntityRepository_Insert(em);
-	test_EntityRepository_Save(em);
-	// test_EntityRepository_Save_with_reserved_word(em);
+	// test_EntityRepository_Save(em);
+	test_EntityRepository_Save_with_reserved_word(em);
 
 	getchar();
 }
@@ -594,12 +594,10 @@ void test_EntityRepository_Save_with_reserved_word(EntityManager em)
 	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
 
 	AppInfo info = rep.findById(1);
-	infof("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
+	infof("AppInfo(id: %d, desc: %s, available: %s) ".format(info.id, info.desc, info.isAvailable));
 
-	info.desc = "test1";
-	// FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-08T11:45:09+08:00
-	// Can't handle reserved word.
-	rep.save(info);
+	// info.desc = "test1";
+	// rep.save(info);
 	// UPDATE AppInfo
 	// SET desc = 'test1', name = 'Vitis'
 	// WHERE AppInfo.id = 1	

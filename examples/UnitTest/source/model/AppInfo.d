@@ -15,6 +15,9 @@ class AppInfo : Model {
     string name;
     string desc;
 
+    @Column("available")
+    bool isAvailable;
+
     
     @(JoinTable("UserApp"),JoinColumn("appid"),InverseJoinColumn("uid"))
     @ManyToMany("apps")
