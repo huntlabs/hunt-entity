@@ -46,9 +46,9 @@ public class CriteriaBuilder
         return _factory.getDialect();
     } 
 
-    public Database getDatabase() {
-        return _factory.getDatabase();
-    }
+    // public Database getDatabase() {
+    //     return _factory.getDatabase();
+    // }
 
     public CriteriaQuery!(T,F) createQuery(T : Object,F : Object = T)() {
         return new CriteriaQuery!(T,F)(this);

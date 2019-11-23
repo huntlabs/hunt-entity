@@ -103,7 +103,7 @@ class EqlQuery(T...)
             scope (exit)
                 endTrace();
         }
-        DatabaseOption opt = _manager.getDatabase().getOption();
+        DatabaseOption opt = _manager.getDbOption();
         if (opt.isMysql())
         {
             _eqlParser = new EqlParse(_eql, DBType.MYSQL.name);

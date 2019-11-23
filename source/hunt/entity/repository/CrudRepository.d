@@ -70,7 +70,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public void remove(T entity)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.remove!T(entity);
     }
@@ -79,7 +79,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     {
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-7-3 10:23:27
         // user "delete from T"
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         foreach (entity; findAll())
         {
@@ -89,7 +89,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     
     public void removeAll(T[] entities)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         foreach (entity; entities)
         {
@@ -99,7 +99,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public void removeById(ID id)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.remove!T(id);
         
@@ -113,7 +113,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] findAll()
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(T);
@@ -136,7 +136,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T findById(ID id)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         T result = em.find!T(id);
         return result;
@@ -144,7 +144,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T save(T entity)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         if (mixin(GenerateFindById!T()) is null)
         {
@@ -159,7 +159,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T[] saveAll(T[] entities)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         T[] resultList;
         foreach (entity; entities)
@@ -179,14 +179,14 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T insert(T entity)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.persist(entity);
         return entity;
     }
     public T[] insertAll(T[] entities)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         T[] resultList;
         foreach (entity; entities)
@@ -198,7 +198,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public T update(T entity)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.merge!T(entity);
         return entity;
@@ -206,7 +206,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     
     public T[] updateAll(T[] entities)
     {
-        auto em = _manager ? _manager : defaultEntityManagerFactory().createEntityManager();
+        auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         T[] resultList;
         foreach (entity; entities)

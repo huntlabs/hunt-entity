@@ -144,7 +144,7 @@ class EqlInfo(T : Object, F : Object = T) {
     }
 
     private string getCountAsName() {
-        if(_manager.getDatabase().getOption().isPgsql()) {
+        if(_manager.getDbOption().isPgsql()) {
             return EntityExpression.getCountAsName(_tableNameInLower);
         } else {
             return EntityExpression.getCountAsName(_tableName);

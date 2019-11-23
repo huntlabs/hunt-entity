@@ -26,18 +26,20 @@ class EntityManager {
     public EntityOption _option;
     public Database _db;
     public string _name;
-    private EntityManagerFactory _factory;
+    // private EntityManagerFactory _factory;
+    private CriteriaBuilder _criteriaBuilder;
     private EntityTransaction _transaction;
     private EntitySession _entitySession;
 
-    this(EntityManagerFactory factory, string name, EntityOption option, Database db, Dialect dialect) {
-        _factory = factory;
+    this(CriteriaBuilder criteriaBuilder, string name, EntityOption option, Database db, Dialect dialect) {
+        // _factory = factory;
+        _criteriaBuilder = criteriaBuilder;
         _name = name;
         _option = option;
         _db = db;
         _dialect = dialect;
         _transaction = new EntityTransaction(this);
-        _entitySession = new EntitySession(db);
+        // _entitySession = new EntitySession(db);
     }
 
     ~this()
@@ -47,7 +49,7 @@ class EntityManager {
     }
 
     public T persist(T)(ref T entity) {
-        QueryBuilder builder = _factory.createQueryBuilder();
+        QueryBuilder builder = _db.createQueryBuilder(); // _factory.createQueryBuilder();
         EntityInfo!T info = new EntityInfo!(T)(this, entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
         if (info.getAutoIncrementKey().length > 0)
@@ -147,14 +149,24 @@ class EntityManager {
     public Dialect getDialect() {return _dialect;}
 
     public EntitySession getSession() {
-        // trace("Creating a new session");
-        // return new EntitySession(_db);
+        if(_entitySession is null) {
+            trace("Creating a new session");
+            _entitySession = new EntitySession(_db);
+        }
         return _entitySession;
     }
 
-    public CriteriaBuilder getCriteriaBuilder() {return _factory.getCriteriaBuilder().setManager(this);}     
+    public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder.setManager(this);}     
     public EntityTransaction getTransaction() {return _transaction;}
+
+    deprecated("Using getSession instead.")
     public Database getDatabase() {return _db;}
+
+
+    DatabaseOption getDbOption() {
+        return _db.getOption();
+    }
+    
     public string getPrefix() {return _option.database.prefix;}
 
     public void close() {

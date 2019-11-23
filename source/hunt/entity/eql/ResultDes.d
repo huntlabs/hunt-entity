@@ -79,7 +79,7 @@ class ResultDes(T : Object) {
     }
 
     private string getColumnAsName(string name) {
-        if(_em.getDatabase().getOption().isPgsql()) {
+        if(_em.getDbOption().isPgsql()) {
             return EntityExpression.getColumnAsName(name, _tableNameInLower);
         } else {
             return EntityExpression.getColumnAsName(name, _tableName);
@@ -87,7 +87,7 @@ class ResultDes(T : Object) {
     }
 
     private string getColumnAsName(string name, string tableName) {
-        if(_em.getDatabase().getOption().isPgsql()) {
+        if(_em.getDbOption().isPgsql()) {
             return EntityExpression.getColumnAsName(name, tableName.toLower());
         } else {
             return EntityExpression.getColumnAsName(name, tableName);
@@ -226,7 +226,7 @@ string makeDeSerialize(T)() {
                     // 1) The types are same.
                     str ~=`
                         if(columnValue.type == typeid(null)) {
-                            version(HUNT_DEBUG) {
+                            version(HUNT_ENTITY_DEBUG_MORE) {
                                 warningf("It's a null value for a number: %s. So use it's default.", "` 
                                     ~ memberName ~ `");
                             }
@@ -241,7 +241,7 @@ string makeDeSerialize(T)() {
                         str ~=`
                             _data.` ~ memberName ~ ` = columnValue.toString();
                         `;
-                    } else static if (isNumeric!memType) {
+                    } else static if (isNumeric!memType || is(memType == bool)) {
                     // 3) convert to number type
                         str ~=`
                             version(HUNT_ENTITY_DEBUG) 
@@ -249,7 +249,8 @@ string makeDeSerialize(T)() {
 
                             try { _data.` ~ memberName ~ ` = columnValue.toString().to!(` ~ memType.stringof ~ `); }
                             catch(Exception) { 
-                                warningf("Can't convert to a number from %s", columnValue.type.toString());
+                                warningf("Can't convert to a number or bool from %s, member: ` ~ memberName ~ 
+                                `, value: %s", columnValue.type.toString(), columnValue.toString());
                             }
                         `;
                     } else {

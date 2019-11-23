@@ -61,16 +61,28 @@ class EntityManagerFactory {
         // _db = null;
     }   
 
-    public EntityManager createEntityManager()
+    EntityManager currentEntityManager()
     {
-        // if(_entityManagerInThread is null) {
-        //     _entityManagerInThread = new EntityManager(this, _name, _option, _db, _dialect);
-        // }
-        // return _entityManagerInThread;
-        return new EntityManager(this, _name, _option, _db, _dialect);
+        warning("Try to get current EntityManager");
+        if(_entityManagerInThread is null) {
+            warning("A new EntityManager created");
+            _entityManagerInThread = new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
+        }
+        return _entityManagerInThread;
     }
 
-    // private static EntityManager _entityManagerInThread;
+    // deprecated("Using currentEntityManager instead.")
+    public EntityManager createEntityManager()
+    {
+        warning("Try to create a new EntityManager");
+        if(_entityManagerInThread is null) {
+            warning("A new EntityManager created");
+            _entityManagerInThread = new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
+        }
+        return _entityManagerInThread;
+        // return new EntityManager(this, _name, _option, _db, _dialect);
+    }
+    private static EntityManager _entityManagerInThread;
     
     public QueryBuilder createQueryBuilder()
     {
@@ -88,8 +100,7 @@ class EntityManagerFactory {
     private string[] showTables() {
         string[] ret;
         QueryBuilder builder = createQueryBuilder();
-        Statement stmt = _db.prepare(builder.showTables().toString());
-        RowSet rs = stmt.query();
+        RowSet rs = _db.query(builder.showTables().toString());
         foreach(Row row; rs) {
             for(int i=0; i<row.size(); i++) {
                 ret ~= row.getValue(i).toString();
@@ -103,8 +114,7 @@ class EntityManagerFactory {
     {
         string[] ret;
         QueryBuilder builder = createQueryBuilder();
-        Statement stmt = _db.prepare(builder.descTable(tableName).toString());
-        RowSet rs = stmt.query();
+        RowSet rs = _db.query(builder.descTable(tableName).toString());
         foreach(Row row; rs) {
             // string[string] array = row.toStringArray();
             // ret ~= "Field" in array ? array["Field"] : array["field"];
@@ -160,8 +170,10 @@ class EntityManagerFactory {
     }
 
     public Dialect getDialect() {return _dialect;}
+
     public Database getDatabase() {return _db;}
-    public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
+
+    // public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
 }
 
 

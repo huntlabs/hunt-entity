@@ -39,7 +39,7 @@ class EntityFieldNormal(T) : EntityFieldInfo {
         //         _columnFieldData.value = "%s".format(value);
         // }
         // else static if (is(T == bool)) {
-        //     if(manager.getDatabase().getOption().isPgsql())
+        //     if(manager.getDbOption().isPgsql())
         //     {
         //         _columnFieldData.value = value ? "'1'":"'0'";
         //     }

@@ -116,7 +116,7 @@ class EntityInfo(T : Object, F : Object = T) {
                 continue;
             }
 
-            if(!_manager.getDatabase().getOption().isPgsql()) {
+            if(!_manager.getDbOption().isPgsql()) {
                 columnName = info.getFullColumn();
             }
 
@@ -146,7 +146,7 @@ class EntityInfo(T : Object, F : Object = T) {
     public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
 
     private string getCountAsName() {
-        if(_manager.getDatabase().getOption().isPgsql()) {
+        if(_manager.getDbOption().isPgsql()) {
             return EntityExpression.getCountAsName(_tableNameInLower);
         } else {
             return EntityExpression.getCountAsName(_tableName);

@@ -36,7 +36,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     public CriteriaUpdate!(T,F) set(P)(EntityFieldInfo field, P p) {
         _criteriaBuilder.assertType!(P)(field);
         // logDebug("set value : %s".format(_criteriaBuilder.getDialect().toSqlValue(p)));
-        if(!_criteriaBuilder.getDatabase().getOption().isPgsql())
+        if(!_criteriaBuilder.getDbOption().isPgsql())
             _sqlBuidler.set(field.getFullColumn(), p);
         else
             _sqlBuidler.set(field.getColumnName(), p);
@@ -60,7 +60,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
             _sqlBuidler.set(field.getFieldName(), 
                 field.getColumnName(), field.getTableName(), value);
 
-            // if(_criteriaBuilder.getDatabase().getOption().isPgsql())
+            // if(_criteriaBuilder.getDbOption().isPgsql())
             // {  
             //     _sqlBuidler.set(field.getColumnName(), value);
             // }

@@ -12,25 +12,27 @@
 module hunt.entity.EntitySession;
 
 import hunt.entity;
+import hunt.database.base.Util;
 import hunt.logging.ConsoleLogger;
+
 
 class EntitySession
 {
 
     private Database _db;
     private Transaction _trans;
-
     private SqlConnection _conn;
 
     this(Database db)
     {
         assert(db !is null);
         _db = db;
-        _conn = _db.getConnection();
+        // _conn = _db.getConnection();
     }
 
     ~this()
     {
+        Util.info("TODO: Closing EntitySession in ~this()");
         // version(HUNT_ENTITY_DEBUG) infof("Closing EntitySession in ~this()"); // bug
         // close();
     }
@@ -38,25 +40,42 @@ class EntitySession
     public void beginTransaction()
     {
         checkConnection();
-        // _trans.begin();
-        _trans = _db.getTransaction(_conn);
+        if(_trans is null)
+            _trans = _db.getTransaction(getConnection());
     }
+
     public void commit()
     {
+        assert(_trans !is null, "Execute beginTransaction first");
         checkConnection();
         _trans.commit();
     }
+
     public void rollback()
     {
+        assert(_trans !is null, "Execute beginTransaction first");
         checkConnection();
         _trans.rollback();
     }
 
     public Statement prepare(string sql)
     {
-        return _db.prepare(sql);
+        return _db.prepare(getConnection(), sql);
     }
 
+	int execute(string sql)
+	{
+        version(HUNT_DEBUG) trace(sql);
+		RowSet rs = getConnection().query(sql);
+		return rs.rowCount();
+	}
+
+	RowSet query(string sql)
+	{
+		version (HUNT_SQL_DEBUG) info(sql);
+		RowSet rs = getConnection().query(sql);
+		return rs;
+	}
 
     public SqlConnection getConnection() 
     {
@@ -67,10 +86,12 @@ class EntitySession
 
     public Transaction getTransaction() {return _trans;}
 
-    public void close()
+    public void close() 
     {
+        Util.info("closing");
         if (_conn !is null && _db !is null)
         {
+            Util.info("closing connection");
             _db.relaseConnection(_conn);
         }
         _conn = null;

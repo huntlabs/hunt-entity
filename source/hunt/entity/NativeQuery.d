@@ -253,7 +253,7 @@ class NativeQuery
                 params.add(_params[e]);
             }
 
-            auto opt = _manager.getDatabase().getOption();
+            auto opt = _manager.getDbOption();
             string dbtype;
             if (opt.isMysql())
             {
