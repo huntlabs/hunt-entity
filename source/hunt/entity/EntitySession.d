@@ -39,9 +39,11 @@ class EntitySession
 
     public void beginTransaction()
     {
-        checkConnection();
-        if(_trans is null)
+        if(_trans is null) {
             _trans = _db.getTransaction(getConnection());
+        } else {
+            // checkConnection();
+        }
     }
 
     public void commit()
@@ -100,7 +102,7 @@ class EntitySession
     private void checkConnection()
     {
         if (_conn is null)
-            throw new EntityException("the entity connection haved release");
+            throw new EntityException("the entity connection haved been released.");
     }
 
 

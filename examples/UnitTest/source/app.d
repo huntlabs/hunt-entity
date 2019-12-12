@@ -64,6 +64,7 @@ void main()
 
 	scope(exit) {
 		em.close();
+		// warning("checking");
 	}
 	// test_eql_select(em);
 	// test_eql_select_with_reserved_word(em);
@@ -92,9 +93,10 @@ void main()
 	// test_EntityRepository_Count(em);
 	// test_EntityRepository_Insert(em);
 	// test_EntityRepository_Save(em);
-	test_EntityRepository_Save_with_reserved_word(em);
-
+	// test_EntityRepository_Save_with_reserved_word(em);
+	testRepositoryWithTransaction(em);
 	getchar();
+	// em.close();
 }
 
 
@@ -580,6 +582,7 @@ void test_EntityRepository_Save(EntityManager em)
 	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
 		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
 
+	loginInfo.appid += 1;
 	loginInfo.updated += 1;
 	rep.save(loginInfo);
 	LoginInfo newInfo = rep.findById(1);
@@ -604,4 +607,18 @@ void test_EntityRepository_Save_with_reserved_word(EntityManager em)
 	
 	// info = rep.findById(1);
 	// warning("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
+}
+
+void testRepositoryWithTransaction(EntityManager em) {
+	em.getTransaction().begin();
+	em.getTransaction().commit();
+
+	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
+
+	// import core.thread;
+	// import core.time;
+	// Thread.sleep(200.msecs);
+
+	AppInfo info = rep.findById(1);
+	infof("AppInfo(id: %d, desc: %s, available: %s) ".format(info.id, info.desc, info.isAvailable));
 }
