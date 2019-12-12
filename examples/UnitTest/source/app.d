@@ -611,14 +611,31 @@ void test_EntityRepository_Save_with_reserved_word(EntityManager em)
 
 void testRepositoryWithTransaction(EntityManager em) {
 	em.getTransaction().begin();
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	LoginInfo loginInfo = rep.findById(1);
+	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
+
+	auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
+		"u.age > 2 and u.sex < :age2 and u.id = :id and u.nickName = :name " ); 
+		// update UInfo u set u.age = 5 where u.id = 2
+
+	update.setParameter("age",2);
+	update.setParameter("age2",55);
+	update.setParameter("id",1);
+	update.setParameter("name","tom");
+	try {
+		warning(" update result : ",update.exec());
+	} catch(Exception ex) {
+		warning("An exception");
+	}
+
 	em.getTransaction().commit();
 
-	EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
+	EntityRepository!(AppInfo, int) appRep = new EntityRepository!(AppInfo, int)(em);
 
-	// import core.thread;
-	// import core.time;
-	// Thread.sleep(200.msecs);
-
-	AppInfo info = rep.findById(1);
-	infof("AppInfo(id: %d, desc: %s, available: %s) ".format(info.id, info.desc, info.isAvailable));
+	AppInfo appInfo = appRep.findById(1);
+	infof("AppInfo(id: %d, desc: %s, available: %s) ".format(appInfo.id, appInfo.desc, appInfo.isAvailable));
 }

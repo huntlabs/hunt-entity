@@ -39,11 +39,8 @@ class EntitySession
 
     public void beginTransaction()
     {
-        if(_trans is null) {
-            _trans = _db.getTransaction(getConnection());
-        } else {
-            // checkConnection();
-        }
+        // alway return a new Transaction;
+        _trans = _db.getTransaction(getConnection());
     }
 
     public void commit()
