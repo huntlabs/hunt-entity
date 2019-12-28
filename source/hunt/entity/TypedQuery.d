@@ -15,12 +15,12 @@ import hunt.entity;
 import hunt.Long;
 import hunt.logging.ConsoleLogger;
 
-version(WITH_HUNT_TRACE)
-{
-    import hunt.trace.Constrants;
-    import hunt.trace.Plugin;
-    import hunt.trace.Span;
-}
+// version(WITH_HUNT_TRACE)
+// {
+//     // import hunt.trace.Constrants;
+//     // import hunt.trace.Plugin;
+//     import hunt.trace.Span;
+// }
 
 class TypedQuery(T : Object, F : Object = T)
 {
@@ -29,11 +29,11 @@ class TypedQuery(T : Object, F : Object = T)
     private CriteriaQuery!(T, F) _query;
     private EntityManager _manager;
 
-    version (WITH_HUNT_TRACE)
-    {
-        private Span _span;
-        private string[string] _tags;
-    }
+    // version (WITH_HUNT_TRACE)
+    // {
+    //     private Span _span;
+    //     private string[string] _tags;
+    // }
 
     this(CriteriaQuery!(T, F) query, EntityManager manager)
     {
@@ -41,22 +41,22 @@ class TypedQuery(T : Object, F : Object = T)
         _manager = manager;
     }
 
-    version (WITH_HUNT_TRACE)
-    {
-        private void beginTrace(string name)
-        {
-            _tags.clear();
-            _span = traceSpanBefore(name);
-        }
+    // version (WITH_HUNT_TRACE)
+    // {
+    //     private void beginTrace(string name)
+    //     {
+    //         _tags.clear();
+    //         _span = traceSpanBefore(name);
+    //     }
 
-        private void endTrace(string error = null)
-        {
-            if (_span !is null)
-            {
-                traceSpanAfter(_span, _tags, error);
-            }
-        }
-    }
+    //     private void endTrace(string error = null)
+    //     {
+    //         if (_span !is null)
+    //         {
+    //             traceSpanAfter(_span, _tags, error);
+    //         }
+    //     }
+    // }
 
     public Object getSingleResult()
     {
@@ -91,15 +91,15 @@ class TypedQuery(T : Object, F : Object = T)
     private Object[] _getResultList()
     {
         auto sql = _query.toString();
-        version (WITH_HUNT_TRACE)
-        {
-            beginTrace("TypeQuery _getResultList");
-            scope (exit)
-            {
-                _tags["sql"] = sql;
-                endTrace();
-            }
-        }
+        // version (WITH_HUNT_TRACE)
+        // {
+        //     beginTrace("TypeQuery _getResultList");
+        //     scope (exit)
+        //     {
+        //         _tags["sql"] = sql;
+        //         endTrace();
+        //     }
+        // }
         Object[] ret;
         long count = -1;
         Statement stmt = _manager.getSession().prepare(sql);

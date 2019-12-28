@@ -32,12 +32,12 @@ import hunt.sql.SQLUtils;
 import std.regex;
 import std.format;
 
-version(WITH_HUNT_TRACE)
-{
-    import hunt.trace.Constrants;
-    import hunt.trace.Plugin;
-    import hunt.trace.Span;
-}
+// version(WITH_HUNT_TRACE)
+// {
+//     import hunt.trace.Constrants;
+//     import hunt.trace.Plugin;
+//     import hunt.trace.Span;
+// }
 
 import std.algorithm;
 
@@ -54,11 +54,11 @@ class NativeQuery
     private int _lastInsertId = -1;
     private int _affectRows = 0;
 
-    version (WITH_HUNT_TRACE)
-    {
-        private Span _span;
-        private string[string] _tags;
-    }
+    // version (WITH_HUNT_TRACE)
+    // {
+    //     private Span _span;
+    //     private string[string] _tags;
+    // }
 
     this(EntityManager manager, string sql)
     {
@@ -66,35 +66,35 @@ class NativeQuery
         _nativeSql = sql;
     }
 
-    version (WITH_HUNT_TRACE)
-    {
-        private void beginTrace(string name)
-        {
-            _tags.clear();
-            _span = traceSpanBefore(name);
-        }
+    // version (WITH_HUNT_TRACE)
+    // {
+    //     private void beginTrace(string name)
+    //     {
+    //         _tags.clear();
+    //         _span = traceSpanBefore(name);
+    //     }
 
-        private void endTrace(string error = null)
-        {
-            if (_span !is null)
-            {
-                traceSpanAfter(_span, _tags, error);
-            }
-        }
-    }
+    //     private void endTrace(string error = null)
+    //     {
+    //         if (_span !is null)
+    //         {
+    //             traceSpanAfter(_span, _tags, error);
+    //         }
+    //     }
+    // }
 
     public RowSet getResultList()
     {
         auto sql = paramedSql();
-        version (WITH_HUNT_TRACE)
-        {
-            beginTrace("NativeQuery getResultList");
-            scope (exit)
-            {
-                _tags["sql"] = sql;
-                endTrace();
-            }
-        }
+        // version (WITH_HUNT_TRACE)
+        // {
+        //     beginTrace("NativeQuery getResultList");
+        //     scope (exit)
+        //     {
+        //         _tags["sql"] = sql;
+        //         endTrace();
+        //     }
+        // }
         auto stmt = _manager.getSession().prepare(sql);
         return stmt.query();
     }
@@ -102,15 +102,15 @@ class NativeQuery
     public int executeUpdate()
     {
         auto sql = paramedSql();
-        version (WITH_HUNT_TRACE)
-        {
-            beginTrace("NativeQuery executeUpdate");
-            scope (exit)
-            {
-                _tags["sql"] = sql;
-                endTrace();
-            }
-        }
+        // version (WITH_HUNT_TRACE)
+        // {
+        //     beginTrace("NativeQuery executeUpdate");
+        //     scope (exit)
+        //     {
+        //         _tags["sql"] = sql;
+        //         endTrace();
+        //     }
+        // }
         auto stmt = _manager.getSession().prepare(sql);
         //TODO row line count is 0 for Update
         _lastInsertId = stmt.lastInsertId();

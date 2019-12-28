@@ -21,12 +21,12 @@ import hunt.entity.eql.EqlInfo;
 import hunt.entity.eql.EqlCache;
 import hunt.Long;
 
-version(WITH_HUNT_TRACE)
-{
-    import hunt.trace.Constrants;
-    import hunt.trace.Plugin;
-    import hunt.trace.Span;
-}
+// version(WITH_HUNT_TRACE)
+// {
+//     import hunt.trace.Constrants;
+//     import hunt.trace.Plugin;
+//     import hunt.trace.Span;
+// }
 
 import std.algorithm;
 import std.conv;
