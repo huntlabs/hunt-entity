@@ -76,12 +76,12 @@ class EntityManagerFactory {
     EntityManager createEntityManager()
     {
         return currentEntityManager();
-        // return new EntityManager(this, _name, _option, _db, _dialect);
+        // return new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
     }
 
     EntityManager newEntityManager()
     {
-        return new EntityManager(this, _name, _option, _db, _dialect);
+        return new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
     }
     
     QueryBuilder createQueryBuilder()
