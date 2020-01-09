@@ -19,14 +19,14 @@ import hunt.Exceptions;
 
 class EntityManagerFactory {
 
-    public Dialect _dialect;
-    public EntityOption _option;
-    public Database _db;
-    public string _name;
+    Dialect _dialect;
+    EntityOption _option;
+    Database _db;
+    string _name;
     private CriteriaBuilder _criteriaBuilder;
     private string[] _exitTables;
 
-    public this(string name, EntityOption option)
+    this(string name, EntityOption option)
     {
         _name = name;
         _option = option;
@@ -70,26 +70,26 @@ class EntityManagerFactory {
         }
         return _entityManagerInThread;
     }
+    private static EntityManager _entityManagerInThread;
 
-    // deprecated("Using currentEntityManager instead.")
-    public EntityManager createEntityManager()
+    deprecated("Using currentEntityManager instead.")
+    EntityManager createEntityManager()
     {
-        warning("Try to create a new EntityManager");
-        if(_entityManagerInThread is null) {
-            warning("A new EntityManager created");
-            _entityManagerInThread = new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
-        }
-        return _entityManagerInThread;
+        return currentEntityManager();
         // return new EntityManager(this, _name, _option, _db, _dialect);
     }
-    private static EntityManager _entityManagerInThread;
+
+    EntityManager newEntityManager()
+    {
+        return new EntityManager(this, _name, _option, _db, _dialect);
+    }
     
-    public QueryBuilder createQueryBuilder()
+    QueryBuilder createQueryBuilder()
     {
         return _db.createQueryBuilder();
     }
 
-    public void close()
+    void close()
     {
         if (_db)
             _db.close();
@@ -130,18 +130,18 @@ class EntityManagerFactory {
         return ret;
     }
 
-    public static void prepareEntity(T...)() {
+    static void prepareEntity(T...)() {
         foreach(V; T) {
             addCreateTableHandle(getEntityTableName!V, &onCreateTableHandler!V);
         }
     }
 
-    public void createTables(T...)() {
+    void createTables(T...)() {
         prepareEntity!(T);
         autoCreateTables();
     }
 
-    public void autoCreateTables()
+    void autoCreateTables()
     {
         GetCreateTableHandle[string] flushList;
         foreach(k,v; __createTableList) {
@@ -169,11 +169,11 @@ class EntityManagerFactory {
         }
     }
 
-    public Dialect getDialect() {return _dialect;}
+    Dialect getDialect() {return _dialect;}
 
-    public Database getDatabase() {return _db;}
+    Database getDatabase() {return _db;}
 
-    // public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
+    // CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder;}
 }
 
 
