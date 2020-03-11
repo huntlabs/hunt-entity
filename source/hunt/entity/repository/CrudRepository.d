@@ -35,7 +35,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     public EntityManager createEntityManager()
     {
-        return defaultEntityManagerFactory().createEntityManager();
+        return defaultEntityManagerFactory().currentEntityManager();
     }
 
     public long count()

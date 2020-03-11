@@ -12,6 +12,7 @@
 module hunt.entity.DefaultEntityManagerFactory;
 
 import hunt.entity.EntityManagerFactory;
+import std.exception;
 
 __gshared private EntityManagerFactory _defaultEntityManagerFactory;
 
@@ -25,7 +26,8 @@ __gshared private EntityManagerFactory _defaultEntityManagerFactory;
 	if (_defaultEntityManagerFactory is null)
 	{
 		// throw error
-		return null;
+		throw new Exception("EntityManagerFactory is null");
+		// return null;
 	}
 
 	return _defaultEntityManagerFactory;
