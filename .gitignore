@@ -43,6 +43,9 @@ __test__library__
 # Ignore Sublime Text workspace (project file is ok):
 *.sublime-workspace
 
+# Crash files
+core
+
 # Others
 backup/
 dub.*.json

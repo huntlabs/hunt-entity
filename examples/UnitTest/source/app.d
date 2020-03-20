@@ -39,6 +39,20 @@ EntityOption getMysqlOptions() {
 }
 
 
+EntityOption getMysqlDevOptions() {
+
+	EntityOption option = new EntityOption();
+	option.database.driver = "mysql";
+	option.database.host = "10.1.222.120";
+	option.database.port = 3306;
+	option.database.database = "eql_test";
+	option.database.username = "root";
+	option.database.password = "123456789";
+	option.database.prefix = "";
+
+	return option;
+}
+
 EntityOption getPgOptions() {
 
 	EntityOption option = new EntityOption();
@@ -52,11 +66,83 @@ EntityOption getPgOptions() {
 	return option;
 }
 
+import hunt.entity.Model;
+
+class Honor : Model { // : Model
+
+    mixin MakeModel;
+
+	this() {
+
+	}
+
+    @AutoIncrement
+    @PrimaryKey
+    int id;
+
+    string title;
+
+    string subtitle;
+
+    string intro;
+
+    short level;
+
+    short high_level;
+
+    short low_level;
+
+    int ability_id;
+
+    int score;
+
+    short type;
+
+    string icon;
+
+    string icon_gray;
+
+    int recommend_id;
+
+    string recommend_title;
+
+    string recommend_describe;
+
+    short status;
+
+    int updated;
+
+    int created;
+
+    int deleted;
+
+}
+
+import hunt.serialization.JsonSerializer;
+import hunt.serialization.Common;
+import std.json;
 
 void main()
 {
 
+        // JSONValue json = JsonSerializer.toJson(settings);
+        // info(json.toPrettyString());
+
+	// Honor h = new Honor();
+	// h.deleted = 12;
+	// JSONValue s = toJson!(SerializationOptions.OnlyPublicWithNull)(h);
+
+	// trace(s.toPrettyString());
+
+	// // string s1 = "";
+	// Honor h2 = JsonSerializer.toObject!(Honor, TraverseBase.no)(s);
+
+	// // GreetingBase greeting1 = JsonSerializer.toObject!GreetingBase(jsonStr);
+
+	// warning(h2.deleted);
+
 	EntityOption option = getMysqlOptions();
+	// EntityOption option = getMysqlDevOptions(); // to test mysql 8
 	// EntityOption option = getPgOptions();
 
 	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
@@ -90,12 +176,12 @@ void main()
 	// test_other(em);
 	// test_exception(em);
 
-	// test_EntityRepository_Count(em);
+	test_EntityRepository_Count(em);
 	// test_EntityRepository_Insert(em);
 	// test_EntityRepository_Save(em);
 	// test_EntityRepository_Save_with_reserved_word(em);
-	testRepositoryWithTransaction(em);
-	getchar();
+	// testRepositoryWithTransaction(em);
+	// getchar();
 	// em.close();
 }
 
@@ -143,18 +229,18 @@ void main()
 
 // }
 
-// void test_comparison(EntityManager em)
-// {
-// 	mixin(DO_TEST);
+void test_comparison(EntityManager em)
+{
+	mixin(DO_TEST);
 
-// 	auto rep = new EntityRepository!(UserInfo, int)(em);
-// 	string name = "Jame\"s Ha'Deng";
-// 	auto uinfos = rep.findAll(new Expr().eq("nickName", name));
-// 	foreach (u; uinfos)
-// 	{
-// 		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
-// 	}
-// }
+	auto rep = new EntityRepository!(UserInfo, int)(em);
+	string name = "Jame\"s Ha'Deng";
+	auto uinfos = rep.findAll(new Expr().eq("nickName", name));
+	foreach (u; uinfos)
+	{
+		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
+	}
+}
 
 // void test_delete(EntityManager em)
 // {
@@ -309,7 +395,7 @@ void test_transaction(EntityManager em)
 	em.getTransaction().commit();
 
 	em.getTransaction().begin();
-	auto update1 = em.createQuery!(UserInfo)(" update UserInfo u set u.age = :age where u.id = :id ").setParameter("age",88).setParameter("id",4);
+	EqlQuery!(UserInfo) update1 = em.createQuery!(UserInfo)(" update UserInfo u set u.age = :age where u.id = :id ").setParameter("age",88).setParameter("id",4);
 
 	logDebug(" update1 result : ",update1.exec());
 	em.getTransaction().rollback();
@@ -619,6 +705,41 @@ void testRepositoryWithTransaction(EntityManager em) {
 		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
 
 	auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
+		"u.age > 2 and u.id = :id and u.nickName = :name " ); 
+		// update UInfo u set u.age = 5 where u.id = 2
+
+	update.setParameter("age",2);
+	// update.setParameter("age2",55); // and u.sex < :age2 // bug test
+	update.setParameter("id",1);
+	update.setParameter("name","tom");
+	try {
+		auto s = update.exec();
+		warning(" update result : ", s);
+		// warning(" update result : ",update.exec());  // Warning: The exception will be catched by logger
+		// assert(false, "Never run to here");
+		em.getTransaction().commit();
+	} catch(Exception ex) {
+		warning("An exception");
+		em.getTransaction().rollback();
+	}
+
+
+	EntityRepository!(AppInfo, int) appRep = new EntityRepository!(AppInfo, int)(em);
+
+	AppInfo appInfo = appRep.findById(1);
+	infof("AppInfo(id: %d, desc: %s, available: %s) ".format(appInfo.id, appInfo.desc, appInfo.isAvailable));
+}
+
+void testRepositoryWithTransaction2(EntityManager em) {
+	em.getTransaction().begin();
+
+	EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+	LoginInfo loginInfo = rep.findById(1);
+	warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+		loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
+
+	auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
 		"u.age > 2 and u.sex < :age2 and u.id = :id and u.nickName = :name " ); 
 		// update UInfo u set u.age = 5 where u.id = 2
 
@@ -627,7 +748,9 @@ void testRepositoryWithTransaction(EntityManager em) {
 	update.setParameter("id",1);
 	update.setParameter("name","tom");
 	try {
-		warning(" update result : ",update.exec());
+		auto s = update.exec();
+		warning(" update result : ", s);
+		// warning(" update result : ",update.exec());  // Warning: The exception will be catched by logger
 	} catch(Exception ex) {
 		warning("An exception");
 	}

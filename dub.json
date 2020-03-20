@@ -1,12 +1,12 @@
 {
     "name": "hunt-entity",
     "description": "Entity is an object-relational mapping (ORM) tool for the D programming language. Referring to the design idea of JPA. support PostgreSQL / MySQL.",
-    "copyright": "Copyright (C) 2018-2019, HuntLabs",
+    "copyright": "Copyright (C) 2018-2020, HuntLabs",
     "homepage": "https://www.huntlabs.net",
     "license": "Apache-2.0",
     "versions": ["WITH_HUNT_ENTITY"],
     "dependencies": {
-        "hunt-database": "~>2.0.0-beta.3",
+        "hunt-database": "~>2.0.3",
         "hunt-validation" : "~>0.2.2"
     }
 }
