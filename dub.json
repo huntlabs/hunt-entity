@@ -6,8 +6,8 @@
     "license": "Apache-2.0",
     "versions": ["WITH_HUNT_ENTITY"],
     "dependencies": {
-        "hunt-database": "~>2.0.3",
-        "hunt-validation" : "~>0.2.2"
+        "hunt-database": "~>2.1.0",
+        "hunt-validation" : "~>0.3.0"
     }
 }
 

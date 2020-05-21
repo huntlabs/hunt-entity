@@ -16,11 +16,12 @@ import hunt.entity.dialect;
 import hunt.entity.EntityOption;
 import hunt.entity.eql;
 import hunt.logging;
+import hunt.util.Common;
 
 import std.array;
 import std.traits;
 
-class EntityManager {
+class EntityManager : Closeable {
 
     public Dialect _dialect;
     public EntityOption _option;
