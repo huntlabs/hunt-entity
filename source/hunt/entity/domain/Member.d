@@ -10,12 +10,12 @@ class Member(T)
 {
     string         _tableName;
 
-    this(EntityManager em)
+    this(string prefix)
     {
         static if (hasUDA!(T,Table))
-            _tableName = em.getPrefix() ~ getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
+            _tableName = prefix ~ getUDAs!(getSymbolsByUDA!(T, Table)[0], Table)[0].name;
         else
-            _tableName = em.getPrefix() ~ T.stringof;
+            _tableName = prefix ~ T.stringof;
     }
 
     mixin(MakeMember!T);
@@ -46,7 +46,7 @@ string MakeMember(T)()
     {
         if (__traits(getProtection, __traits(getMember, T, m)) == "public")
         {
-            str ~= "@property string " ~ m ~ "(){";
+            str ~= "@property string " ~ m ~ "() {";
             str ~= "return getMember!\""~m~"\"; }";
         }
     }

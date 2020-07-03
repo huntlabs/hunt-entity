@@ -26,7 +26,16 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     protected EntityManager _manager;
 
     this(EntityManager manager = null) {
-        _manager = manager;
+        // _manager = manager;
+        if(manager is null) {
+            _manager = defaultEntityManagerFactory().currentEntityManager();
+        } else {
+            _manager = manager;
+        }
+    }
+
+    EntityManager entityManager() {
+        return _manager;
     }
 
     public EntityManager getEntityManager() {

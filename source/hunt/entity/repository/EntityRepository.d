@@ -27,6 +27,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
 {
     this(EntityManager manager = null) {
         super(manager);
+        _member = new Member!T(entityManager.getPrefix());
     }
 
     static string initObjects()
@@ -83,8 +84,9 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         mixin(initObjects);
 
         //sort
-        foreach(o ; sort.list)
+        foreach(o ; sort.list) {
             criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
+        }
 
         //all
         criteriaQuery.select(root);
@@ -246,9 +248,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
 
     @property Member!T Field()
     {
-        auto em = _manager ? _manager : createEntityManager();
-        scope(exit) {if (!_manager) em.close();}
-        return new Member!T(em);
+        // auto em = _manager ? _manager : createEntityManager();
+        // scope(exit) {if (!_manager) em.close();}
+        // return new Member!T(em);
+        return _member;
     }
 
 private:
