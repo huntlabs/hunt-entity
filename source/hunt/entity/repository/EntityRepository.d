@@ -11,14 +11,19 @@
  
 module hunt.entity.repository.EntityRepository;
 
-import hunt.entity;
+import hunt.entity.criteria;
+import hunt.entity.EntityManager;
+import hunt.entity.TypedQuery;
+import hunt.entity.Model;
 import hunt.entity.repository.CrudRepository;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.Long;
 
+import hunt.database.query;
+
 public import hunt.entity.domain;
 
-class EntityRepository (T, ID) : CrudRepository!(T, ID)
+class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
 {
     this(EntityManager manager = null) {
         super(manager);

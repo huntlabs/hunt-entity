@@ -9,6 +9,8 @@
  *
  */
 
+module hunt.entity.criteria;
+
 public import hunt.entity.criteria.CriteriaBase;
 public import hunt.entity.criteria.CriteriaBuilder;
 public import hunt.entity.criteria.CriteriaDelete;
