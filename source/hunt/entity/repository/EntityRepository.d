@@ -68,10 +68,25 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
 
     T find(Condition condition)
     {
-        auto list = findAll(condition);
-        if(list.length > 0)
-            return list[0];
-        return null;
+        // auto list = findAll(condition);
+        // if(list.length > 0)
+        //     return list[0];
+        // return null;
+        mixin(initObjects);
+
+         //condition
+        criteriaQuery.select(root).where(condition.toPredicate());
+
+        // page
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(0)
+            .setMaxResults(1);
+            
+        // result
+        auto res = typedQuery.getResultList();
+        if(res.length >0){
+            return res[0];
+        }
+        return null;        
     }
 
     T find(ID id)
