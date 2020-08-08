@@ -49,14 +49,21 @@ class EntityManager : Closeable {
         // close();
     }
 
-    public T persist(T)(ref T entity) {
+    T persist(T)(ref T entity) {
         QueryBuilder builder = _db.createQueryBuilder(); // _factory.createQueryBuilder();
         EntityInfo!T info = new EntityInfo!(T)(this, entity);
         builder.insert(info.getTableName()).values(info.getInsertString());
-        if (info.getAutoIncrementKey().length > 0)
-            builder.setAutoIncrease(info.getAutoIncrementKey());
-        auto stmt = getSession().prepare(builder.toString);
-        int r = stmt.execute();
+
+        string autoIncrementKey = info.getAutoIncrementKey();
+        if (!autoIncrementKey.empty())
+            builder.setAutoIncrease(autoIncrementKey);
+        Statement stmt = getSession().prepare(builder.toString);
+        int r = stmt.execute(autoIncrementKey);
+
+        version(HUNT_ENTITY_DEBUG) {
+            infof("affected: %d, autoIncrementKey: %s, lastInsertId: %d", r, autoIncrementKey, stmt.lastInsertId);
+        }
+
         info.setIncreaseKey(entity, stmt.lastInsertId);
         return entity;
     }

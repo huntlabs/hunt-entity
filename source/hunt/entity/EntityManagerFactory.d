@@ -63,9 +63,9 @@ class EntityManagerFactory {
 
     EntityManager currentEntityManager()
     {
-        warning("Try to get current EntityManager");
+        version(HUNT_DATABASE_DEBUG) warning("Try to get current EntityManager");
         if(_entityManagerInThread is null) {
-            warning("A new EntityManager created");
+            version(HUNT_DATABASE_DEBUG) warning("A new EntityManager created");
             _entityManagerInThread = new EntityManager(_criteriaBuilder, _name, _option, _db, _dialect);
         }
         return _entityManagerInThread;
