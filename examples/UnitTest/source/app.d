@@ -66,57 +66,6 @@ EntityOption getPgOptions() {
     return option;
 }
 
-import hunt.entity.Model;
-
-class Honor : Model { // : Model
-
-    mixin MakeModel;
-
-    this() {
-
-    }
-
-    @AutoIncrement
-    @PrimaryKey
-    int id;
-
-    string title;
-
-    string subtitle;
-
-    string intro;
-
-    short level;
-
-    short high_level;
-
-    short low_level;
-
-    int ability_id;
-
-    int score;
-
-    short type;
-
-    string icon;
-
-    string icon_gray;
-
-    int recommend_id;
-
-    string recommend_title;
-
-    string recommend_describe;
-
-    short status;
-
-    int updated;
-
-    int created;
-
-    int deleted;
-
-}
 
 import hunt.serialization.JsonSerializer;
 import hunt.serialization.Common;
@@ -128,22 +77,11 @@ void main()
         // JSONValue json = JsonSerializer.toJson(settings);
         // info(json.toPrettyString());
 
-    // Honor h = new Honor();
-    // h.deleted = 12;
-    // JSONValue s = toJson!(SerializationOptions.OnlyPublicWithNull)(h);
 
-    // trace(s.toPrettyString());
 
-    // // string s1 = "";
-    // Honor h2 = JsonSerializer.toObject!(Honor, TraverseBase.no)(s);
-
-    // // GreetingBase greeting1 = JsonSerializer.toObject!GreetingBase(jsonStr);
-
-    // warning(h2.deleted);
-
-    EntityOption option = getMysqlOptions();
+    // EntityOption option = getMysqlOptions();
     // EntityOption option = getMysqlDevOptions(); // to test mysql 8
-    // EntityOption option = getPgOptions();
+    EntityOption option = getPgOptions();
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
     EntityManager em = entityManagerFactory.currentEntityManager();
@@ -152,7 +90,7 @@ void main()
         em.close();
         // warning("checking");
     }
-    // test_eql_select(em);
+    test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
@@ -185,47 +123,13 @@ void main()
     // em.close();
 
     // testBinarySerializationForModel();
-    testJsonSerializationForModel();
+    // testJsonSerializationForModel();
 }
 
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 /*                                                      EQL tests                                                     */
 /* ------------------------------------------------------------------------------------------------------------------ */
-
-void testBinarySerializationForModel() {
-    Car car = new Car();
-    car.name = "Ferrari";
-    car.id = 123;
-
-    import hunt.serialization.BinarySerialization;
-
-    ubyte[] buffer = serialize!(SerializationOptions.OnlyPublicWithNull)(car);
-    tracef("%(%02X %)", buffer);
-    Car newCar = unserialize!(Car, SerializationOptions.OnlyPublicWithNull)(buffer);
-    tracef(newCar.name);
-}
-
-
-void testJsonSerializationForModel() {
-    Car car = new Car();
-    car.name = "Ferrari";
-    car.id = 123;
-
-    import hunt.serialization.Common;
-    import hunt.serialization.JsonSerializer;
-
-    JSONValue jv = JsonSerializer.toJson!(SerializationOptions.OnlyPublicWithNull)(car);
-    string json = jv.toPrettyString();
-    tracef(json);
-
-    auto itemPtr = "_manager" in jv;
-    assert(itemPtr is null);
-
-    Car newCar = JsonSerializer.toObject!(Car, SerializationOptions.OnlyPublicWithNull)(jv);
-    tracef(newCar.name);
-
-}
 
 // void test_persist(EntityManager em)
 // {
@@ -486,16 +390,20 @@ void test_eql_select(EntityManager em)
 // SELECT Car.uid AS Car__as__uid, Car.id AS Car__as__id, Car.name AS Car__as__name
 // FROM Car 
 // WHERE Car.id = 1
-    auto query0 = em.createQuery!(Car)(" select a from Car a where a.id = 1;");
-    foreach (Car d; query0.getResultList())
+    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.id = 1;");
+    EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a;");
+    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name is null;");
+    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name = '';");
+    Car[] results = query0.getResultList();
+    foreach (Car d; results)
     {
         logDebug("Car( %s , %s , %s ) ".format(d.id, d.name, d.uid));
+        infof("%s , %s", d.name is null, d.name == "");
     }
 
 
-
-    // auto query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
-    // foreach (d; query1.getResultList())
+    // EqlQuery!(UserInfo) query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
+    // foreach (UserInfo d; query1.getResultList())
     // {
     // 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
     // }
@@ -803,4 +711,39 @@ void testRepositoryWithTransaction2(EntityManager em) {
 
     AppInfo appInfo = appRep.findById(1);
     infof("AppInfo(id: %d, desc: %s, available: %s) ".format(appInfo.id, appInfo.desc, appInfo.isAvailable));
+}
+
+
+void testBinarySerializationForModel() {
+    Car car = new Car();
+    car.name = "Ferrari";
+    car.id = 123;
+
+    import hunt.serialization.BinarySerialization;
+
+    ubyte[] buffer = serialize!(SerializationOptions.OnlyPublicWithNull)(car);
+    tracef("%(%02X %)", buffer);
+    Car newCar = unserialize!(Car, SerializationOptions.OnlyPublicWithNull)(buffer);
+    tracef(newCar.name);
+}
+
+
+void testJsonSerializationForModel() {
+    Car car = new Car();
+    car.name = "Ferrari";
+    car.id = 123;
+
+    import hunt.serialization.Common;
+    import hunt.serialization.JsonSerializer;
+
+    JSONValue jv = JsonSerializer.toJson!(SerializationOptions.OnlyPublicWithNull)(car);
+    string json = jv.toPrettyString();
+    tracef(json);
+
+    auto itemPtr = "_manager" in jv;
+    assert(itemPtr is null);
+
+    Car newCar = JsonSerializer.toObject!(Car, SerializationOptions.OnlyPublicWithNull)(jv);
+    tracef(newCar.name);
+
 }
