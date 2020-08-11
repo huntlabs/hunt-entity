@@ -18,6 +18,8 @@ import std.traits;
 
 mixin template MakeModel()
 {
+    import hunt.serialization.Common;
+
     mixin(makeLazyData);
     mixin(makeLazyLoadList!(typeof(this)));
     mixin(makeLazyLoadSingle!(typeof(this)));
@@ -38,10 +40,15 @@ mixin template MakeModel()
 
 string makeLazyData() {
     return `
+    @Ignore
     private LazyData[string] _lazyDatas;
+
+    @Ignore
     private EntityManager _manager;
+
     public void setManager(EntityManager manager) {_manager = manager;}
     public EntityManager getManager() {return _manager;}
+
     public void addLazyData(string key, LazyData data) {
         if (data) {
             _lazyDatas[key] = data;

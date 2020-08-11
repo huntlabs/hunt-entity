@@ -6,45 +6,37 @@ import hunt.database.query.Common;
 import std.conv;
 import std.variant;
 
-interface Dialect
-{
-    Variant fromSqlValue(DlangDataType fieldType,Variant fieldValue);
-    string toSqlValueImpl(DlangDataType type,Variant value);
-    string toSqlValue(T)(T val)
-    {
-        Variant value = val;
-        DlangDataType type = getDlangDataType!T;
-        return toSqlValueImpl(type, value);
-    }
+interface Dialect {
+	Variant fromSqlValue(DlangDataType fieldType, Variant fieldValue);
+	string toSqlValueImpl(DlangDataType type, Variant value);
+	
+	string toSqlValue(T)(T val) {
+		Variant value = val;
+		DlangDataType type = getDlangDataType!T;
+		return toSqlValueImpl(type, value);
+	}
 
-    string getColumnDefinition(ColumnDefinitionInfo info);
+	string getColumnDefinition(ColumnDefinitionInfo info);
 }
 
-
-public T safeConvert(F,T)(F value)
-{
-    try
-    {
-        return to!T(value);
-    }
-    catch
-    {
-        return T.init;
-    }
+public T safeConvert(F, T)(F value) {
+	try {
+		return to!T(value);
+	} catch {
+		return T.init;
+	}
 }
 
-auto fromSQLType(uint type)
-{
-    return typeid(string);
+auto fromSQLType(uint type) {
+	return typeid(string);
 }
-
 
 struct SqlSingleTypeInfo {
 	SqlType sqlType;
 	int len;
 	bool unsigned;
 }
- 
+
 struct ColumnDefinitionInfo {
 	int len = 0;
 	bool isId;
@@ -54,6 +46,7 @@ struct ColumnDefinitionInfo {
 	string dType;
 }
 
+// dfmt off
 enum SqlSingleTypeInfo[PropertyMemberType] DTypeToSqlInfo = [
 	PropertyMemberType.BOOL_TYPE : SqlSingleTypeInfo(SqlType.BOOLEAN, 2, false),
 	PropertyMemberType.SHORT_TYPE : SqlSingleTypeInfo(SqlType.SMALLINT, 4, false),
@@ -68,4 +61,4 @@ enum SqlSingleTypeInfo[PropertyMemberType] DTypeToSqlInfo = [
 	PropertyMemberType.DOUBLE_TYPE : SqlSingleTypeInfo(SqlType.DOUBLE, 14, false),
 	PropertyMemberType.STRING_TYPE : SqlSingleTypeInfo(SqlType.VARCHAR, 0, false),
 ];
-
+// dfmt on
