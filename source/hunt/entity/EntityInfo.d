@@ -96,7 +96,8 @@ class EntityInfo(T : Object, F : Object = T) {
             string columnName = info.getColumnName();
             Variant currentValue = info.getColumnFieldData();
             version(HUNT_DB_DEBUG_MORE) {
-                tracef("fieldName: %s, columnName: %s, type: %s", fieldName, columnName, currentValue.type);
+                tracef("fieldName: %s, columnName: %s, type: %s, value: %s", 
+                    fieldName, columnName, currentValue.type, currentValue.toString());
             }
             
             if (fieldName == _autoIncrementKey) 
@@ -121,10 +122,12 @@ class EntityInfo(T : Object, F : Object = T) {
             }
 
             if(columnName in str) {
-                version(HUNT_DEBUG) warning("column already exists: ", columnName);
+                version(HUNT_DEBUG) {
+                    warningf("skip a existed column [%s] with value [%s].", columnName, currentValue.toString());
+                }
+            } else {
+                str[columnName] = currentValue;
             }
-
-            str[columnName] = currentValue;
         }
         return str;
     }
@@ -137,7 +140,7 @@ class EntityInfo(T : Object, F : Object = T) {
         return info;
     }
 
-    public string getFactoryName() { return _factoryName; };
+    public string getFactoryName() { return _factoryName; }
     public string getEntityClassName() { return _entityClassName; }
     public string getTableName() { return _tableName; }
     public string getAutoIncrementKey() { return _autoIncrementKey; }
@@ -262,6 +265,7 @@ string makeInitEntityData(T,F)() {
                 }
                 //value 
                 string value = "_data."~memberName;
+                
                 // use member name as the key
                 string fieldName = "_fields["~memberName.stringof~"]";
                 static if (is(F == memType) ) {

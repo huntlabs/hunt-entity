@@ -29,7 +29,7 @@ class Query(T) {
     }
  
     public int executeUpdate() {
-        auto stmt = _manager.getSession().prepare(_sqlSting); 
+        Statement stmt = _manager.getSession().prepare(_sqlSting); 
         _lastInsertId = stmt.lastInsertId();
         _affectRows = stmt.affectedRows();
         return stmt.execute();
