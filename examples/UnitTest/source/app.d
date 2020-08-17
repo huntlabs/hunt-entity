@@ -66,6 +66,19 @@ EntityOption getPgOptions() {
     return option;
 }
 
+EntityOption getPgDevOptions() {
+
+    EntityOption option = new EntityOption();
+    option.database.driver = "postgresql";
+    option.database.host = "10.1.223.62";
+    option.database.port = 5432;
+    option.database.database = "api_parts";
+    option.database.username = "putao";
+    option.database.password = "putao123";	
+
+    return option;
+}
+
 
 import hunt.serialization.JsonSerializer;
 import hunt.serialization.Common;
@@ -82,6 +95,7 @@ void main()
     // EntityOption option = getMysqlOptions();
     // EntityOption option = getMysqlDevOptions(); // to test mysql 8
     EntityOption option = getPgOptions();
+    // EntityOption option = getPgDevOptions();
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
     EntityManager em = entityManagerFactory.currentEntityManager();
@@ -90,11 +104,11 @@ void main()
         em.close();
         // warning("checking");
     }
-    test_eql_select(em);
+    // test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
-    // test_OneToOne(em);
+    test_OneToOne(em);
     // test_OneToMany(em);
     // test_ManyToOne(em);
     // test_ManyToMany(em);
@@ -118,6 +132,7 @@ void main()
     // test_EntityRepository_Insert(em);
     // test_EntityRepository_Save(em);
     // test_EntityRepository_Save_with_reserved_word(em);
+    // test_EntityRepository_Insert02(em);
     // testRepositoryWithTransaction(em);
     // getchar();
     // em.close();
@@ -226,7 +241,8 @@ void test_OneToOne(EntityManager em)
     mixin(DO_TEST);
 
     auto uinfo = em.find!(UserInfo)(1);
-    logDebug("Uinfo.IDCard is Lazy load : %s ".format(uinfo.card));
+    warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card));
+
     auto card = uinfo.getCard;
     logDebug("Card( %s , %s ) ".format(card.id, card.desc));
 
@@ -605,7 +621,8 @@ void test_EntityRepository_Insert(EntityManager em)
 
     rep.insert(loginInfo);
 
-    // int t = rep.insert(loginInfo， "id");
+    tracef("new id: %d", loginInfo.id);
+    assert(loginInfo.id > 0);
 }
 
 void test_EntityRepository_Save(EntityManager em)
@@ -746,4 +763,113 @@ void testJsonSerializationForModel() {
     Car newCar = JsonSerializer.toObject!(Car, SerializationOptions.OnlyPublicWithNull)(jv);
     tracef(newCar.name);
 
+}
+
+
+@Table("material_color")
+class Color :Model{
+    mixin MakeModel;
+
+    @AutoIncrement
+    @PrimaryKey
+    int id;
+
+    string code;
+
+    string title;
+
+    short status;
+
+    @Column("color_system_value")
+    string colorSystemValue;
+
+    @Column("type_id")
+    short typeId;
+
+    string pantone;
+
+    @Column("rgb_value")
+    string rgbValue;
+
+    @Column("cmyk_value")
+    string cmykValue;
+
+    int created;
+
+    int updated;
+
+    int deleted;
+
+    @Column("color_no")
+    string colorNo;
+}
+
+
+@Table("material")
+class Material :Model{
+    mixin MakeModel;
+
+    @AutoIncrement
+    @PrimaryKey
+    int id;
+
+    string code;
+
+    string title;
+
+    short status;
+
+    @Column("common_materials_id")
+    int commonMaterialsId;
+
+    @Column("material_composition_id")
+    int materialCompositionId;
+
+    @Column("material_color_id")
+    int materialColorId;
+
+    @Column("material_technique_id")
+    int materialTechniqueId;
+
+    @Column("resource_status")
+    short resourceStatus;
+
+    string picurl;
+
+    string centent;
+
+    int created;
+
+    int updated;
+
+    int deleted;
+
+    @OneToOne()
+    @JoinColumn("material_color_id","id")
+    Color color;
+
+    // @OneToOne()
+    // @JoinColumn("material_composition_id","id")
+    // Composition composition;
+
+    // @OneToOne()
+    // @JoinColumn("material_technique_id","id")
+    // Technique technique;
+}
+
+
+void test_EntityRepository_Insert02(EntityManager em)
+{
+    mixin(DO_TEST);
+
+    EntityRepository!(Material, int) rep = new EntityRepository!(Material, int)(em);
+
+    Material material = new Material();
+    material.title = "xxxx";
+    material.materialColorId = 123;
+
+    rep.insert(material);
+
+    tracef("new id: %d", material.id);
+    assert(material.id > 0);
 }
