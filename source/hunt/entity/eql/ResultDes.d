@@ -226,8 +226,8 @@ string makeDeSerialize(T)() {
                     // 1) The types are same.
                     str ~=`
                         if(columnValue.type == typeid(null)) {
-                            version(HUNT_ENTITY_DEBUG_MORE) {
-                                warningf("It's a null value for a number: %s. So use it's default.", "` 
+                            version(HUNT_DEBUG) {
+                                warningf("It's a null value for the column: %s. So use its default.", "` 
                                     ~ memberName ~ `");
                             }
                         } else if(columnValue.hasValue()) {

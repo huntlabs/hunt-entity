@@ -420,7 +420,7 @@ string makeDeSerialize(T,F)() {
                     }
                     if(columnValue.type == typeid(null)) {
                         version(HUNT_DEBUG) {
-                            warningf("It's a null value for a number: %s. So use it's default.", "` 
+                            warningf("It's a null value for the column: %s. So use its default.", "` 
                                 ~ memberName ~ `");
                         }
                     } else if (columnValue.hasValue()) {
