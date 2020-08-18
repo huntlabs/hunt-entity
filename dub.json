@@ -4,10 +4,9 @@
     "copyright": "Copyright (C) 2018-2020, HuntLabs",
     "homepage": "https://www.huntlabs.net",
     "license": "Apache-2.0",
-    "versions": ["WITH_HUNT_ENTITY"],
     "dependencies": {
-        "hunt-database": {"path": "../hunt-database"},
-        "hunt-validation" : {"path": "../hunt-validation"}
+        "hunt-database": "~>2.1.4",
+        "hunt-validation" : "~>0.3.0"
     }
 }
 
