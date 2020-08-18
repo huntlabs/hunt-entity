@@ -100,6 +100,7 @@ class CriteriaBuilder
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("COUNT");
     }
 
+    // deprecated("Unsupported any more")
     EntityExpression count(T)(Root!T root) {
         return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setColumnSpecifier("COUNT");
     }
@@ -108,6 +109,7 @@ class CriteriaBuilder
         return new EntityExpression(info.getColumnName(), info.getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
 
+    // deprecated("Unsupported any more")
     EntityExpression countDistinct(T)(Root!T root) {
         return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }

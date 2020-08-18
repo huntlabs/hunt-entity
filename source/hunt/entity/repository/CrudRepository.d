@@ -61,7 +61,23 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();
-        criteriaQuery.select(builder.count(root));
+        criteriaQuery.select(builder.count(root.getPrimaryField()));
+
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        long result = typedQuery.getResultAs!long();
+        return result;
+    }
+
+    long count(string fieldName)
+    {
+        EntityManager em = _manager ? _manager : createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        auto criteriaQuery = builder.createQuery!T;
+        Root!T root = criteriaQuery.from();
+        EntityFieldInfo fieldInfo = root.get(fieldName);
+        criteriaQuery.select(builder.count(fieldInfo));
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         long result = typedQuery.getResultAs!long();
@@ -71,7 +87,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
     /**
      * 
      */
-    long sum() {
+    long sum(string fieldName) {
         EntityManager em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
 
@@ -79,21 +95,12 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         CriteriaQuery!(T, T) criteriaQuery = builder.createQuery!T;
 
         Root!T root = criteriaQuery.from();
-        criteriaQuery.select(builder.count(root));
-
-        // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T17:18:45+08:00
-        // 
+        EntityFieldInfo fieldInfo = root.get(fieldName);
+        criteriaQuery.select(builder.sum(fieldInfo));
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
-
         long result = typedQuery.getResultAs!long();
         return result;
-        // Long r = cast(Long)result;
-        // if(r is null) {
-        //     warningf("The result is not a Long. It's %s", typeid(result));
-        //     return 0;
-        // }
-        // return r.longValue();
     }
 
     void remove(T entity)

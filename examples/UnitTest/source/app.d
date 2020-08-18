@@ -98,8 +98,8 @@ void main()
 
     // EntityOption option = getMysqlOptions();
     // EntityOption option = getMysqlDevOptions(); // to test mysql 8
-    // EntityOption option = getPgOptions();
-    EntityOption option = getPgDevOptions();
+    EntityOption option = getPgOptions();
+    // EntityOption option = getPgDevOptions();
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
     EntityManager em = entityManagerFactory.currentEntityManager();
@@ -132,11 +132,12 @@ void main()
     // test_other(em);
     // test_exception(em);
 
-    // test_EntityRepository_Count(em);
     // test_EntityRepository_Insert(em);
-    test_EntityRepository_Save(em);
+    // test_EntityRepository_Save(em);
     // test_EntityRepository_Save_with_reserved_word(em);
     // test_EntityRepository_Insert02(em);
+    test_EntityRepository_Count(em);
+    // test_EntityRepository_Sum(em);
     // testRepositoryWithTransaction(em);
     // getchar();
     // em.close();
@@ -600,19 +601,6 @@ void test_eql_ManyToOne(EntityManager em)
 /*                                               Entity Repository                                                    */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-void test_EntityRepository_Count(EntityManager em)
-{
-    mixin(DO_TEST);
-
-    EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
-
-    // LoginInfo.update_time 
-    warningf("'updated' field: %s", rep.Field().updated);
-
-    long count = rep.count();
-    tracef("count: %d", count);
-}
-
 
 void test_EntityRepository_Insert(EntityManager em)
 {
@@ -770,6 +758,32 @@ void testRepositoryWithTransaction2(EntityManager em) {
     infof("AppInfo(id: %d, desc: %s, available: %s) ".format(appInfo.id, appInfo.desc, appInfo.isAvailable));
 }
 
+void test_EntityRepository_Count(EntityManager em)
+{
+    mixin(DO_TEST);
+
+    EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+
+    // LoginInfo.update_time 
+    warningf("'updated' field: %s", rep.Field().updated);
+
+    long count = rep.count();
+    tracef("count by id: %d", count);
+
+    count = rep.count(LoginInfo.updated.stringof);
+    tracef("count by location: %d", count);
+}
+
+
+void test_EntityRepository_Sum(EntityManager em)
+{
+    mixin(DO_TEST);
+
+    EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
+
+    long sum = rep.sum(UserInfo.age.stringof);
+    tracef("sum: %d", sum);
+}
 
 void testBinarySerializationForModel() {
     Car car = new Car();

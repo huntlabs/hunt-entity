@@ -73,6 +73,8 @@ class TypedQuery(T : Object, F : Object = T)
             return R.init;
         }
 
+        // First row and first column
+
         Row firstRow = rowSet.firstRow();
         if(firstRow.size() == 0) {
             warning("The column in the row is empty.");
