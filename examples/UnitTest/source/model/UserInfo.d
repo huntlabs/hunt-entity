@@ -23,6 +23,10 @@ class UserInfo : Model {
     @ManyToMany("uinfos")
     AppInfo[] apps;
 
+// FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-18T13:40:43+08:00
+// 
+    // @OneToOne()
+    // @JoinColumn("id", "uid")
     @OneToOne("user",FetchType.LAZY)
     IDCard card;
 

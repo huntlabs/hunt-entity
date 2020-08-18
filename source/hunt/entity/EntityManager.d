@@ -110,14 +110,19 @@ class EntityManager : Closeable {
         Predicate condition = criteriaBuilder.equal(r.getPrimaryField());
 
         string primaryKey = r.getEntityInfo().getPrimaryKeyString();
-        foreach(string k, EntityFieldInfo v; r.getEntityInfo().getFields()) {
+
+        EntityFieldInfo[string] fields = r.getEntityInfo().getFields();
+
+        foreach(string k, EntityFieldInfo v; fields) {
             string columnName = v.getColumnName();
 
             version(HUNT_ENTITY_DEBUG) tracef("Field: %s, Column: %s", k, columnName);
-
-            if (k != primaryKey && !columnName.empty()) {
-                criteriaUpdate.set(v);    
+            if(columnName == primaryKey || columnName.empty()) {
+                version(HUNT_ENTITY_DEBUG) warningf("primaryKey skipped, Field: %s, Column: %s", k, columnName);
+                continue;
             }
+
+            criteriaUpdate.set(v);
         }
         return createQuery(criteriaUpdate.where(condition)).executeUpdate();
     }

@@ -43,7 +43,7 @@ EntityOption getMysqlDevOptions() {
 
     EntityOption option = new EntityOption();
     option.database.driver = "mysql";
-    option.database.host = "10.1.222.120";
+    option.database.host = "10.1.222.110";
     option.database.port = 3306;
     option.database.database = "eql_test";
     option.database.username = "root";
@@ -70,11 +70,13 @@ EntityOption getPgDevOptions() {
 
     EntityOption option = new EntityOption();
     option.database.driver = "postgresql";
-    option.database.host = "10.1.223.62";
+    option.database.host = "10.1.222.110";
     option.database.port = 5432;
-    option.database.database = "api_parts";
-    option.database.username = "putao";
-    option.database.password = "putao123";	
+    option.database.database = "postgres";
+    option.database.username = "postgres";
+    option.database.password = "123456";	
+    // option.database.username = "putao";
+    // option.database.password = "putao123";	
 
     return option;
 }
@@ -94,8 +96,8 @@ void main()
 
     // EntityOption option = getMysqlOptions();
     // EntityOption option = getMysqlDevOptions(); // to test mysql 8
-    EntityOption option = getPgOptions();
-    // EntityOption option = getPgDevOptions();
+    // EntityOption option = getPgOptions();
+    EntityOption option = getPgDevOptions();
 
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(option);
     EntityManager em = entityManagerFactory.currentEntityManager();
@@ -108,7 +110,7 @@ void main()
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
-    test_OneToOne(em);
+    // test_OneToOne(em);
     // test_OneToMany(em);
     // test_ManyToOne(em);
     // test_ManyToMany(em);
@@ -130,7 +132,7 @@ void main()
 
     // test_EntityRepository_Count(em);
     // test_EntityRepository_Insert(em);
-    // test_EntityRepository_Save(em);
+    test_EntityRepository_Save(em);
     // test_EntityRepository_Save_with_reserved_word(em);
     // test_EntityRepository_Insert02(em);
     // testRepositoryWithTransaction(em);
@@ -243,8 +245,8 @@ void test_OneToOne(EntityManager em)
     auto uinfo = em.find!(UserInfo)(1);
     warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card));
 
-    auto card = uinfo.getCard;
-    logDebug("Card( %s , %s ) ".format(card.id, card.desc));
+    // auto card = uinfo.getCard;
+    // logDebug("Card( %s , %s ) ".format(card.id, card.desc));
 
     auto card2 = em.find!(IDCard)(1);
     logDebug("Uinfo( %s , %s ) ".format(card2.user.id, card2.user.nickName));
@@ -270,22 +272,22 @@ void test_ManyToOne(EntityManager em)
     logDebug("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
 }
 
-void test_ManyToMany(EntityManager em)
-{
-    mixin(DO_TEST);
+// void test_ManyToMany(EntityManager em)
+// {
+//     mixin(DO_TEST);
 
-    auto app = em.find!(AppInfo)(1);
-    auto uinfos = app.getUinfos();
-    logDebug("AppInfo( %s , %s , %s ) ".format(app.id, app.name, app.desc));
-    foreach (uinfo; uinfos)
-        logDebug("AppInfo.UserInfo( %s , %s , %s ) ".format(uinfo.id, uinfo.nickName, uinfo.age));
+//     auto app = em.find!(AppInfo)(1);
+//     auto uinfos = app.getUinfos();
+//     logDebug("AppInfo( %s , %s , %s ) ".format(app.id, app.name, app.desc));
+//     foreach (uinfo; uinfos)
+//         logDebug("AppInfo.UserInfo( %s , %s , %s ) ".format(uinfo.id, uinfo.nickName, uinfo.age));
 
-    auto uinfo = em.find!(UserInfo)(1);
-    auto apps = uinfo.getApps();
-    logDebug("UserInfo( %s , %s , %s) ".format(uinfo.id, uinfo.nickName, uinfo.age));
-    foreach (app2; apps)
-        logDebug("UserInfo.AppInfo( %s , %s , %s ) ".format(app2.id, app2.name, app2.desc));
-}
+//     auto uinfo = em.find!(UserInfo)(1);
+//     auto apps = uinfo.getApps();
+//     logDebug("UserInfo( %s , %s , %s) ".format(uinfo.id, uinfo.nickName, uinfo.age));
+//     foreach (app2; apps)
+//         logDebug("UserInfo.AppInfo( %s , %s , %s ) ".format(app2.id, app2.name, app2.desc));
+// }
 
 
 void test_valid(EntityManager em)
@@ -614,32 +616,68 @@ void test_EntityRepository_Insert(EntityManager em)
 {
     mixin(DO_TEST);
 
-    EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+    // case 1
+    // EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
 
-    LoginInfo loginInfo = new LoginInfo();
-    loginInfo.location = "new location";
+    // LoginInfo loginInfo = new LoginInfo();
+    // loginInfo.location = "new location";
 
-    rep.insert(loginInfo);
+    // rep.insert(loginInfo);
 
-    tracef("new id: %d", loginInfo.id);
-    assert(loginInfo.id > 0);
+    // tracef("new id: %d", loginInfo.id);
+    // assert(loginInfo.id > 0);
+
+    // case 2
+    // insert with reserved word
+    // EntityRepository!(AppInfo, int) rep = new EntityRepository!(AppInfo, int)(em);
+
+    // AppInfo appInfo = new AppInfo();
+    // appInfo.name = "no name";
+    // // rep.insert(appInfo);
+    // rep.save(appInfo);
+    // tracef("new id: %d", appInfo.id);   
+
+    // case 3
+    EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
+
+    UserInfo userInfo = new UserInfo();
+    userInfo.nickName = "Bob";
+    rep.insert(userInfo);
+    // rep.save(userInfo);
+    tracef("new id: %d", userInfo.id); 
+
+    // case 4
+    // EntityRepository!(Agent, ulong) rep = new EntityRepository!(Agent, ulong)(em);
+
+    // Agent a = new Agent();
+    // a.username = "u1";
+    // a.name = "xxxx";
+    // rep.insert(a);
 }
 
 void test_EntityRepository_Save(EntityManager em)
 {
     mixin(DO_TEST);
 
-    EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
+    // case 1
+    // EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
 
-    LoginInfo loginInfo = rep.findById(1);
-    warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
-        loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
+    // LoginInfo loginInfo = rep.findById(1);
+    // warning("LoginInfo(id: %d, uid: %d, updated: %d); Uinfo( %s) ".format(loginInfo.id, 
+    //     loginInfo.uid, loginInfo.updated, loginInfo.uinfo));
 
-    loginInfo.appid += 1;
-    loginInfo.updated += 1;
-    rep.save(loginInfo);
-    LoginInfo newInfo = rep.findById(1);
-    logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+    // loginInfo.appid += 1;
+    // loginInfo.updated += 1;
+    // rep.save(loginInfo);
+    // LoginInfo newInfo = rep.findById(1);
+    // logDebug("Uinfo(id: %d, updated: %d, Uinfo( %s) ".format(newInfo.id, newInfo.updated, loginInfo.uinfo));
+
+    // case 2
+    EntityRepository!(Agent, ulong) rep = new EntityRepository!(Agent, ulong)(em);
+    Agent info = rep.findById(1);
+    info.username = "test1";
+    rep.save(info);
+
 }
 
 
@@ -652,8 +690,8 @@ void test_EntityRepository_Save_with_reserved_word(EntityManager em)
     AppInfo info = rep.findById(1);
     infof("AppInfo(id: %d, desc: %s, available: %s) ".format(info.id, info.desc, info.isAvailable));
 
-    // info.desc = "test1";
-    // rep.save(info);
+    info.desc = "test1";
+    rep.save(info);
     // UPDATE AppInfo
     // SET desc = 'test1', name = 'Vitis'
     // WHERE AppInfo.id = 1	
@@ -872,4 +910,95 @@ void test_EntityRepository_Insert02(EntityManager em)
 
     tracef("new id: %d", material.id);
     assert(material.id > 0);
+}
+
+
+@Table("agent")
+class Agent : Model {
+
+    mixin MakeModel;
+
+    @AutoIncrement
+    @PrimaryKey
+    ulong id;
+
+    string username;
+
+    string password;
+
+    string salt;
+
+    string name;
+
+    // timestamp
+    long created;
+
+    // timestamp
+    long updated;
+
+    // 1: enabled, 0: disabled
+    ushort status;
+
+    string ip;
+
+    @Column("admin_id")
+    ulong adminId;
+
+    @Column("code")
+    string code;
+
+    @OneToOne()
+    @JoinColumn("id", "agent_id")
+    AgentAsset asset;
+
+    // @OneToOne()
+    // @JoinColumn("id", "agent_id")
+    // AgentCredit credit;
+}
+
+
+@Table("agent_asset")
+class AgentAsset : Model {
+
+    mixin MakeModel;
+
+    @AutoIncrement
+    @PrimaryKey
+    ulong id;
+
+    @Column("agent_id")
+    ulong agentId;
+
+    @Column("balance_amount")
+    ulong balanceAmount;
+
+    @Column("rebate_amount")
+    ulong rebateAmount;
+
+    @Column("credit_amount")
+    ulong creditAmount;
+
+    long created;
+
+}
+
+
+@Table("agent_credit")
+class AgentCredit : Model {
+
+    mixin MakeModel;
+
+    @AutoIncrement
+    @PrimaryKey
+    ulong id;
+
+    @Column("agent_id")
+    ulong agentId;
+
+    ushort ratio;
+
+    @Column("quota_amount")
+    ulong quotaAmount;
+    
+    long created;
 }

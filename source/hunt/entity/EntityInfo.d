@@ -92,6 +92,7 @@ class EntityInfo(T : Object, F : Object = T) {
 
     public Variant[string] getInsertString() {
         Variant[string] str;
+
         foreach(string fieldName, EntityFieldInfo info; _fields) {
             string columnName = info.getColumnName();
             Variant currentValue = info.getColumnFieldData();
@@ -100,7 +101,8 @@ class EntityInfo(T : Object, F : Object = T) {
                     fieldName, columnName, currentValue.type, currentValue.toString());
             }
             
-            if (fieldName == _autoIncrementKey) 
+            // Skip the autoIncrementKey
+            if (columnName == _autoIncrementKey) 
                 continue;
             
             // version(HUNT_DB_DEBUG) trace(currentValue.type);
@@ -113,7 +115,7 @@ class EntityInfo(T : Object, F : Object = T) {
             }
 
             if (columnName.empty()) {
-                version(HUNT_DEBUG) warningf("columnName is empty for field %s", fieldName);
+                version(HUNT_DEBUG) warningf("The name of column for the field [%s] is empty.", fieldName);
                 continue;
             }
 
@@ -420,7 +422,7 @@ string makeDeSerialize(T,F)() {
                     }
                     if(columnValue.type == typeid(null)) {
                         version(HUNT_DEBUG) {
-                            warningf("It's a null value for the column: %s. So use its default.", "` 
+                            warningf("The value of column [%s] is null. So use its default.", "` 
                                 ~ memberName ~ `");
                         }
                     } else if (columnValue.hasValue()) {
