@@ -15,6 +15,8 @@ import hunt.entity;
 import hunt.Long;
 import hunt.logging.ConsoleLogger;
 
+import std.variant;
+
 // version(WITH_HUNT_TRACE)
 // {
 //     // import hunt.trace.Constrants;
@@ -58,7 +60,33 @@ class TypedQuery(T : Object, F : Object = T)
     //     }
     // }
 
-    public Object getSingleResult()
+    R getResultAs(R)() {
+        string sql = _query.toString();
+        Statement stmt = _manager.getSession().prepare(sql);
+        RowSet rowSet = stmt.query();
+        version(HUNT_ENTITY_DEBUG) {
+            infof("The result columns: %s", rowSet.columnsNames());
+        }
+
+        if(rowSet.size() == 0) {
+            warning("The result is empty");
+            return R.init;
+        }
+
+        Row firstRow = rowSet.firstRow();
+        if(firstRow.size() == 0) {
+            warning("The column in the row is empty.");
+            return R.init;
+        }
+
+        Variant singleValue = firstRow.getValue(0);
+        if(singleValue.hasValue())
+            return singleValue.get!R();
+        else 
+            return R.init;
+    }
+
+    Object getSingleResult()
     {
         Object[] ret = _getResultList();
         if (ret.length == 0)
@@ -66,7 +94,7 @@ class TypedQuery(T : Object, F : Object = T)
         return ret[0];
     }
 
-    public T[] getResultList()
+    T[] getResultList()
     {
         Object[] ret = _getResultList();
         if (ret.length == 0)
@@ -76,13 +104,13 @@ class TypedQuery(T : Object, F : Object = T)
         return cast(T[]) ret;
     }
 
-    public TypedQuery!(T, F) setMaxResults(int maxResult)
+    TypedQuery!(T, F) setMaxResults(int maxResult)
     {
         _query.getQueryBuilder().limit(maxResult);
         return this;
     }
 
-    public TypedQuery!(T, F) setFirstResult(int startPosition)
+    TypedQuery!(T, F) setFirstResult(int startPosition)
     {
         _query.getQueryBuilder().offset(startPosition);
         return this;
@@ -100,24 +128,26 @@ class TypedQuery(T : Object, F : Object = T)
         //         endTrace();
         //     }
         // }
-        Object[] ret;
-        long count = -1;
         Statement stmt = _manager.getSession().prepare(sql);
         RowSet res = stmt.query();
         version(HUNT_ENTITY_DEBUG) {
-            infof("columns: %s", res.columnsNames());
+            infof("The result columns: %s", res.columnsNames());
         }
 
         Row[] rows;
-        foreach (value; res)
-        {
+        foreach (value; res) {
             rows ~= value;
         }
-        foreach (k, v; rows)
+
+        
+        long count = -1;
+        Object[] ret;
+        foreach (size_t k, Row v; rows)
         {
             Object t = _query.getRoot().deSerialize(rows, count, cast(int) k);
             if (t is null)
             {
+                warningf("t is null, count=%d", count);
                 if (count != -1)
                 {
                     ret ~= new Long(count);
@@ -126,6 +156,8 @@ class TypedQuery(T : Object, F : Object = T)
                 {
                     throw new EntityException("getResultList has an null data");
                 }
+            } else {
+                warning(typeid(t));
             }
             ret ~= t;
         }

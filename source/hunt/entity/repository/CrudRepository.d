@@ -50,6 +50,9 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return defaultEntityManagerFactory().currentEntityManager();
     }
 
+    /**
+     * 
+     */
     long count()
     {
         EntityManager em = _manager ? _manager : createEntityManager();
@@ -60,24 +63,37 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         Root!T root = criteriaQuery.from();
         criteriaQuery.select(builder.count(root));
 
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+        long result = typedQuery.getResultAs!long();
+        return result;
+    }
+
+    /**
+     * 
+     */
+    long sum() {
+        EntityManager em = _manager ? _manager : createEntityManager();
+        scope(exit) {if (!_manager) em.close();}
+
+        CriteriaBuilder builder = em.getCriteriaBuilder();
+        CriteriaQuery!(T, T) criteriaQuery = builder.createQuery!T;
+
+        Root!T root = criteriaQuery.from();
+        criteriaQuery.select(builder.count(root));
+
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T17:18:45+08:00
         // 
-        auto result = em.createQuery(criteriaQuery).getSingleResult();
-        Long r = cast(Long)result;
-        if(r is null) {
-            warning(typeid(result));
-            return 0;
-        }
-        return r.longValue();
 
-        // RowSet rs = em.createQuery(criteriaQuery).getNativeResult();
-        // if(rs.size() == 0) {
-        //     warning("No data returned.");
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
+
+        long result = typedQuery.getResultAs!long();
+        return result;
+        // Long r = cast(Long)result;
+        // if(r is null) {
+        //     warningf("The result is not a Long. It's %s", typeid(result));
         //     return 0;
         // }
-
-        // Row row = rs.iterator.front();
-        // return row.getLong(0);
+        // return r.longValue();
     }
 
     void remove(T entity)
