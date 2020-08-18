@@ -19,14 +19,17 @@ import hunt.logging.ConsoleLogger;
 
 import std.traits;
 
-public import hunt.entity.repository.Repository;
+import hunt.entity.repository.Repository;
 
+
+/**
+ * 
+ */
 class CrudRepository(T, ID) : Repository!(T, ID)
 {
     protected EntityManager _manager;
 
     this(EntityManager manager = null) {
-        // _manager = manager;
         if(manager is null) {
             _manager = defaultEntityManagerFactory().currentEntityManager();
         } else {
@@ -38,16 +41,16 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return _manager;
     }
 
-    public EntityManager getEntityManager() {
+    EntityManager getEntityManager() {
         return _manager;
     }
 
-    public EntityManager createEntityManager()
+    EntityManager createEntityManager()
     {
         return defaultEntityManagerFactory().currentEntityManager();
     }
 
-    public long count()
+    long count()
     {
         EntityManager em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
@@ -77,14 +80,14 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         // return row.getLong(0);
     }
 
-    public void remove(T entity)
+    void remove(T entity)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.remove!T(entity);
     }
 
-    public void removeAll()
+    void removeAll()
     {
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-7-3 10:23:27
         // user "delete from T"
@@ -96,7 +99,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         }
     }
     
-    public void removeAll(T[] entities)
+    void removeAll(T[] entities)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -106,7 +109,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         }
     }
 
-    public void removeById(ID id)
+    void removeById(ID id)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -114,13 +117,13 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         
     }
     
-    public bool existsById(ID id)
+    bool existsById(ID id)
     {
         T entity = this.findById(id);
         return (entity !is null);
     }
 
-    public T[] findAll()
+    T[] findAll()
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -131,7 +134,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return typedQuery.getResultList();
     }
 
-    public T[] findAllById(ID[] ids)
+    T[] findAllById(ID[] ids)
     {
         T[] entities;
         foreach (id; ids)
@@ -143,7 +146,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return entities;
     }
 
-    public T findById(ID id)
+    T findById(ID id)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -151,7 +154,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return result;
     }
 
-    public T save(T entity)
+    T save(T entity)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -166,7 +169,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return entity;
     }
 
-    public T[] saveAll(T[] entities)
+    T[] saveAll(T[] entities)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -186,14 +189,14 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return resultList;
     }
 
-    public T insert(T entity)
+    T insert(T entity)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         em.persist(entity);
         return entity;
     }
-    public T[] insertAll(T[] entities)
+    T[] insertAll(T[] entities)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -205,7 +208,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return resultList;
     }
 
-    public T update(T entity)
+    T update(T entity)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
@@ -213,7 +216,7 @@ class CrudRepository(T, ID) : Repository!(T, ID)
         return entity;
     }
     
-    public T[] updateAll(T[] entities)
+    T[] updateAll(T[] entities)
     {
         auto em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}

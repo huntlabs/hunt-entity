@@ -23,10 +23,10 @@ import std.traits;
 
 class EntityManager : Closeable {
 
-    public Dialect _dialect;
-    public EntityOption _option;
-    public Database _db;
-    public string _name;
+    Dialect _dialect;
+    EntityOption _option;
+    Database _db;
+    string _name;
     // private EntityManagerFactory _factory;
     private CriteriaBuilder _criteriaBuilder;
     private EntityTransaction _transaction;
@@ -68,7 +68,7 @@ class EntityManager : Closeable {
         return entity;
     }
 
-    public T find(T,P)(P primaryKeyOrT) {
+    T find(T,P)(P primaryKeyOrT) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaQuery!T criteriaQuery = criteriaBuilder.createQuery!(T);
         Root!T r;
@@ -86,7 +86,7 @@ class EntityManager : Closeable {
     }
 
 
-    public int remove(T,P)(P primaryKeyOrT) {
+    int remove(T,P)(P primaryKeyOrT) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaDelete!T criteriaDelete = criteriaBuilder.createCriteriaDelete!(T);
         Root!T r;
@@ -102,8 +102,7 @@ class EntityManager : Closeable {
         return createQuery(criteriaDelete.where(condition)).executeUpdate();
     }
 
-
-    public int merge(T)(T entity) {
+    int merge(T)(T entity) {
         CriteriaBuilder criteriaBuilder = getCriteriaBuilder();
         CriteriaUpdate!T criteriaUpdate = criteriaBuilder.createCriteriaUpdate!(T);
         Root!T r = criteriaUpdate.from(entity);
@@ -127,41 +126,41 @@ class EntityManager : Closeable {
         return createQuery(criteriaUpdate.where(condition)).executeUpdate();
     }
 
-    public void flush()
+    void flush()
     {
         //TODO 
     }
 
-    public EqlQuery!(T) createQuery(T...)(string eql)
+    EqlQuery!(T) createQuery(T...)(string eql)
     {
         return new EqlQuery!(T)(eql, this);
     }
 
-    public EqlQuery!(T) createQuery(T...)(string query_eql,Pageable page)
+    EqlQuery!(T) createQuery(T...)(string query_eql,Pageable page)
     {
         return new EqlQuery!(T)(query_eql,page,this);
     }
 
-    public TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
+    TypedQuery!(T,F) createQuery(T,F)(CriteriaQuery!(T,F) query) {
         return new TypedQuery!(T,F)(query, this);
     }
 
-    public Query!(T) createQuery(T)(CriteriaDelete!T query) {
+    Query!(T) createQuery(T)(CriteriaDelete!T query) {
         return new Query!(T)(query, this);
     }
 
-    public Query!(T) createQuery(T)(CriteriaUpdate!T query) {
+    Query!(T) createQuery(T)(CriteriaUpdate!T query) {
         return new Query!(T)(query, this);
     }
 
-    public NativeQuery createNativeQuery(string sql)
+    NativeQuery createNativeQuery(string sql)
     {
         return new NativeQuery(this,sql);
     }
 
-    public Dialect getDialect() {return _dialect;}
+    Dialect getDialect() {return _dialect;}
 
-    public EntitySession getSession() {
+    EntitySession getSession() {
         if(_entitySession is null) {
             trace("Creating a new session");
             _entitySession = new EntitySession(_db);
@@ -169,24 +168,23 @@ class EntityManager : Closeable {
         return _entitySession;
     }
 
-    public CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder.setManager(this);}     
-    public EntityTransaction getTransaction() {return _transaction;}
+    CriteriaBuilder getCriteriaBuilder() {return _criteriaBuilder.setManager(this);}     
+    EntityTransaction getTransaction() {return _transaction;}
 
     deprecated("Using getSession instead.")
-    public Database getDatabase() {return _db;}
+    Database getDatabase() {return _db;}
 
 
     DatabaseOption getDbOption() {
         return _db.getOption();
     }
     
-    public string getPrefix() {return _option.database.prefix;}
+    string getPrefix() {return _option.database.prefix;}
 
-    public void close() {
+    void close() {
         if(_entitySession)
         {
             _entitySession.close();
-            // _entitySession = null;
         }
     }
 }

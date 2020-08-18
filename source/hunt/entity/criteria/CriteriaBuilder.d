@@ -21,7 +21,7 @@ import std.format;
 import std.traits;
 import std.variant;
 
-public class CriteriaBuilder
+class CriteriaBuilder
 {
 
     private EntityManagerFactory _factory;
@@ -31,88 +31,88 @@ public class CriteriaBuilder
         _factory = factory;
     }
 
-    public CriteriaBuilder setManager(EntityManager manager) {
+    CriteriaBuilder setManager(EntityManager manager) {
         _manager = manager;
         return this;
     }
 
-    public EntityManager getManager() {return _manager;}
+    EntityManager getManager() {return _manager;}
 
-    public QueryBuilder createQueryBuilder() {
+    QueryBuilder createQueryBuilder() {
         return _factory.createQueryBuilder();
     }
 
-    public Dialect getDialect() {
+    Dialect getDialect() {
         return _factory.getDialect();
     } 
 
-    // public Database getDatabase() {
+    // Database getDatabase() {
     //     return _factory.getDatabase();
     // }
 
-    public CriteriaQuery!(T,F) createQuery(T : Object,F : Object = T)() {
+    CriteriaQuery!(T,F) createQuery(T : Object,F : Object = T)() {
         return new CriteriaQuery!(T,F)(this);
     }
 
-    public CriteriaDelete!(T,F) createCriteriaDelete(T : Object,F : Object = T)() {
+    CriteriaDelete!(T,F) createCriteriaDelete(T : Object,F : Object = T)() {
         return new CriteriaDelete!(T,F)(this);
     }
 
-    public CriteriaUpdate!(T,F) createCriteriaUpdate(T : Object,F : Object = T)() {
+    CriteriaUpdate!(T,F) createCriteriaUpdate(T : Object,F : Object = T)() {
         return new CriteriaUpdate!(T,F)(this);
     }
 
-    public Order asc(EntityFieldInfo info) {
+    Order asc(EntityFieldInfo info) {
         return new Order(info.getFullColumn(), OrderBy.ASC);
     }
 
-    public Order desc(EntityFieldInfo info) {
+    Order desc(EntityFieldInfo info) {
         return new Order(info.getFullColumn(), OrderBy.DESC);
     }
 
     //P should be Predicate
-    public Predicate and(P...)(P predicates) {
+    Predicate and(P...)(P predicates) {
         return new Predicate().andValue(predicates);
     }
 
     //P should be Predicate
-    public Predicate or(P...)(P predicates) {
+    Predicate or(P...)(P predicates) {
         return new Predicate().orValue(predicates);
     }
 
-    public EntityExpression max(EntityFieldInfo info) {
+    EntityExpression max(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("MAX");
     }
 
-    public EntityExpression min(EntityFieldInfo info) {
+    EntityExpression min(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("MIN");
     }
 
-    public EntityExpression avg(EntityFieldInfo info) {
+    EntityExpression avg(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("AVG");
     }
 
-    public EntityExpression sum(EntityFieldInfo info) {
+    EntityExpression sum(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("SUM");
     }
 
-    public EntityExpression count(EntityFieldInfo info) {
+    EntityExpression count(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setColumnSpecifier("COUNT");
     }
 
-    public EntityExpression count(T)(Root!T root) {
+    EntityExpression count(T)(Root!T root) {
         return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setColumnSpecifier("COUNT");
     }
 
-    public EntityExpression countDistinct(EntityFieldInfo info) {
+    EntityExpression countDistinct(EntityFieldInfo info) {
         return new EntityExpression(info.getColumnName(), info.getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
 
-    public EntityExpression countDistinct(T)(Root!T root) {
+    EntityExpression countDistinct(T)(Root!T root) {
         return new EntityExpression(root.getPrimaryField().getColumnName(), root.getPrimaryField().getTableName()).setDistinct(true).setColumnSpecifier("COUNT");
     }
 
-    public Predicate equal(T)(EntityFieldInfo info, T t, bool check = true) {
+    Predicate equal(T)(EntityFieldInfo info, T t, bool check = true) {
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
@@ -133,7 +133,7 @@ public class CriteriaBuilder
 
 
     /// for get lazy data
-    public Predicate lazyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
+    Predicate lazyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
@@ -153,7 +153,7 @@ public class CriteriaBuilder
     }
 
     /// for get lazy data
-    public Predicate lazyManyToManyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
+    Predicate lazyManyToManyEqual(T)(EntityFieldInfo info, T t, bool check = true) {
         auto condTable = info.getJoinTable();
         auto condColumn = info.getJoinColumn();
         if(info.isMainMapped())
@@ -176,11 +176,11 @@ public class CriteriaBuilder
         }
     }
 
-    public Predicate equal(EntityFieldInfo info) {
+    Predicate equal(EntityFieldInfo info) {
         return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().toString());
     }
 
-    public Predicate notEqual(T)(EntityFieldInfo info, T t){
+    Predicate notEqual(T)(EntityFieldInfo info, T t){
 
         static if (isBuiltinType!T) {
             if (check)
@@ -200,60 +200,60 @@ public class CriteriaBuilder
         }
     }
 
-    public Predicate notEqual(EntityFieldInfo info){
+    Predicate notEqual(EntityFieldInfo info){
         return new Predicate().addValue(info.getFullColumn(), "<>", info.getColumnFieldData().toString());
     }
 
-    public Predicate gt(T)(EntityFieldInfo info, T t){
+    Predicate gt(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
         return new Predicate().addValue(info.getFullColumn(), ">", quoteSqlfNeed(t));
     }
 
-    public Predicate gt(EntityFieldInfo info){
+    Predicate gt(EntityFieldInfo info){
         return new Predicate().addValue(info.getFullColumn(), ">", info.getColumnFieldData().toString());
     }
 
-    public Predicate ge(T)(EntityFieldInfo info, T t){
+    Predicate ge(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
         return new Predicate().addValue(info.getFullColumn(), ">=", quoteSqlfNeed(t));
     }
 
-    public Predicate ge(EntityFieldInfo info){
+    Predicate ge(EntityFieldInfo info){
         return new Predicate().addValue(info.getFullColumn(), ">=", info.getColumnFieldData().toString());
     }
 
-    public Predicate lt(T)(EntityFieldInfo info, T t){
+    Predicate lt(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
         return new Predicate().addValue(info.getFullColumn(), "<", quoteSqlfNeed(t));
     }
 
-    public Predicate lt(EntityFieldInfo info){
+    Predicate lt(EntityFieldInfo info){
         return new Predicate().addValue(info.getFullColumn(), "<", info.getColumnFieldData().toString());
     }
 
-    public Predicate le(T)(EntityFieldInfo info, T t){
+    Predicate le(T)(EntityFieldInfo info, T t){
         assertType!(T)(info);
         return new Predicate().addValue(info.getFullColumn(), "<=", quoteSqlfNeed(t));
     }
 
-    public Predicate le(EntityFieldInfo info){
+    Predicate le(EntityFieldInfo info){
         return new Predicate().addValue(info.getFullColumn(), "<=", info.getColumnFieldData().toString());
     }
 
-    public Predicate like(EntityFieldInfo info, string pattern) {
+    Predicate like(EntityFieldInfo info, string pattern) {
         return new Predicate().addValue(info.getFullColumn(), "like", quoteSqlfNeed(pattern));
     }
 
-    public Predicate notLike(EntityFieldInfo info, string pattern) {
+    Predicate notLike(EntityFieldInfo info, string pattern) {
         return new Predicate().addValue(info.getFullColumn(), "not like", quoteSqlfNeed(pattern));
     }
 
-    public Predicate between(T)(EntityFieldInfo info, T t1, T t2) {
+    Predicate between(T)(EntityFieldInfo info, T t1, T t2) {
         assertType!(T)(info);
         return new Predicate().betweenValue(info.getFullColumn(), quoteSqlfNeed(t1), quoteSqlfNeed(t2));
     }
 
-    public Predicate In(T...)(EntityFieldInfo info, T args) {
+    Predicate In(T...)(EntityFieldInfo info, T args) {
         foreach(k,v; args) {
             if (k == 0) {
                 assertType!(typeof(v))(info);
@@ -262,7 +262,7 @@ public class CriteriaBuilder
         return new Predicate().In(info.getFullColumn(), args);
     }
 
-    public void assertType(T)(EntityFieldInfo info) {
+    void assertType(T)(EntityFieldInfo info) {
         if (info.getColumnFieldData().hasValue()) {
             static if (is(T == string)) {
                 if (info.getColumnFieldData().type != typeid(string)) {
