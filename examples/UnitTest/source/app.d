@@ -7,6 +7,8 @@ import model.AppInfo;
 import model.Car;
 import model.IDCard;
 import model.LoginInfo;
+import model.Agent;
+import model.AgentAsset;
 
 import hunt.logging;
 import std.traits;
@@ -910,95 +912,4 @@ void test_EntityRepository_Insert02(EntityManager em)
 
     tracef("new id: %d", material.id);
     assert(material.id > 0);
-}
-
-
-@Table("agent")
-class Agent : Model {
-
-    mixin MakeModel;
-
-    @AutoIncrement
-    @PrimaryKey
-    ulong id;
-
-    string username;
-
-    string password;
-
-    string salt;
-
-    string name;
-
-    // timestamp
-    long created;
-
-    // timestamp
-    long updated;
-
-    // 1: enabled, 0: disabled
-    ushort status;
-
-    string ip;
-
-    @Column("admin_id")
-    ulong adminId;
-
-    @Column("code")
-    string code;
-
-    @OneToOne()
-    @JoinColumn("id", "agent_id")
-    AgentAsset asset;
-
-    // @OneToOne()
-    // @JoinColumn("id", "agent_id")
-    // AgentCredit credit;
-}
-
-
-@Table("agent_asset")
-class AgentAsset : Model {
-
-    mixin MakeModel;
-
-    @AutoIncrement
-    @PrimaryKey
-    ulong id;
-
-    @Column("agent_id")
-    ulong agentId;
-
-    @Column("balance_amount")
-    ulong balanceAmount;
-
-    @Column("rebate_amount")
-    ulong rebateAmount;
-
-    @Column("credit_amount")
-    ulong creditAmount;
-
-    long created;
-
-}
-
-
-@Table("agent_credit")
-class AgentCredit : Model {
-
-    mixin MakeModel;
-
-    @AutoIncrement
-    @PrimaryKey
-    ulong id;
-
-    @Column("agent_id")
-    ulong agentId;
-
-    ushort ratio;
-
-    @Column("quota_amount")
-    ulong quotaAmount;
-    
-    long created;
 }

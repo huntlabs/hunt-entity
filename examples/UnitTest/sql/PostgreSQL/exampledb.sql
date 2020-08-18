@@ -275,3 +275,49 @@ ALTER TABLE "userapp" ADD CONSTRAINT "userapp_pkey" PRIMARY KEY ("id");
 -- Primary Key structure for table userinfo
 -- ----------------------------
 ALTER TABLE "userinfo" ADD CONSTRAINT "userinfo_pkey" PRIMARY KEY ("id");
+
+
+
+
+DROP TABLE IF EXISTS "public"."agent";
+
+CREATE TABLE public.agent (
+  id SERIAL,
+  code VARCHAR(64) NOT NULL,
+  name VARCHAR(128),
+  username VARCHAR(64) NOT NULL,
+  password CHAR(32) NOT NULL,
+  salt CHAR(6) NOT NULL,
+  status SMALLINT DEFAULT 0 NOT NULL,
+  updated BIGINT,
+  created BIGINT,
+  admin_id BIGINT NOT NULL,
+  ip VARCHAR(32),
+  CONSTRAINT agent_account_pkey PRIMARY KEY(code, username),
+  CONSTRAINT agent_id_key UNIQUE(id),
+  CONSTRAINT agent_username_key UNIQUE(username)
+) ;
+
+
+
+ALTER TABLE public.agent
+  OWNER TO postgres;
+
+
+DROP TABLE IF EXISTS "public"."agent_asset";
+CREATE TABLE public.agent_asset (
+  id SERIAL,
+  agent_id BIGINT NOT NULL,
+  balance_amount BIGINT NOT NULL,
+  rebate_amount BIGINT NOT NULL,
+  credit_amount BIGINT NOT NULL,
+  created BIGINT,
+  CONSTRAINT agent_asset_agent_id_key UNIQUE(agent_id),
+  CONSTRAINT agent_asset_id_key UNIQUE(id),
+  CONSTRAINT agent_asset_pkey PRIMARY KEY(id, agent_id)
+) ;
+
+
+ALTER TABLE public.agent_asset
+  OWNER TO postgres;
+  
