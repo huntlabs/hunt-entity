@@ -31,6 +31,9 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
         // _columnFieldData.valueType = typeof(_entityInfo.getPrimaryValue()).stringof;
 
         // _columnFieldData.value = new hunt.Nullable.Nullable!(typeof(_entityInfo.getPrimaryValue()))(_entityInfo.getPrimaryValue());
+
+        // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-21T17:10:30+08:00
+        // Why not set it to a object
         _columnFieldData = Variant(_entityInfo.getPrimaryValue());
 
         initJoinData(tableName, columnName);

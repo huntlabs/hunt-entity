@@ -17,5 +17,6 @@ class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
         _value = fieldValue;
         _owner = owner;
         _entityInfo = new EntityInfo!(T,F)(_manager, fieldValue, owner);
+        _typeInfo = typeid(T);
     }   
 }

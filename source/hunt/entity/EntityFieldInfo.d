@@ -27,43 +27,48 @@ class EntityFieldInfo : EntityExpression
     protected Variant _columnFieldData;
     protected bool _isMainMapped;
     protected bool _enableJoin = true;
+    protected TypeInfo _typeInfo;
 
     private string _fieldName;
     private bool _nullable = true;
     private bool _primary;
     private bool _auto;
 
-    public this(string fieldName, string columnName, string tableName) {
+    this(string fieldName, string columnName, string tableName) {
         super(columnName, tableName);
         _fieldName = fieldName;
     }
 
-    public void setNullable(bool b) {_nullable = b;}
-    public bool getNullable() {return _nullable;}
+    TypeInfo typeInfo() {
+        return _typeInfo;
+    }
 
-    public void setPrimary(bool b) {_primary = b;}
-    public bool getPrimary() {return _primary;}
+    void setNullable(bool b) {_nullable = b;}
+    bool getNullable() {return _nullable;}
 
-    public void setAuto(bool b) {_auto = b;}
-    public bool getAuto() {return _auto;}
+    void setPrimary(bool b) {_primary = b;}
+    bool getPrimary() {return _primary;}
 
-    public bool isMainMapped() {return _isMainMapped;}
+    void setAuto(bool b) {_auto = b;}
+    bool getAuto() {return _auto;}
+
+    bool isMainMapped() {return _isMainMapped;}
 
     deprecated("Using getFieldName instead.")
-    public string getFileldName() {return _fieldName;}
-    public string getFieldName() {return _fieldName;}
-    public string getJoinColumn() {return _joinColumn;}
-    public string getInverseJoinColumn() {return _inverseJoinColumn;}
-    public string getJoinTable() {return _joinTable;}
-    public string getJoinPrimaryKey() {return _joinPrimaryKey;}
-    public ForeignKeyData getForeignKeyData() {return _foreignKeyData;}
+    string getFileldName() {return _fieldName;}
+    string getFieldName() {return _fieldName;}
+    string getJoinColumn() {return _joinColumn;}
+    string getInverseJoinColumn() {return _inverseJoinColumn;}
+    string getJoinTable() {return _joinTable;}
+    string getJoinPrimaryKey() {return _joinPrimaryKey;}
+    ForeignKeyData getForeignKeyData() {return _foreignKeyData;}
 
-    public JoinSqlBuild getJoinSqlData() {return _joinSqlData;}
+    JoinSqlBuild getJoinSqlData() {return _joinSqlData;}
 
-    public bool isEnableJoin() {return _enableJoin;}
-    public void setEnableJoin(bool en) { _enableJoin = en;}
+    bool isEnableJoin() {return _enableJoin;}
+    void setEnableJoin(bool en) { _enableJoin = en;}
 
-    public Variant getColumnFieldData() {return _columnFieldData;}
+    Variant getColumnFieldData() {return _columnFieldData;}
 
     override string toString() {
         return format("isPrimary: %s, TableName:%s, FileldName: %s, ColumnName: %s, JoinTable: %s, JoinColumn: %s, ", 

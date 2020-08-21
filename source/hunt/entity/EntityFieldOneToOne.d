@@ -13,8 +13,10 @@ module hunt.entity.EntityFieldOneToOne;
 
 import hunt.entity;
 import hunt.Exceptions;
-import hunt.logging;
+import hunt.logging.ConsoleLogger;
 
+import std.range;
+import std.string;
 import std.variant;
 
 class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
@@ -26,15 +28,32 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
 
     this(EntityManager manager, string fieldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
+        string mappedBy = mode.mappedBy;
+
         _mode = mode;  
         _enableJoin = _mode.fetch == FetchType.EAGER;    
-        _isMappedBy = _mode.mappedBy != "";
-        super(manager, fieldName, _isMappedBy ? "" : columnOrjoin, tableName, _isMappedBy ? null : fieldValue , owner);
+        _isMappedBy = !mappedBy.empty();
+
+        super(manager, fieldName, 
+            _isMappedBy ? "" : columnOrjoin, 
+            tableName, 
+            _isMappedBy ? null : fieldValue , 
+            owner);
+
         _primaryKey = primaryKey;
         if (_isMappedBy) {
-            _joinColumn = _entityInfo.getFields[_mode.mappedBy].getJoinColumn();
+            EntityFieldInfo fieldInfo = _entityInfo.getSingleField(mappedBy);
+            if(fieldInfo is null) {
+                string msg = format("Can't get the field info for [%s] in %s", mappedBy, T.stringof);
+                warningf(msg);
+                throw new EntityException(msg);
+                // _joinColumn = columnOrjoin;
+            } else {
+                _joinColumn = fieldInfo.getJoinColumn();
+            }
         }
-        else {
+        else 
+        {
             _joinColumn = columnOrjoin;
             _columnFieldData = Variant(_entityInfo.getPrimaryValue());
 
@@ -112,7 +131,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
             }
             
             string value = v.toString();
-            version(HUNT_DEBUG) tracef("A column: %s = %s", name, value);                
+            version(HUNT_ENTITY_DEBUG) tracef("A column: %s = %s", name, value);                
             ret = new LazyData(primaryKeyName, value);
         }        
         return ret;

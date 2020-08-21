@@ -23,6 +23,8 @@ class EntityFieldNormal(T) : EntityFieldInfo {
         super(fieldName, columnName, tableName);
 
         _columnFieldData = Variant(value);
+        _typeInfo = typeid(T);
+
         // _columnFieldData = new ColumnFieldData();
         // _columnFieldData.valueType = typeof(value).stringof;
         // _columnFieldData.value = new hunt.Nullable.Nullable!(T)(value);

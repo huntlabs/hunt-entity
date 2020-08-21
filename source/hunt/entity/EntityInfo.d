@@ -54,6 +54,8 @@ class EntityInfo(T : Object, F : Object = T) {
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
 
+    // pragma(msg, makeInitEntityData!(T,F)());
+
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
 
@@ -96,9 +98,15 @@ class EntityInfo(T : Object, F : Object = T) {
         foreach(string fieldName, EntityFieldInfo info; _fields) {
             string columnName = info.getColumnName();
             Variant currentValue = info.getColumnFieldData();
+            
+            TypeInfo typeInfo = info.typeInfo();
+            if(typeInfo is null) {
+                typeInfo = currentValue.type;
+            }
+
             version(HUNT_DB_DEBUG_MORE) {
                 tracef("fieldName: %s, columnName: %s, type: %s, value: %s", 
-                    fieldName, columnName, currentValue.type, currentValue.toString());
+                    fieldName, columnName, typeInfo, currentValue.toString());
             }
             
             // Skip the autoIncrementKey
@@ -108,8 +116,8 @@ class EntityInfo(T : Object, F : Object = T) {
             // version(HUNT_DB_DEBUG) trace(currentValue.type);
 
             // skip Object member
-            if(typeid(currentValue.type) == typeid(TypeInfo_Class) || 
-                typeid(currentValue.type) == typeid(TypeInfo_Struct) ) {
+            if(typeid(typeInfo) == typeid(TypeInfo_Class) || 
+                typeid(typeInfo) == typeid(TypeInfo_Struct) ) {
                 version(HUNT_DB_DEBUG) warningf("Object member skipped: %s", fieldName);
                 continue;
             }
@@ -223,6 +231,7 @@ string makeInitEntityData(T,F)() {
     string str = `
     private void initEntityData() {
         _entityClassName = "`~T.stringof~`";`;
+
     static if (hasUDA!(T,Table)) {
         str ~= `
         _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
@@ -268,7 +277,7 @@ string makeInitEntityData(T,F)() {
                 //value 
                 string value = "_data."~memberName;
                 
-                // use member name as the key
+                // Use the field/member name as the key
                 string fieldName = "_fields["~memberName.stringof~"]";
                 static if (is(F == memType) ) {
                     str ~= `
@@ -282,11 +291,13 @@ string makeInitEntityData(T,F)() {
                     static if (hasUDA!(__traits(getMember, T ,memberName), JoinTable))
                             {
                     str ~= `
-                    `~fieldName~` = new EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-                                                    ~(getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,true,`
-                                                    ~(getUDAs!(__traits(getMember, T ,memberName), JoinTable)[0]).stringof~`,`
-                                                    ~(getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0]).stringof~`,`
-                                                    ~(getUDAs!(__traits(getMember, T ,memberName), InverseJoinColumn)[0]).stringof~ `);`;
+                    `~fieldName~` = new EntityFieldManyToManyOwner!(`
+                                    ~ memType.stringof.replace("[]","")
+                                    ~ `,F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
+                                    ~ (getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0]).stringof~`, `~owner~`,true,`
+                                    ~ (getUDAs!(__traits(getMember, T ,memberName), JoinTable)[0]).stringof~`,`
+                                    ~ (getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0]).stringof~`,`
+                                    ~ (getUDAs!(__traits(getMember, T ,memberName), InverseJoinColumn)[0]).stringof~ `);`;
                             }
                             else
                             {
@@ -296,7 +307,11 @@ string makeInitEntityData(T,F)() {
                             }
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-                    string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
+                    static if(is(memType == T)) {
+                        enum string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
+                    } else {
+                        enum string owner = "_data";
+                    }
         str ~= `
         `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
                                     ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~`, `~owner~`);`;
@@ -341,7 +356,7 @@ string makeInitEntityData(T,F)() {
                 else {
                     // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
         str ~= `
-        `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager,`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
+        `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
                 }
 
                 //nullable
