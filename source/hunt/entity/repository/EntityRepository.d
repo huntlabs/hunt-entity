@@ -55,7 +55,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
     }
 
 
-    long count(Specification!T specification)
+    long count(Specification specification)
     {
         mixin(initObjects);
 
@@ -64,6 +64,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         
         Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
         return result.longValue();
+        // return 0;
     }
 
     T find(Condition condition)
@@ -140,7 +141,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-    T[] findAll(Specification!T specification)
+    T[] findAll(Specification specification)
     {
         mixin(initObjects);
 
@@ -171,7 +172,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-    T[] findAll(Specification!T specification , Sort sort)
+    T[] findAll(Specification specification , Sort sort)
     {
         mixin(initObjects);
 
@@ -238,7 +239,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return page;
     }
 
-    Page!T findAll(Specification!T specification, Pageable pageable)
+    Page!T findAll(Specification specification, Pageable pageable)
     {
         mixin(initObjects);
 

@@ -14,7 +14,11 @@ module hunt.entity.criteria.CriteriaQuery;
 import hunt.entity;
 import hunt.logging;
 
-class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F)
+interface ICriteriaQuery {
+
+}
+
+class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F), ICriteriaQuery
 {
     this(CriteriaBuilder criteriaBuilder)
     {

@@ -13,7 +13,7 @@ module hunt.entity.domain.Specification;
 
 import hunt.entity;
 
-interface Specification(T)
+interface Specification
 {
-	Predicate toPredicate(Root!T root, CriteriaQuery!T criteriaQuery, CriteriaBuilder criteriaBuilder);
+	Predicate toPredicate(IRoot root, ICriteriaQuery criteriaQuery, CriteriaBuilder criteriaBuilder);
 }

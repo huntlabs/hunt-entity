@@ -15,7 +15,11 @@ import hunt.entity;
 import hunt.logging;
 import std.traits;
 
-class Root(T : Object, F : Object = T)
+interface IRoot {
+
+}
+
+class Root(T : Object, F : Object = T) : IRoot
 {
     private EntityInfo!(T,F) _entityInfo;
     private CriteriaBuilder _builder;

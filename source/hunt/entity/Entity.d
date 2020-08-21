@@ -11,7 +11,6 @@
  
 module hunt.entity.Entity;
 
-import hunt.validation.DeclDef;
 import hunt.entity;
 import std.string;
 import std.traits;
@@ -19,6 +18,7 @@ import std.traits;
 mixin template MakeModel()
 {
     import hunt.serialization.Common;
+    import hunt.validation;
 
     mixin(makeLazyData);
     mixin(makeLazyLoadList!(typeof(this)));
