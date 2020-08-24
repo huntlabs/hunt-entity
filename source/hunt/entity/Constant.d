@@ -137,7 +137,7 @@ class LazyData {
 
     override string toString()
     {
-        return "(%s , %s)".format(key,value);
+        return "(%s, %s)".format(key,value);
     }
 }
 

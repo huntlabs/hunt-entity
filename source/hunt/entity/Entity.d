@@ -19,6 +19,10 @@ mixin template MakeModel()
 {
     import hunt.serialization.Common;
     import hunt.validation;
+    import hunt.logging.ConsoleLogger;
+    import std.format;
+
+    // pragma(msg, makeLazyData());
 
     mixin(makeLazyData);
     mixin(makeLazyLoadList!(typeof(this)));
@@ -46,22 +50,32 @@ string makeLazyData() {
     @Ignore
     private EntityManager _manager;
 
-    public void setManager(EntityManager manager) {_manager = manager;}
-    public EntityManager getManager() {return _manager;}
+    void setManager(EntityManager manager) {_manager = manager;}
+    EntityManager getManager() {return _manager;}
 
-    public void addLazyData(string key, LazyData data) {
+    void addLazyData(string key, LazyData data) {
         if (data) {
             _lazyDatas[key] = data;
         }
     }
-    public LazyData[string] getAllLazyData() {
+    LazyData[string] getAllLazyData() {
         return _lazyDatas;
     }
-    public LazyData getLazyData(string key ) {
-        import hunt.logging;
-        // logDebug("lazyDatas : %s, get : %s".format(_lazyDatas,key));
-        // logDebug("Datas : %s".format(_lazyDatas[key]));
-        return _lazyDatas[key];
+    LazyData getLazyData(string key ) {
+        
+        version(HUNT_ENTITY_DEBUG) {
+            trace("lazyDatas : %s, get : %s".format(_lazyDatas, key));
+            // logDebug("Datas : %s".format(_lazyDatas[key]));
+        }
+
+        auto itemPtr = key in _lazyDatas;
+        
+        if(itemPtr is null) {
+            warningf("No data found for %s", key);
+            return null;
+        } else {
+            return *itemPtr;
+        }
     }`;
 }
 string makeLazyLoadList(T)() {

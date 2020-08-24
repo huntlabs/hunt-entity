@@ -125,7 +125,7 @@ void main()
     // test_create_eql_by_queryBuilder(em);
     // test_statement(em);
     // test_valid(em);
-    // test_pagination(em);
+    test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
     // test_transaction(em);
@@ -136,7 +136,7 @@ void main()
     // test_EntityRepository_Save(em);
     // test_EntityRepository_Save_with_reserved_word(em);
     // test_EntityRepository_Insert02(em);
-    test_EntityRepository_Count(em);
+    // test_EntityRepository_Count(em);
     // test_EntityRepository_Sum(em);
     // testRepositoryWithTransaction(em);
     // getchar();
@@ -308,12 +308,34 @@ void test_pagination(EntityManager em)
 {
     mixin(DO_TEST);
 
-    auto query = em.createQuery!(UserInfo)(" select a from UserInfo a where a.age > :age order by a.id ",new Pageable(0,2)).setParameter("age",10);
-    auto page = query.getPageResult();
-    logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),page.getSize(),page.getTotalPages(),page.getTotalElements()));
-    foreach(d ; page.getContent())
+    // {
+    //     EqlQuery!UserInfo query = em.createQuery!(UserInfo)(" select a from UserInfo a where a.age > :age order by a.id ",
+    //             new Pageable(0,2)).setParameter("age",0);
+
+    //     Page!UserInfo page = query.getPageResult();
+    //     logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),
+    //             page.getSize(),page.getTotalPages(), page.getTotalElements()));
+
+    //     foreach(d ; page.getContent())
+    //     {
+    //         logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+    //     }
+    // }
+
     {
-        logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+        string queryString = "select a, b from UserInfo a left join AppInfo b on a.id = b.id " ~ 
+            " where a.age > :age order by a.id ";
+        auto query = em.createQuery!(UserInfo, AppInfo)(queryString, new Pageable(0,2))
+            .setParameter("age",10);
+            
+        auto page = query.getPageResult();
+        logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),
+                page.getSize(),page.getTotalPages(),page.getTotalElements()));
+
+        foreach(d ; page.getContent())
+        {
+            logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+        }
     }
 }
 
@@ -336,7 +358,7 @@ void test_count(EntityManager em)
     // Give some warning message.
     string sql = " select count(UserInfo.id) as num from UserInfo a "; // bug
     // sql = " select count(a.id) as num from UserInfo a "; 
-    sql = " select count(*) as num from UserInfo a "; 
+    // sql = " select count(*) as num from UserInfo a "; 
 
     auto query = em.createQuery!(UserInfo)(sql);
     logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
@@ -344,7 +366,7 @@ void test_count(EntityManager em)
     assert(rs.size() > 0);
     Row row = rs.iterator.front();
     long count = row.getLong(0);
-    infof("count: %d", count);
+    warningf("count: %d", count);
 }
 
 void test_transaction(EntityManager em)
@@ -819,111 +841,3 @@ void testJsonSerializationForModel() {
 
 }
 
-
-@Table("material_color")
-class Color :Model{
-    mixin MakeModel;
-
-    @AutoIncrement
-    @PrimaryKey
-    int id;
-
-    string code;
-
-    string title;
-
-    short status;
-
-    @Column("color_system_value")
-    string colorSystemValue;
-
-    @Column("type_id")
-    short typeId;
-
-    string pantone;
-
-    @Column("rgb_value")
-    string rgbValue;
-
-    @Column("cmyk_value")
-    string cmykValue;
-
-    int created;
-
-    int updated;
-
-    int deleted;
-
-    @Column("color_no")
-    string colorNo;
-}
-
-
-@Table("material")
-class Material :Model{
-    mixin MakeModel;
-
-    @AutoIncrement
-    @PrimaryKey
-    int id;
-
-    string code;
-
-    string title;
-
-    short status;
-
-    @Column("common_materials_id")
-    int commonMaterialsId;
-
-    @Column("material_composition_id")
-    int materialCompositionId;
-
-    @Column("material_color_id")
-    int materialColorId;
-
-    @Column("material_technique_id")
-    int materialTechniqueId;
-
-    @Column("resource_status")
-    short resourceStatus;
-
-    string picurl;
-
-    string centent;
-
-    int created;
-
-    int updated;
-
-    int deleted;
-
-    @OneToOne()
-    @JoinColumn("material_color_id","id")
-    Color color;
-
-    // @OneToOne()
-    // @JoinColumn("material_composition_id","id")
-    // Composition composition;
-
-    // @OneToOne()
-    // @JoinColumn("material_technique_id","id")
-    // Technique technique;
-}
-
-
-void test_EntityRepository_Insert02(EntityManager em)
-{
-    mixin(DO_TEST);
-
-    EntityRepository!(Material, int) rep = new EntityRepository!(Material, int)(em);
-
-    Material material = new Material();
-    material.title = "xxxx";
-    material.materialColorId = 123;
-
-    rep.insert(material);
-
-    tracef("new id: %d", material.id);
-    assert(material.id > 0);
-}

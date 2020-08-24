@@ -11,6 +11,7 @@ class IDCard : Model {
     @AutoIncrement @PrimaryKey 
     int id;
 
+    int uid;
 
     string desc;
 
