@@ -79,19 +79,11 @@ class ResultDes(T : Object) {
     }
 
     private string getColumnAsName(string name) {
-        if(_em.getDbOption().isPgsql()) {
-            return EntityExpression.getColumnAsName(name, _tableNameInLower);
-        } else {
-            return EntityExpression.getColumnAsName(name, _tableName);
-        }
+        return EntityExpression.getColumnAsName(name, _tableName);
     }
 
     private string getColumnAsName(string name, string tableName) {
-        if(_em.getDbOption().isPgsql()) {
-            return EntityExpression.getColumnAsName(name, tableName.toLower());
-        } else {
-            return EntityExpression.getColumnAsName(name, tableName);
-        }
+        return EntityExpression.getColumnAsName(name, tableName);
     }    
 
     public R deSerialize(R)(string value) {
@@ -148,7 +140,7 @@ string makeDeSerialize(T)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0) {
 
-        version(HUNT_ENTITY_DEBUG_MORE) {
+        version(HUNT_ENTITY_DEBUG) {
             tracef("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
         }
@@ -158,7 +150,7 @@ string makeDeSerialize(T)() {
         T _data = new T();
         Row row = rows[startIndex];
         string columnAsName;
-        version(HUNT_ENTITY_DEBUG_MORE) logDebugf("rows[%d]: %s", startIndex, row);
+        version(HUNT_ENTITY_DEBUG) logDebugf("rows[%d]: %s", startIndex, row);
 
         Variant columnValue;
         `;
@@ -197,12 +189,14 @@ string makeDeSerialize(T)() {
 
                         columnValue = row.getValue(`~ columnName ~`);
                         if (!columnValue.hasValue()) { // try use columnAsName to get the value
-                            version(HUNT_ENTITY_DEBUG_MORE) warningf("No value for %s.", `~ columnName ~`);
+                            version(HUNT_ENTITY_DEBUG_MORE) {
+                                warningf("No value for %s found. Try %s again.", `~ columnName ~`, columnAsName);
+                            }
                             columnValue = row.getValue(columnAsName);
                         }
-
-                        version(HUNT_ENTITY_DEBUG_MORE) {
-                            if (columnValue.hasValue()) {
+                        
+                        if (columnValue.hasValue()) {
+                            version(HUNT_ENTITY_DEBUG_MORE) {
                                 string value = columnValue.toString();
                                 if(value.length > 128) {
                                     tracef("field: %s, column: %s, type: %s, value: %s", "` 
@@ -214,11 +208,11 @@ string makeDeSerialize(T)() {
                                         ~ columnName ~ `, columnAsName, columnValue.type,` 
                                         ~ ` value.empty() ? "(empty)" : value);
                                 }
-                            } else {
-                                warningf("field: name=%s, type=%s;, column: %s / %s, value: (null)", "` 
-                                    ~ memberName ~ `", "` ~ memType.stringof ~ `", ` ~ columnName 
-                                    ~ `, columnAsName);
                             }
+                        } else {
+                            warningf("field: name=%s, type=%s;, column: %s / %s, value: (null)", "` 
+                                ~ memberName ~ `", "` ~ memType.stringof ~ `", ` ~ columnName 
+                                ~ `, columnAsName);
                         }
                         `;
 
