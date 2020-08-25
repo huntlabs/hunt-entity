@@ -7,7 +7,7 @@ import hunt.entity;
 class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
 
     protected T _value;
-    private F _owner;
+    protected F _owner;
     protected EntityInfo!(T,F) _entityInfo;
     protected EntityManager _manager;
 

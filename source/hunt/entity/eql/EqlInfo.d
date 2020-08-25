@@ -269,9 +269,12 @@ string makeInitEntityData(T,F)() {
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                     string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
+
         str ~= `
-        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
-                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~`, `~owner~`);`;
+        `~ fieldName ~ ` = new EntityFieldOneToOne!(` ~ memType.stringof ~ ", T)(_manager, " ~ memberName.stringof ~
+                    `, _primaryKey, ` ~ columnName ~ ", _tableName, " ~ value ~ ", " ~ 
+                    (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof ~ 
+                    `, ` ~ owner ~ `);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
         //             static if (is(T==F)) {
@@ -338,7 +341,7 @@ string makeDeSerialize(T,F)() {
 
         import std.variant;
 
-        T _data = new T();
+        // T _data = new T();
 
         Row row = rows[startIndex];
         string columnAsName;
@@ -401,13 +404,17 @@ string makeDeSerialize(T,F)() {
         auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));
         _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
         _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
+
                     }
                 }
             }
         }
     }
+    // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-25T15:47:21+08:00
+    // More tests needed
     str ~= `
-        return Common.sampleCopy(_data);
+        // return Common.sampleCopy(_data);
+        return _data;
     }`;
     return str;
 }

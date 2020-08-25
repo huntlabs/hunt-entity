@@ -48,13 +48,12 @@ class EntityInfo(T : Object, F : Object = T) {
 
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
-    // pragma(msg,makeInitEntityData!(T,F));
+    // pragma(msg,makeInitEntityData!(T,F)());
     // pragma(msg,makeDeSerialize!(T,F));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
 
-    // pragma(msg, makeInitEntityData!(T,F)());
 
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
@@ -72,6 +71,7 @@ class EntityInfo(T : Object, F : Object = T) {
         else {
             _data = t;
         }
+        
         static if (is(T == F)){
             _owner = _data;
         }
@@ -392,15 +392,15 @@ string makeDeSerialize(T,F)() {
 
     string str = `
 
-    public T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
+    T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
-            tracef("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
+            infof("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
         }
 
         import std.variant;
 
-        T _data = new T();
+        // T _data = new T();
         _data.setManager(_manager);
         Row row = rows[startIndex];
         string columnAsName;
@@ -432,9 +432,10 @@ string makeDeSerialize(T,F)() {
                     columnAsName = `~memberName~`.getColumnAsName();
                     columnValue = row.getValue(columnAsName);
                     version(HUNT_ENTITY_DEBUG_MORE) {
-                        tracef("A column: %s = %s, As Name: %s", `~memberName~`.getColumnName(), 
+                        tracef("A column: %s = %s; The AsName: %s", `~memberName~`.getColumnName(), 
                             columnValue, columnAsName);
                     }
+
                     if(columnValue.type == typeid(null)) {
                         version(HUNT_DEBUG) {
                             warningf("The value of column [%s] is null. So use its default.", "` 
@@ -450,40 +451,38 @@ string makeDeSerialize(T,F)() {
                         `~memberName~`.deSerialize!(`~memType.stringof~`)(cvalue, _data.`~memberName~`);
                     }
                     `;
-                }
-                else {
+                } else {
                     static if(is(F == memType)) {
+
                         str ~=`
-                        _data.`~memberName~` = _owner;`;
+                        warningf("set ` ~ memberName ~ ` to {Type:%s, isNull: %s}", typeid(_owner), _owner is null);
+                        _data.` ~ memberName ~ ` = _owner;`;
                     }
                     else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
                         str ~=`
                         auto `~memberName~` = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(this.`~memberName~`));
                         _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                         _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
-                    }
-                    else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
+
+                    } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
                         str ~=`
                         auto `~memberName~` = (cast(EntityFieldManyToOne!(`~memType.stringof~`))(this.`~memberName~`));
                         _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                         _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
-                    }
-                    else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
+
+                    } else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
                         str ~=`
                         auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));
                         _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                         _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
-                    }
-                    else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                        static if ( memType.stringof.replace("[]","") == F.stringof)
-                        {
+
+                    } else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
+                        static if ( memType.stringof.replace("[]","") == F.stringof) {
                             str ~=`
                                 auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(this.`~memberName~`));
                                 _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                                 _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
-                        }
-                        else
-                        {
+                        } else {
                             str ~=`
                                 auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(this.`~memberName~`));
                                 _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
@@ -495,8 +494,12 @@ string makeDeSerialize(T,F)() {
             }
         }
     }
+
+    // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-25T15:22:46+08:00
+    // More tests needed
     str ~= `
-        return Common.sampleCopy(_data);
+        // return Common.sampleCopy(_data);
+        return _data;
     }`;
 
     return str;

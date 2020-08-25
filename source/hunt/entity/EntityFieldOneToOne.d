@@ -25,9 +25,8 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     private string _primaryKey;
     private bool _isMappedBy;
 
-
-
-    this(EntityManager manager, string fieldName, string primaryKey, string columnOrjoin, string tableName, T fieldValue, OneToOne mode, F owner) {
+    this(EntityManager manager, string fieldName, string primaryKey, string columnOrjoin, 
+            string tableName, T fieldValue, OneToOne mode, F owner) {
         string mappedBy = mode.mappedBy;
 
         _mode = mode;  
@@ -75,7 +74,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         initJoinData(tableName);
     }
 
-    override public string getSelectColumn() {
+    override string getSelectColumn() {
         if (_isMappedBy)
             return "";
         else 
@@ -99,14 +98,15 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
     }
 
-    public T deSerialize(Row row) {
+    T deSerialize(Row row) {
+        tracef("For %s from a row, id: %d", T.stringof, _owner.id);
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
         return _entityInfo.deSerialize([row], count);        
     }
 
-    public LazyData getLazyData(Row row) {
+    LazyData getLazyData(Row row) {
         LazyData ret;
 
         string primaryKeyName = _entityInfo.getPrimaryKeyString();
@@ -137,7 +137,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         return ret;
     }
 
-    public void setMode(OneToOne mode) {
+    void setMode(OneToOne mode) {
         _mode = mode;
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }

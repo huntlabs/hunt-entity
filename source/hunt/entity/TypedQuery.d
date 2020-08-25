@@ -24,8 +24,7 @@ import std.variant;
 //     import hunt.trace.Span;
 // }
 
-class TypedQuery(T : Object, F : Object = T)
-{
+class TypedQuery(T, F = T) if(is(T : Object) && is(F : Object)) {
 
     private string _sqlSting;
     private CriteriaQuery!(T, F) _query;
@@ -37,8 +36,7 @@ class TypedQuery(T : Object, F : Object = T)
     //     private string[string] _tags;
     // }
 
-    this(CriteriaQuery!(T, F) query, EntityManager manager)
-    {
+    this(CriteriaQuery!(T, F) query, EntityManager manager) {
         _query = query;
         _manager = manager;
     }
@@ -64,11 +62,11 @@ class TypedQuery(T : Object, F : Object = T)
         string sql = _query.toString();
         Statement stmt = _manager.getSession().prepare(sql);
         RowSet rowSet = stmt.query();
-        version(HUNT_ENTITY_DEBUG) {
+        version (HUNT_ENTITY_DEBUG) {
             infof("The result columns: %s", rowSet.columnsNames());
         }
 
-        if(rowSet.size() == 0) {
+        if (rowSet.size() == 0) {
             warning("The result is empty");
             return R.init;
         }
@@ -76,51 +74,45 @@ class TypedQuery(T : Object, F : Object = T)
         // First row and first column
 
         Row firstRow = rowSet.firstRow();
-        if(firstRow.size() == 0) {
+        if (firstRow.size() == 0) {
             warning("The column in the row is empty.");
             return R.init;
         }
 
         Variant singleValue = firstRow.getValue(0);
-        if(singleValue.hasValue())
+        if (singleValue.hasValue())
             return singleValue.get!R();
-        else 
+        else
             return R.init;
     }
 
-    Object getSingleResult()
-    {
+    Object getSingleResult() {
         Object[] ret = _getResultList();
         if (ret.length == 0)
             return null;
         return ret[0];
     }
 
-    T[] getResultList()
-    {
+    T[] getResultList() {
         Object[] ret = _getResultList();
-        if (ret.length == 0)
-        {
+        if (ret.length == 0) {
             return null;
         }
         return cast(T[]) ret;
     }
 
-    TypedQuery!(T, F) setMaxResults(int maxResult)
-    {
+    TypedQuery!(T, F) setMaxResults(int maxResult) {
         _query.getQueryBuilder().limit(maxResult);
         return this;
     }
 
-    TypedQuery!(T, F) setFirstResult(int startPosition)
-    {
+    TypedQuery!(T, F) setFirstResult(int startPosition) {
         _query.getQueryBuilder().offset(startPosition);
         return this;
     }
 
-    private Object[] _getResultList()
-    {
-        auto sql = _query.toString();
+    private Object[] _getResultList() {
+        string sql = _query.toString();
         // version (WITH_HUNT_TRACE)
         // {
         //     beginTrace("TypeQuery _getResultList");
@@ -132,7 +124,7 @@ class TypedQuery(T : Object, F : Object = T)
         // }
         Statement stmt = _manager.getSession().prepare(sql);
         RowSet res = stmt.query();
-        version(HUNT_ENTITY_DEBUG) {
+        version (HUNT_ENTITY_DEBUG) {
             infof("The result columns: %s", res.columnsNames());
         }
 
@@ -141,25 +133,18 @@ class TypedQuery(T : Object, F : Object = T)
             rows ~= value;
         }
 
-        
         long count = -1;
         Object[] ret;
-        foreach (size_t k, Row v; rows)
-        {
-            Object t = _query.getRoot().deSerialize(rows, count, cast(int) k);
-            if (t is null)
-            {
+        Root!(T, F) r = _query.getRoot();
+        foreach (size_t k, Row v; rows) {
+            T t = r.deSerialize(rows, count, cast(int) k);
+            if (t is null) {
                 warningf("t is null, count=%d", count);
-                if (count != -1)
-                {
+                if (count != -1) {
                     ret ~= new Long(count);
-                }
-                else
-                {
+                } else {
                     throw new EntityException("getResultList has an null data");
                 }
-            } else {
-                warning(typeid(t));
             }
             ret ~= t;
         }

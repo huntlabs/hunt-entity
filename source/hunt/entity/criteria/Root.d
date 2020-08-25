@@ -8,7 +8,7 @@
  * Licensed under the Apache-2.0 License.
  *
  */
- 
+
 module hunt.entity.criteria.Root;
 
 import hunt.entity;
@@ -19,46 +19,54 @@ interface IRoot {
 
 }
 
-class Root(T : Object, F : Object = T) : IRoot
-{
-    private EntityInfo!(T,F) _entityInfo;
+class Root(T : Object, F: Object = T) : IRoot {
+    private EntityInfo!(T, F) _entityInfo;
     private CriteriaBuilder _builder;
     JoinSqlBuild[] _joins;
     private bool _enableJoin = false;
 
-    public this(CriteriaBuilder builder, T t = null, F owner = null) {
+    this(CriteriaBuilder builder, T t = null, F owner = null) {
         _builder = builder;
-        _entityInfo = new EntityInfo!(T,F)(_builder.getManager(), t, owner);
+        _entityInfo = new EntityInfo!(T, F)(_builder.getManager(), t, owner);
     }
 
-    public string getEntityClassName() {
+    string getEntityClassName() {
         return _entityInfo.getEntityClassName();
     }
-    public string getTableName() {
+
+    string getTableName() {
         return _entityInfo.getTableName();
     }
-    public EntityInfo!(T,F) opDispatch(string name)() {
+
+    EntityInfo!(T, F) opDispatch(string name)() {
         if (getEntityClassName() != name)
-            throw new EntityException("Cannot find entityinfo by name : " ~ name);	
+            throw new EntityException("Cannot find entityinfo by name : " ~ name);
         return _entityInfo;
     }
-    public EntityFieldInfo get(string field) {
+
+    EntityFieldInfo get(string field) {
         return _entityInfo.getSingleField(field);
     }
-    public T deSerialize(Row[] rows, ref long count, int startIndex) {
+
+    T deSerialize(Row[] rows, ref long count, int startIndex) {
         return _entityInfo.deSerialize(rows, count, startIndex);
     }
-    public EntityFieldInfo getPrimaryField() {
+
+    EntityFieldInfo getPrimaryField() {
         return _entityInfo.getPrimaryField();
     }
 
-    public EntityInfo!(T,F) getEntityInfo() {return _entityInfo;}
+    EntityInfo!(T, F) getEntityInfo() {
+        return _entityInfo;
+    }
 
-    public JoinSqlBuild[] getJoins() {return _joins;}
+    JoinSqlBuild[] getJoins() {
+        return _joins;
+    }
 
-    public Join!(T,P) join(P)(EntityFieldInfo info, JoinType joinType = JoinType.INNER) {
+    Join!(T, P) join(P)(EntityFieldInfo info, JoinType joinType = JoinType.INNER) {
 
-        Join!(T,P) ret = new Join!(T,P)(_builder, info, this, joinType);
+        Join!(T, P) ret = new Join!(T, P)(_builder, info, this, joinType);
         JoinSqlBuild data = new JoinSqlBuild();
         data.tableName = ret.getTableName();
         data.joinWhere = ret.getJoinOnString();
@@ -69,39 +77,42 @@ class Root(T : Object, F : Object = T) : IRoot
 
         return ret;
     }
-    
-    public string[] getAllSelectColumn() {
+
+    string[] getAllSelectColumn() {
         import std.algorithm;
+
         string[] ret;
-        foreach(EntityFieldInfo value; _entityInfo.getFields()) {
+        foreach (EntityFieldInfo value; _entityInfo.getFields()) {
             string name = value.getSelectColumn();
-            version(HUNT_ENTITY_DEBUG_MORE) {
-                infof("FileldName: %s, JoinPrimaryKey: %s, joinColumn: %s, selectColumn: %s, ",  
-                    value.getFieldName(), value.getJoinPrimaryKey(), value.getJoinColumn(), name);
+            version (HUNT_ENTITY_DEBUG_MORE) {
+                infof("FileldName: %s, JoinPrimaryKey: %s, joinColumn: %s, selectColumn: %s, ",
+                        value.getFieldName(), value.getJoinPrimaryKey(),
+                        value.getJoinColumn(), name);
             }
-            if(ret.canFind(name)) {
-                version(HUNT_DEBUG) warningf("duplicated column: %s", name);
+
+            if (ret.canFind(name)) {
+                version (HUNT_DEBUG)
+                    warningf("duplicated column: %s", name);
                 continue;
             }
+            
             if (name != "") {
                 ret ~= name;
             }
         }
-        return ret;        
+        return ret;
     }
 
-    public Root!(T, F) autoJoin() {
+    Root!(T, F) autoJoin() {
         // logDebug("#### join Fields : ",_entityInfo.getFields());
-        foreach(value; _entityInfo.getFields()) {
-            if (value.getJoinSqlData() && (_enableJoin || value.isEnableJoin()))
-                // logDebug("** join sql : ",value.getJoinSqlData());
-                _joins ~= value.getJoinSqlData(); 
+        foreach (value; _entityInfo.getFields()) {
+            if (value.getJoinSqlData() && (_enableJoin || value.isEnableJoin())) // logDebug("** join sql : ",value.getJoinSqlData());
+                _joins ~= value.getJoinSqlData();
         }
         return this;
     }
 
-    public void setEnableJoin(bool flg)
-    {
+    void setEnableJoin(bool flg) {
         _enableJoin = flg;
     }
 
