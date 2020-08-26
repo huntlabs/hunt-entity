@@ -57,17 +57,21 @@ class EntityFieldManyToOne(T : Object) : EntityFieldObject!(T,T) {
 
     public T deSerialize(Row row) {
         if (_mode.fetch == FetchType.LAZY)
-            return null;
+            return T.init;
         long count = -1;
-        return _entityInfo.deSerialize([row], count, 0, true);        
+        return _entityInfo.deSerialize([row], count, 0, null, true);        
     }
 
     public void setMode(ManyToOne mode) {
         _mode = mode;
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
+    
+    override FetchType fetchType() {
+        return _mode.fetch;
+    }
 
-    public LazyData getLazyData(Row row) {
+    override LazyData getLazyData(Row row) {
         string name = EntityExpression.getColumnAsName(_joinColumn, getTableName());
         Variant v = row.getValue(name);
         if(!v.hasValue()) {

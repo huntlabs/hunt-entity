@@ -15,7 +15,7 @@ import hunt.entity;
 import std.format;
 import std.variant;
 
-class EntityFieldInfo : EntityExpression
+abstract class EntityFieldInfo : EntityExpression
 {
     protected string _joinColumn;
     protected string _inverseJoinColumn;
@@ -54,8 +54,9 @@ class EntityFieldInfo : EntityExpression
 
     bool isMainMapped() {return _isMainMapped;}
 
-    deprecated("Using getFieldName instead.")
-    string getFileldName() {return _fieldName;}
+    // deprecated("Using getFieldName instead.")
+    // string getFileldName() {return _fieldName;}
+
     string getFieldName() {return _fieldName;}
     string getJoinColumn() {return _joinColumn;}
     string getInverseJoinColumn() {return _inverseJoinColumn;}
@@ -69,6 +70,8 @@ class EntityFieldInfo : EntityExpression
     void setEnableJoin(bool en) { _enableJoin = en;}
 
     Variant getColumnFieldData() {return _columnFieldData;}
+
+    abstract bool isAggregateType();
 
     override string toString() {
         return format("isPrimary: %s, TableName:%s, FileldName: %s, ColumnName: %s, JoinTable: %s, JoinColumn: %s, ", 

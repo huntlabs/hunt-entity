@@ -137,7 +137,7 @@ class TypedQuery(T, F = T) if(is(T : Object) && is(F : Object)) {
         Object[] ret;
         Root!(T, F) r = _query.getRoot();
         foreach (size_t k, Row v; rows) {
-            T t = r.deSerialize(rows, count, cast(int) k);
+            T t = r.deSerialize(rows, count, cast(int) k, null);
             if (t is null) {
                 warningf("t is null, count=%d", count);
                 if (count != -1) {

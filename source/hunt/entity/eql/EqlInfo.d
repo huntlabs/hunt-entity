@@ -341,7 +341,9 @@ string makeDeSerialize(T,F)() {
 
         import std.variant;
 
-        // T _data = new T();
+        T _data = new T();
+        bool isObjectDeserialized = false;
+        bool isMemberDeserialized = false;
 
         Row row = rows[startIndex];
         string columnAsName;
@@ -365,6 +367,7 @@ string makeDeSerialize(T,F)() {
             static if (!isFunction!(memType)) {
                 static if (isBasicType!memType || isSomeString!memType) {
         str ~=`
+        isMemberDeserialized = false;
         auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
         columnAsName = `~memberName~`.getColumnAsName();
         columnName = `~memberName~`.getColumnName();
@@ -378,11 +381,23 @@ string makeDeSerialize(T,F)() {
                 columnValue, columnAsName);
         }
         if (columnValue.hasValue()) {
-            `~memberName~`.deSerialize!(`~memType.stringof~`)(columnValue.toString(), _data.`~memberName~`);
+            string cvalue = columnValue.toString();
+            version(HUNT_ENTITY_DEBUG_MORE) { 
+                tracef("field: name=%s, type=%s; column: name=%s, type=%s; value: %s", "` 
+                            ~ memberName ~ `", "` ~ memType.stringof ~ `", columnAsName, columnValue.type,` 
+                            ~ ` cvalue.empty() ? "(empty)" : cvalue);
+            }
+            _data.`~memberName~` = `~memberName~`.deSerialize!(` ~ 
+                memType.stringof ~ `)(cvalue, isMemberDeserialized);
+                
+            if(isMemberDeserialized) isObjectDeserialized = true;
+        }
+        
+        version(HUNT_ENTITY_DEBUG) {
+            warningf("member: `~memberName~`, isDeserialized: %s", isMemberDeserialized);
         }
         `;
-                }
-                else {
+                } else {
                     static if(is(F == memType)) {
         str ~=`
         _data.`~memberName~` = _owner;`;
@@ -413,8 +428,20 @@ string makeDeSerialize(T,F)() {
     // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-25T15:47:21+08:00
     // More tests needed
     str ~= `
+        version(HUNT_ENTITY_DEBUG) {
+            infof("Object: ` ~ T.stringof ~`, isDeserialized: %s",  isObjectDeserialized);
+        }
+
         // return Common.sampleCopy(_data);
-        return _data;
+        // return _data;
+
+        if(isObjectDeserialized) {
+            _data.loadLazyMembers();
+            // return Common.sampleCopy(_data);
+            return _data;
+        } else {
+            return T.init;
+        }        
     }`;
     return str;
 }

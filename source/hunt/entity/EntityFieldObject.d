@@ -4,7 +4,14 @@ module hunt.entity.EntityFieldObject;
 
 import hunt.entity;
 
-class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
+interface IEntityFieldObject {
+    LazyData getLazyData(Row row);
+
+    FetchType fetchType();
+}
+
+
+class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo, IEntityFieldObject {
 
     protected T _value;
     protected F _owner;
@@ -19,4 +26,16 @@ class EntityFieldObject(T : Object, F : Object) : EntityFieldInfo {
         _entityInfo = new EntityInfo!(T,F)(_manager, fieldValue, owner);
         _typeInfo = typeid(T);
     }   
+
+    override bool isAggregateType() {
+        return true;
+    }
+    
+    FetchType fetchType() {
+        return FetchType.LAZY;
+    }
+
+    LazyData getLazyData(Row row) {
+        return null;
+    }
 }

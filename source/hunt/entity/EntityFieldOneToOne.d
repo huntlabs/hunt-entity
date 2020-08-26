@@ -99,14 +99,14 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
     }
 
     T deSerialize(Row row) {
-        tracef("For %s from a row, id: %d", T.stringof, _owner.id);
+        tracef("For %s from a row, owner is null: %s", T.stringof, _owner is null);
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
-        return _entityInfo.deSerialize([row], count);        
+        return _entityInfo.deSerialize([row], count, 0);        
     }
 
-    LazyData getLazyData(Row row) {
+    override LazyData getLazyData(Row row) {
         LazyData ret;
 
         string primaryKeyName = _entityInfo.getPrimaryKeyString();
@@ -142,4 +142,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
+    override FetchType fetchType() {
+        return _mode.fetch;
+    }
 }

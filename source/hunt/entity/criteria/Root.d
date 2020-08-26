@@ -48,8 +48,8 @@ class Root(T : Object, F: Object = T) : IRoot {
         return _entityInfo.getSingleField(field);
     }
 
-    T deSerialize(Row[] rows, ref long count, int startIndex) {
-        return _entityInfo.deSerialize(rows, count, startIndex);
+    T deSerialize(Row[] rows, ref long count, int startIndex, F owner) {
+        return _entityInfo.deSerialize(rows, count, startIndex, owner);
     }
 
     EntityFieldInfo getPrimaryField() {

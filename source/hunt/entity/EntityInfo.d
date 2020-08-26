@@ -80,7 +80,8 @@ class EntityInfo(T : Object, F : Object = T) {
         }
         _manager = manager;
         if (_manager) {
-            _data.setManager(_manager);
+            if(_data !is null)
+                _data.setManager(_manager);
             _tablePrefix = _manager.getPrefix();
         }
         initEntityData();
@@ -142,7 +143,7 @@ class EntityInfo(T : Object, F : Object = T) {
         return str;
     }
 
-    public EntityFieldInfo opDispatch(string name)() 
+    EntityFieldInfo opDispatch(string name)() 
     {
         EntityFieldInfo info = _fields.get(name,null);
         if (info is null)
@@ -313,8 +314,9 @@ string makeInitEntityData(T,F)() {
                         enum string owner = "_data";
                     }
         str ~= `
-        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof~`, _primaryKey, `~columnName~`, _tableName, `~value~`, `
-                                    ~(getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof~`, `~owner~`);`;
+        `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof ~ 
+                    `, _primaryKey, `~columnName~`, _tableName, `~value~`, `
+                                    ~ (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof ~ `, `~owner ~ `);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
                     static if (is(T==F)) {
@@ -392,7 +394,7 @@ string makeDeSerialize(T,F)() {
 
     string str = `
 
-    T deSerialize(Row[] rows, ref long count, int startIndex = 0, bool isFromManyToOne = false) {
+    T deSerialize(Row[] rows, ref long count, int startIndex = 0, F owner = null,  bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
             infof("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
@@ -400,7 +402,10 @@ string makeDeSerialize(T,F)() {
 
         import std.variant;
 
-        // T _data = new T();
+
+        T _data = new T();
+        bool isObjectDeserialized = false;
+        bool isMemberDeserialized = false;
         _data.setManager(_manager);
         Row row = rows[startIndex];
         string columnAsName;
@@ -428,6 +433,7 @@ string makeDeSerialize(T,F)() {
                 }
                 static if (isBasicType!memType || isSomeString!memType) {
                     str ~=`
+                    isMemberDeserialized = false;
                     auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
                     columnAsName = `~memberName~`.getColumnAsName();
                     columnValue = row.getValue(columnAsName);
@@ -448,21 +454,35 @@ string makeDeSerialize(T,F)() {
                                         ~ memberName ~ `", "` ~ memType.stringof ~ `", columnAsName, columnValue.type,` 
                                         ~ ` cvalue.empty() ? "(empty)" : cvalue);
                         }
-                        `~memberName~`.deSerialize!(`~memType.stringof~`)(cvalue, _data.`~memberName~`);
+                        _data.`~memberName~` = `~memberName~`.deSerialize!(` ~ 
+                            memType.stringof ~ `)(cvalue, isMemberDeserialized);
+
+                        if(isMemberDeserialized) isObjectDeserialized = true;
+                    }
+
+                    version(HUNT_ENTITY_DEBUG) {
+                        warningf("member: `~memberName~`, isDeserialized: %s", isMemberDeserialized);
                     }
                     `;
                 } else {
                     static if(is(F == memType)) {
 
                         str ~=`
-                        warningf("set ` ~ memberName ~ ` to {Type:%s, isNull: %s}", typeid(_owner), _owner is null);
+                        version(HUNT_ENTITY_DEBUG) {
+                            warningf("set [` ~ memberName ~ 
+                                `] to the owner {Type: %s, isNull: %s}", typeid(_owner), _owner is null);
+                        }
+
                         _data.` ~ memberName ~ ` = _owner;`;
                     }
                     else static if (isArray!memType && hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
+                        str ~= `warning("dddddd");`;
                         str ~=`
                         auto `~memberName~` = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(this.`~memberName~`));
-                        _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
+                        _data.addLazyData("`~memberName~`", `~memberName~`.getLazyData(rows[startIndex]));
                         _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+
+                        str ~= `warningf("ssss=>%s", _data.cars is null);`;
 
                     } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)){
                         str ~=`
@@ -495,11 +515,22 @@ string makeDeSerialize(T,F)() {
         }
     }
 
+
+
     // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-25T15:22:46+08:00
     // More tests needed
     str ~= `
-        // return Common.sampleCopy(_data);
-        return _data;
+        version(HUNT_ENTITY_DEBUG) {
+            infof("Object: ` ~ T.stringof ~`, isDeserialized: %s",  isObjectDeserialized);
+        }
+
+        if(isObjectDeserialized) {
+            _data.loadLazyMembers();
+            // return Common.sampleCopy(_data);
+            return _data;
+        } else {
+            return T.init;
+        }
     }`;
 
     return str;

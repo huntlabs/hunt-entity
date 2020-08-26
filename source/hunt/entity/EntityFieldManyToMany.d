@@ -108,7 +108,9 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
     public string getPrimaryKey() {return _primaryKey;}
     public ManyToMany getMode() {return _mode;}
 
-
+    override FetchType fetchType() {
+        return _mode.fetch;
+    }
 
     public T[] deSerialize(Row[] rows, int startIndex, bool isFromManyToOne) {
         T[] ret;
@@ -172,7 +174,7 @@ class EntityFieldManyToMany(T : Object, F : Object = T,string MAPPEDBY = "") : E
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
-    public LazyData getLazyData(Row row) {
+    override LazyData getLazyData(Row row) {
         logDebug("--- MappedBy : %s , row : %s ".format(_mode.mappedBy, row));
         string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
         Variant v = row.getValue(name);

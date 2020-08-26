@@ -22,11 +22,12 @@ mixin template MakeModel()
     import hunt.logging.ConsoleLogger;
     import std.format;
 
-    // pragma(msg, makeLazyData());
+    // pragma(msg, makeGetFunction!(typeof(this)));
 
-    mixin(makeLazyData);
-    mixin(makeLazyLoadList!(typeof(this)));
-    mixin(makeLazyLoadSingle!(typeof(this)));
+    mixin MakeLazyData;
+
+    mixin MakeLazyLoadList!(typeof(this));
+    mixin MakeLazyLoadSingle!(typeof(this));
     mixin(makeGetFunction!(typeof(this)));
     mixin MakeValid;
     /*  
@@ -41,9 +42,7 @@ mixin template MakeModel()
     // }
 }
 
-
-string makeLazyData() {
-    return `
+mixin template MakeLazyData() {
     @Ignore
     private LazyData[string] _lazyDatas;
 
@@ -58,9 +57,11 @@ string makeLazyData() {
             _lazyDatas[key] = data;
         }
     }
+
     LazyData[string] getAllLazyData() {
         return _lazyDatas;
     }
+
     LazyData getLazyData(string key ) {
         
         version(HUNT_ENTITY_DEBUG) {
@@ -76,15 +77,16 @@ string makeLazyData() {
         } else {
             return *itemPtr;
         }
-    }`;
+    }    
 }
-string makeLazyLoadList(T)() {
-    return `
+
+mixin template MakeLazyLoadList(T) {
+
     private R[] lazyLoadList(R)(LazyData data , bool manyToMany = false , string mapped = "") {
         import hunt.logging;
         // logDebug("lazyLoadList ETMANAGER : ",_manager);
         auto builder = _manager.getCriteriaBuilder();
-        auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
+        auto criteriaQuery = builder.createQuery!(R, T);
        
         // logDebug("****LoadList( %s , %s , %s )".format(R.stringof,data.key,data.value));
 
@@ -116,60 +118,102 @@ string makeLazyLoadList(T)() {
             return ret;
         }
         
-    }`;
+    }    
 }
-string makeLazyLoadSingle(T)() {
-    return `
+
+
+mixin template MakeLazyLoadSingle(T) {
+
+    import hunt.logging.ConsoleLogger;
+
     private R lazyLoadSingle(R)(LazyData data) {
+        if(data is null) {
+            warning("data is null");
+        }
         auto builder = _manager.getCriteriaBuilder();
-        auto criteriaQuery = builder.createQuery!(R,`~T.stringof~`);
+        auto criteriaQuery = builder.createQuery!(R, T);
         auto r = criteriaQuery.from(null, this);
         auto p = builder.lazyEqual(r.get(data.key), data.value, false);
         auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
         R ret = cast(R)(query.getSingleResult());
         ret.setManager(_manager);
         return ret;
-    }`;
+    }    
 }
+
 string makeGetFunction(T)() {
     string str;
-    foreach(memberName; __traits(derivedMembers, T)) {
+    string allGetMethods;
+
+    foreach(memberName; __traits(derivedMembers, T)) { 
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            
             alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!isFunction!(memType)) {
-                static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne) || hasUDA!(__traits(getMember, T ,memberName), OneToMany) ||
-                            hasUDA!(__traits(getMember, T ,memberName), ManyToOne) || hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-    str ~= `
-    public `~memType.stringof~` get`~capitalize(memberName)~`() {`;
+            static if (!isFunction!(memType)) {{
+
+                static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
+                    enum bool lazyLoading = true;
+                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0].fetch;
+                } else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
+                    enum bool lazyLoading = true;
+                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0].fetch;
+                } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
+                    enum bool lazyLoading = true;
+                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0].fetch;
+                } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
+                    enum bool lazyLoading = true;
+                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].fetch;
+                } else {
+                    enum bool lazyLoading = false;
+                }
+
+                static if (lazyLoading) {
+                    static if(fetchType == FetchType.EAGER) {
+                        allGetMethods ~= `
+                            if(` ~ memberName ~ ` is null) {
+                                info("loading data for: ` ~ memberName ~ `");
+                                get` ~ capitalize(memberName) ~ `();
+                            }
+                        `;
+                    }
+
+                    str ~= `
+                    public `~memType.stringof ~ " get" ~ capitalize(memberName) ~ `() {`;
+                    
                     static if (isArray!memType) {
                         string mappedBy;
-                       static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany))
-                       {
-                           str ~= ` bool manyToMany = true ;`;
-                           
-                           mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
-                       }
-                       else
-                       {
-                           str ~= ` bool manyToMany = false ;`;
-                       }
+                    static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
+                        str ~= "\n bool manyToMany = true ;";
+                        
+                        mappedBy = "\"" ~ getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy ~ "\"";
+                    } else {
+                        str ~= "\n bool manyToMany = false ;";
+                    }
 
-                        str ~= `
-                        if (`~memberName~`.length == 0)
-                            `~memberName~` = lazyLoadList!(`~memType.stringof.replace("[]","")~`)(getLazyData("`~memberName~`"),manyToMany,`~mappedBy~`);`;
+                    str ~= "\n" ~ memberName ~ ` = lazyLoadList!(` ~ memType.stringof.replace("[]","") ~ 
+                                `)(getLazyData("`~memberName~`"), manyToMany, `~mappedBy~`);`;
+                    } else {
+                        str ~= "\n" ~ memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
                     }
-                    else {
-                            str ~= `
-                            if (`~memberName~` is null)
-                                `~memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
-                    }
-        str ~= `
-        return `~memberName~`;
-    }`;
+
+                    str ~= `
+                        return `~memberName~`;
+                    }`;
                 }
-            }
+            }}
         }
     }
+
+    // Try to load the other members which is not loaed in current mapping.
+    
+    str ~= "\n";
+    str ~= `
+    void loadLazyMembers() {
+        infof("Try to load data for the other object members in %s", typeid(` ~ T.stringof ~ `));
+        ` ~ allGetMethods ~ `
+    }
+    `;
+
     return str;
 }  
 

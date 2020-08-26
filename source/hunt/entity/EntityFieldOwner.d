@@ -14,7 +14,10 @@ class EntityFieldOwner : EntityFieldInfo {
     override public string getSelectColumn() {
         return "";
     }
-
+    
+    override bool isAggregateType() {
+        return true;
+    }
 }
 
 

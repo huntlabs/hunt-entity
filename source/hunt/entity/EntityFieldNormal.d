@@ -13,6 +13,8 @@ module hunt.entity.EntityFieldNormal;
 
 import hunt.entity;
 
+import hunt.logging.ConsoleLogger;
+
 import std.conv;
 import std.math;
 import std.variant;
@@ -55,22 +57,38 @@ class EntityFieldNormal(T) : EntityFieldInfo {
         // }
     }
 
-    public void deSerialize(R)(string value, ref R r) {
+    override bool isAggregateType() {
+        return false;
+    }
+
+    R deSerialize(R)(string value, ref bool flag) {
         if (value.length == 0) {
-            return;
+            return R.init;
         }
         if (value.length == 1 && cast(byte)(value[0]) == 0) {
-            return;
+            return R.init;
         }
+
+        R r;
         static if (is(R==bool)) {
             if( value[0] == 1 || value[0] == 't')
                 r = true;
             else 
                 r = false;
+            flag = true;
+        } else {
+            try {
+                r = to!R(value);
+                flag = true;
+            } catch(Exception ex) {
+                warning(ex.msg);
+                version(HUNT_DEBUG) {
+                    warning(ex);
+                }
+            }
         }
-        else {
-            r = to!R(value);
-        }
+
+        return r;
     }
 
 }

@@ -54,7 +54,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         // logDebug("one to many join sql : %s ".format(_joinSqlData));
     }
 
-    override public string getSelectColumn() {
+    override string getSelectColumn() {
         return "";
     }
 
@@ -74,25 +74,26 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         _findString ~= " FROM "~_entityInfo.getTableName()~" WHERE " ~ _entityInfo.getTableName() ~"."~_joinColumn~" = ";
     }
 
-    public string getPrimaryKey() {return _primaryKey;}
-    public OneToMany getMode() {return _mode;}
+    string getPrimaryKey() {return _primaryKey;}
+    OneToMany getMode() {return _mode;}
+
+    override FetchType fetchType() {
+        return _mode.fetch;
+    }    
 
 
+    T[] deSerialize(Row[] rows, int startIndex, bool isFromManyToOne) {
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("FetchType: %s, isFromManyToOne: %s", _mode.fetch, isFromManyToOne);
+        }
 
-    public T[] deSerialize(Row[] rows, int startIndex, bool isFromManyToOne) {
-        T[] ret;
         if (_mode.fetch == FetchType.LAZY)
-            return ret;
+            return null;
+
+        T[] ret;
         T singleRet;
         long count = -1;
-        if (!isFromManyToOne) {
-            foreach(value; rows) {
-                singleRet = _entityInfo.deSerialize([value], count);
-                if (singleRet)
-                    ret ~= Common.sampleCopy(singleRet);
-            }
-        }
-        else {
+        if (isFromManyToOne) {
             string joinValue = getJoinKeyValue(rows[startIndex]);
             if (joinValue == "")
                 return ret;
@@ -100,6 +101,14 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
             foreach(value; rets) {
                 ret ~= Common.sampleCopy(value);
             }
+        } else {
+            warning("11111");
+            foreach(value; rows) {
+                singleRet = _entityInfo.deSerialize([value], count);
+                if (singleRet !is null)
+                    ret ~= Common.sampleCopy(singleRet);
+            }
+            warning("222222");
         }
         return ret;
     }
@@ -135,21 +144,25 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         return _decodeCache[key];
     }
 
-    public void setMode(OneToMany mode) {
+    void setMode(OneToMany mode) {
         _mode = mode;
         _enableJoin = _mode.fetch == FetchType.EAGER;    
     }
 
-    public LazyData getLazyData(Row row) {
+    override LazyData getLazyData(Row row) {
         string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
         Variant v = row.getValue(name);
         if(!v.hasValue()) {
-            version(HUNT_DEBUG) warningf("Can't find value for %s", name);
+            version(HUNT_DEBUG) warningf("Can't find the value of the primary key: %s", name);
             return null;
         }
         
         string value = v.toString();
-        version(HUNT_ENTITY_DEBUG) tracef("A column: %s=%s", name, value);
+        version(HUNT_ENTITY_DEBUG) {
+            infof("The referenced primary column: %s=%s, the current model: %s", 
+                name, value, T.stringof);
+        }
+
         LazyData ret = new LazyData(_mode.mappedBy, value);
         return ret;        
     }
