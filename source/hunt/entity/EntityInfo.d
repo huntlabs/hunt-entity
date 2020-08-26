@@ -39,6 +39,8 @@ class EntityInfo(T : Object, F : Object = T) {
     private F _owner;
     private string _tablePrefix;
 
+    private string[string] _fieldColumnMaps;
+
     //auto mixin function
     // private void initEntityData(T t){}
     // public T deSerialize(Row row) {}
@@ -85,6 +87,16 @@ class EntityInfo(T : Object, F : Object = T) {
             _tablePrefix = _manager.getPrefix();
         }
         initEntityData();
+    }
+
+    string getColumnName(string fieldName) {
+        auto itemPtr = fieldName in _fieldColumnMaps;
+        if(itemPtr is null) {
+            version(HUNT_ENTITY_DEBUG) warningf("No mapped column name found for field: %s", fieldName);
+            return fieldName;
+        }
+
+        return *itemPtr;
     }
 
     public EntityFieldInfo getPrimaryField() {
@@ -229,6 +241,8 @@ string makeSetIncreaseKey(T)() {
 
 
 string makeInitEntityData(T,F)() {
+    import std.conv;
+
     string str = `
     private void initEntityData() {
         _entityClassName = "`~T.stringof~`";`;
@@ -252,6 +266,25 @@ string makeInitEntityData(T,F)() {
         _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
     }
 
+    // All fields
+    // string[string] fieldColumnMaps;
+    
+    static foreach (string memberName; FieldNameTuple!T) {{
+        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+            alias memType = typeof(__traits(getMember, T ,memberName));
+            static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
+                // fieldColumnMaps[memberName]=getUDAs!(__traits(getMember, T ,memberName), Column)[0].name;
+                str ~= `
+                    _fieldColumnMaps["` ~ memberName ~`"] = "` ~ 
+                        getUDAs!(__traits(getMember, T ,memberName), Column)[0].name ~ `";
+                `;
+            }
+        }
+    }}
+
+    // pragma(msg, "xxx=>" ~ fieldColumnMaps.to!string());
+
+    //
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
             alias memType = typeof(__traits(getMember, T ,memberName));
@@ -264,11 +297,11 @@ string makeInitEntityData(T,F)() {
                 {
                     mappedBy = "\""~getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy~"\"";
                 }
+
                 static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), Column)[0].nullable.to!string;
-                }
-                else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
+                } else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
                 } 
@@ -315,7 +348,7 @@ string makeInitEntityData(T,F)() {
                     }
         str ~= `
         `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof ~ 
-                    `, _primaryKey, `~columnName~`, _tableName, `~value~`, `
+                    `, _primaryKey, getColumnName(`~columnName~`), _tableName, `~value~`, `
                                     ~ (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof ~ `, `~owner ~ `);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
@@ -332,7 +365,7 @@ string makeInitEntityData(T,F)() {
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
         str ~= `
-        `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`, `
+        `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, getColumnName(`~columnName~`), _tableName, `~value~`, `
                                     ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~`);`;
                 }
                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
