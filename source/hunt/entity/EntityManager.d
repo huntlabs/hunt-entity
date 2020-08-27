@@ -61,7 +61,7 @@ class EntityManager : Closeable {
         int r = stmt.execute(autoIncrementKey);
 
         version(HUNT_ENTITY_DEBUG) {
-            infof("affected: %d, autoIncrementKey: %s, lastInsertId: %d", r, autoIncrementKey, stmt.lastInsertId);
+            infof("affected: %d, autoIncrementKey: %s, lastInsertId: %d", r, autoIncrementKey, stmt.lastInsertId());
         }
 
         info.setIncreaseKey(entity, stmt.lastInsertId);

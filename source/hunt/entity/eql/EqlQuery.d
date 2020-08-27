@@ -12,13 +12,16 @@
 module hunt.entity.eql.EqlQuery;
 
 import hunt.entity;
-import hunt.sql;
-import hunt.logging;
-import hunt.collection;
+
+import hunt.entity.SimpleEntityInfo;
 import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
 import hunt.entity.eql.EqlCache;
+
+import hunt.sql;
+import hunt.logging.ConsoleLogger;
+import hunt.collection;
 import hunt.Long;
 
 // version(WITH_HUNT_TRACE)
@@ -34,6 +37,8 @@ import std.format;
 import std.traits;
 import std.string;
 import std.variant;
+
+
 
 class EqlQuery(T...)
 {
@@ -52,6 +57,7 @@ class EqlQuery(T...)
     private long _limit = -1;
     private int _lastInsertId = -1;
     private int _affectRows = 0;
+    private SimpleEntityInfo!ResultObj _entityInfo;
 
     version (WITH_HUNT_TRACE)
     {
@@ -64,7 +70,7 @@ class EqlQuery(T...)
         _manager = em;
         _resultDes = new ResultDes!(ResultObj)(em);
         _eql = eql;
-
+        _entityInfo = new SimpleEntityInfo!ResultObj();
         parseEql();
     }
 
@@ -106,11 +112,11 @@ class EqlQuery(T...)
         DatabaseOption opt = _manager.getDbOption();
         if (opt.isMysql())
         {
-            _eqlParser = new EqlParse(_eql, DBType.MYSQL.name);
+            _eqlParser = new EqlParse(_eql, _entityInfo, DBType.MYSQL.name);
         }
         else if (opt.isPgsql())
         {
-            _eqlParser = new EqlParse(_eql, DBType.POSTGRESQL.name);
+            _eqlParser = new EqlParse(_eql, _entityInfo, DBType.POSTGRESQL.name);
         }
         // else if (opt.isSqlite())
         // {
@@ -121,7 +127,7 @@ class EqlQuery(T...)
             throw new Exception("not support dbtype : %s".format(opt.schemeName()));
         }
         version(HUNT_SQL_DEBUG) {
-            trace(_eql);
+            tracef("Raw sql: %s", _eql);
         }
 
         auto parsedEql = eqlCache.get(_eql);
@@ -255,7 +261,7 @@ class EqlQuery(T...)
         return sql;
     }
 
-    public int exec()
+    int exec()
     {
         auto sql = getExecSql();
         version (WITH_HUNT_TRACE)
@@ -267,11 +273,16 @@ class EqlQuery(T...)
                 endTrace();
             }
         }
-        auto stmt = _manager.getSession().prepare(sql);
+        
+        Statement stmt = _manager.getSession().prepare(sql);
+        string autoIncrementKey = _entityInfo.autoIncrementKey();
+        int r = stmt.execute(autoIncrementKey);
+
         _lastInsertId = stmt.lastInsertId();
         _affectRows = stmt.affectedRows();
+
         //TODO update 时 返回的row line count 为 0
-        return stmt.execute();
+        return r;
     }
 
     public int lastInsertId()

@@ -13,6 +13,7 @@ module hunt.entity.eql.EqlParse;
 
 import hunt.entity.eql.EqlInfo;
 import hunt.entity;
+import hunt.entity.SimpleEntityInfo;
 import hunt.sql;
 
 import hunt.logging;
@@ -59,8 +60,11 @@ class EqlParse
     private Object[int] _params;
     private Object[string] _parameters;
 
-    this(string eql, string dbtype = "mysql")
+    private IEntityInfo _entityInfo;
+
+    this(string eql, IEntityInfo entityInfo, string dbtype = "mysql")
     {
+        _entityInfo = entityInfo;
         _parsedEql = _eql = eql;
         _dbtype = dbtype;
         _aliasVistor = new ExportTableAliasVisitor();
@@ -174,7 +178,7 @@ class EqlParse
         }
         else if (cast(SQLInsertStatement)(_stmtList.get(0)) !is null)
         {
-            version (HUNT_ENTITY_MORE)
+            version (HUNT_ENTITY_DEBUG_MORE)
                 logDebug("EQL do_insert_parse");
             doInsertParse();
         }
@@ -256,7 +260,7 @@ class EqlParse
                 List!SQLExpr newArgs = new ArrayList!SQLExpr();
                 foreach (subExpr; aggreExpr.getArguments())
                 {
-                    // version(HUNT_ENTITY_MORE) {
+                    // version(HUNT_ENTITY_DEBUG_MORE) {
                     //     tracef("arg expr : %s, arg string : %s",
                     //         typeid(cast(Object)subExpr).name, SQLUtils.toSQLString(subExpr));
                     // }
@@ -333,7 +337,7 @@ class EqlParse
         }
         // else
         // {
-        //     version (HUNT_ENTITY_MORE)
+        //     version (HUNT_ENTITY_DEBUG_MORE)
         //         logDebug("order by item is null");
         // }
 
@@ -357,6 +361,8 @@ class EqlParse
         }
 
         _parsedEql = SQLUtils.toSQLString(select_copy, _dbtype);
+
+        warning(_parsedEql);
 
     }
 
@@ -461,7 +467,7 @@ class EqlParse
 
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
 
-        version (HUNT_ENTITY_MORE)
+        version (HUNT_ENTITY_DEBUG_MORE)
             trace(_parsedEql);
     }
 
@@ -557,12 +563,18 @@ class EqlParse
         }
 
         ///from
-        auto fromExpr = insertBlock.getTableSource();
+        SQLExprTableSource fromExpr = insertBlock.getTableSource();
         // version (HUNT_DEBUG)
         //     logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
         parseFromTable(fromExpr);
 
         _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
+
+        if(_dbtype == DBType.POSTGRESQL) {
+            string autoIncrementKey = _entityInfo.autoIncrementKey();
+            _parsedEql = _parsedEql.stripRight(";");
+            _parsedEql ~= " RETURNING " ~ autoIncrementKey ~ ";";
+        }
     }
 
     /// a.id  --- > Class.id , a is instance of Class
@@ -901,7 +913,7 @@ class EqlParse
             auto re = regex(r":" ~ k ~ r"([^\w]*)", "g");
             if (cast(String) v !is null || (cast(Nullable!string) v !is null))
             {
-                version (HUNT_ENTITY_MORE)
+                version (HUNT_ENTITY_DEBUG_MORE)
                     logInfo("-----: ", v.toString);
                 if (_dbtype == DBType.POSTGRESQL.name)
                     sql = sql.replaceAll(re, quoteSqlString(v.toString(), "'") ~ "$1");
@@ -931,7 +943,7 @@ class EqlParse
         if (_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
             sql = SQLUtils.format(sql, _dbtype);
 
-        version(HUNT_ENTITY_DEBUG) infof("native sql : %s", sql);
+        version(HUNT_ENTITY_DEBUG) infof("result sql : %s", sql);
         return sql;
     }
 }
