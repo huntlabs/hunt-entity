@@ -13,7 +13,7 @@ module hunt.entity.eql.EqlQuery;
 
 import hunt.entity;
 
-import hunt.entity.SimpleEntityInfo;
+import hunt.entity.EntityMetaInfo;
 import hunt.entity.eql.EqlParse;
 import hunt.entity.eql.ResultDes;
 import hunt.entity.eql.EqlInfo;
@@ -57,7 +57,8 @@ class EqlQuery(T...)
     private long _limit = -1;
     private int _lastInsertId = -1;
     private int _affectRows = 0;
-    private SimpleEntityInfo!ResultObj _entityInfo;
+    private EntityMetaInfo _entityInfo;
+    // private enum EntityMetaInfo _entityInfo = extractEntityInfo!ResultObj();
 
     version (WITH_HUNT_TRACE)
     {
@@ -70,7 +71,7 @@ class EqlQuery(T...)
         _manager = em;
         _resultDes = new ResultDes!(ResultObj)(em);
         _eql = eql;
-        _entityInfo = new SimpleEntityInfo!ResultObj();
+        _entityInfo = extractEntityInfo!ResultObj();
         parseEql();
     }
 
@@ -275,7 +276,7 @@ class EqlQuery(T...)
         }
         
         Statement stmt = _manager.getSession().prepare(sql);
-        string autoIncrementKey = _entityInfo.autoIncrementKey();
+        string autoIncrementKey = _entityInfo.autoIncrementKey;
         int r = stmt.execute(autoIncrementKey);
 
         _lastInsertId = stmt.lastInsertId();

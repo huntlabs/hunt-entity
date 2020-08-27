@@ -35,7 +35,7 @@ public import hunt.entity.EntityFieldOwner;
 public import hunt.entity.EntityFieldManyToMany;
 public import hunt.entity.EntityFieldManyToManyOwner;
 
-public import hunt.entity.SimpleEntityInfo;
+public import hunt.entity.EntityMetaInfo;
 
 public import hunt.entity.EntityFieldOneToOne;
 public import hunt.entity.EntityFieldObject;

@@ -282,8 +282,6 @@ string makeInitEntityData(T,F)() {
         }
     }}
 
-    // pragma(msg, "xxx=>" ~ fieldColumnMaps.to!string());
-
     //
     foreach(memberName; __traits(derivedMembers, T)) {
         static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {

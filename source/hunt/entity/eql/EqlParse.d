@@ -13,7 +13,7 @@ module hunt.entity.eql.EqlParse;
 
 import hunt.entity.eql.EqlInfo;
 import hunt.entity;
-import hunt.entity.SimpleEntityInfo;
+import hunt.entity.EntityMetaInfo;
 import hunt.sql;
 
 import hunt.logging;
@@ -60,9 +60,9 @@ class EqlParse
     private Object[int] _params;
     private Object[string] _parameters;
 
-    private IEntityInfo _entityInfo;
+    private EntityMetaInfo _entityInfo;
 
-    this(string eql, IEntityInfo entityInfo, string dbtype = "mysql")
+    this(string eql, ref EntityMetaInfo entityInfo, string dbtype = "mysql")
     {
         _entityInfo = entityInfo;
         _parsedEql = _eql = eql;
@@ -571,7 +571,7 @@ class EqlParse
         _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
 
         if(_dbtype == DBType.POSTGRESQL) {
-            string autoIncrementKey = _entityInfo.autoIncrementKey();
+            string autoIncrementKey = _entityInfo.autoIncrementKey;
             _parsedEql = _parsedEql.stripRight(";");
             _parsedEql ~= " RETURNING " ~ autoIncrementKey ~ ";";
         }
