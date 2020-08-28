@@ -71,7 +71,7 @@ class EqlQuery(T...)
         _manager = em;
         _resultDes = new ResultDes!(ResultObj)(em);
         _eql = eql;
-        _entityInfo = extractEntityInfo!ResultObj();
+        _entityInfo = ResultObj.metaInfo; // extractEntityInfo!ResultObj();
         parseEql();
     }
 

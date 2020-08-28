@@ -21,8 +21,18 @@ mixin template MakeModel()
     import hunt.validation;
     import hunt.logging.ConsoleLogger;
     import std.format;
+    import hunt.entity.EntityMetaInfo;
 
     // pragma(msg, makeGetFunction!(typeof(this)));
+
+    // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-28T16:59:53+08:00
+    // 
+    // enum EntityMetaInfo metaInfo = extractEntityInfo!(typeof(this));
+
+    static EntityMetaInfo metaInfo() {
+        enum m = extractEntityInfo!(typeof(this));
+        return m;
+    }
 
     mixin MakeLazyData;
 

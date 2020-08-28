@@ -6,7 +6,7 @@ import hunt.entity;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity.dialect;
 
-import hunt.logging;
+import hunt.logging.ConsoleLogger;
 
 import std.conv;
 import std.string;
@@ -28,6 +28,16 @@ struct EntityMetaInfo {
 
     // fully qualified name
     string qualifiedName;
+
+    string toClumnName(string fieldName) {
+        auto itemPtr = fieldName in fieldColumnMaps;
+        if(itemPtr is null) {
+            version(HUNT_ENTITY_DEBUG) warningf("No mapped column name found for field: %s", fieldName);
+            return fieldName;
+        }
+
+        return *itemPtr;
+    }    
 
 }
 

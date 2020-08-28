@@ -85,7 +85,7 @@ class Root(T : Object, F: Object = T) : IRoot {
         foreach (EntityFieldInfo value; _entityInfo.getFields()) {
             string name = value.getSelectColumn();
             version (HUNT_ENTITY_DEBUG_MORE) {
-                infof("FileldName: %s, JoinPrimaryKey: %s, joinColumn: %s, selectColumn: %s, ",
+                infof("FileldName: %s, JoinPrimaryKey: %s, joinColumn: %s, selectColumn: %s",
                         value.getFieldName(), value.getJoinPrimaryKey(),
                         value.getJoinColumn(), name);
             }
