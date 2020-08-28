@@ -17,8 +17,18 @@ import std.traits;
  */
 struct EntityMetaInfo {
     string autoIncrementKey;
-    
+
     string[string] fieldColumnMaps;
+
+    // TODO: Tasks pending completion -@zhangxueping at 2020-08-28T09:35:46+08:00
+    // 
+    string tableName;
+    string modelName;
+    // TypeInfo typeInfo;
+
+    // fully qualified name
+    string qualifiedName;
+
 }
 
 /**

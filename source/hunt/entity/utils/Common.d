@@ -147,3 +147,11 @@ unittest{
     logDebug("PrimaryKey : %s ".format(getPrimaryKey!AppInfo));
 
 }
+
+
+private enum string IndentString = "                                ";  // 32 spaces
+
+string indent(size_t number) {
+    assert(number>0 && IndentString.length, "Out of range");
+    return IndentString[0..number];
+}

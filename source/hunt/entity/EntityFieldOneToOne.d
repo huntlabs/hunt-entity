@@ -98,12 +98,15 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
     }
 
-    T deSerialize(Row row) {
-        tracef("For %s from a row, owner is null: %s", T.stringof, _owner is null);
+    T deSerialize(Row row, F owner) {
+        version(HUNT_ENTITY_DEBUG) {
+            warningf("For %s from a row, owner is null: %s", T.stringof, owner is null);
+        }
+        
         if (_mode.fetch == FetchType.LAZY)
             return null;
         long count = -1;
-        return _entityInfo.deSerialize([row], count, 0);        
+        return _entityInfo.deSerialize([row], count, 0, owner);        
     }
 
     override LazyData getLazyData(Row row) {
