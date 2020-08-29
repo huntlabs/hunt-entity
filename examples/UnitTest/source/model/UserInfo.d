@@ -23,10 +23,11 @@ class UserInfo : Model {
     @ManyToMany("uinfos")
     AppInfo[] apps;
 
-    @OneToOne("user")
+    @OneToOne(IDCard.user.stringof)
     // @OneToOne("user",FetchType.LAZY)
     IDCard card;
 
-    @OneToMany("user")
+    @OneToMany(Car.user.stringof, FetchType.EAGER)
     Car[] cars;
 }
+

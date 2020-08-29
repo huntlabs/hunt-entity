@@ -20,69 +20,6 @@ import core.thread;
 import std.conv;
 import hunt.database;
 
-enum DO_TEST = `
-    logInfo("BEGIN ----------------" ~ __FUNCTION__ ~ "--------------------");
-    scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
-    scope(failure) logError("END   ----------------" ~ __FUNCTION__ ~ "----------FAIL----------");`;
-
-
-EntityOption getMysqlOptions() {
-
-    EntityOption option = new EntityOption();
-    option.database.driver = "mysql";
-    option.database.host = "10.1.11.171";
-    option.database.port = 3306;
-    option.database.database = "eql_test";
-    option.database.username = "root";
-    option.database.password = "123456";
-    option.database.prefix = "";
-
-    return option;
-}
-
-
-EntityOption getMysqlDevOptions() {
-
-    EntityOption option = new EntityOption();
-    option.database.driver = "mysql";
-    option.database.host = "10.1.222.110";
-    option.database.port = 3306;
-    option.database.database = "eql_test";
-    option.database.username = "root";
-    option.database.password = "123456789";
-    option.database.prefix = "";
-
-    return option;
-}
-
-EntityOption getPgOptions() {
-
-    EntityOption option = new EntityOption();
-    option.database.driver = "postgresql";
-    option.database.host = "10.1.11.44";
-    option.database.port = 5432;
-    option.database.database = "eql_test";
-    option.database.username = "postgres";
-    option.database.password = "123456";	
-
-    return option;
-}
-
-EntityOption getPgDevOptions() {
-
-    EntityOption option = new EntityOption();
-    option.database.driver = "postgresql";
-    option.database.host = "10.1.222.110";
-    option.database.port = 5432;
-    option.database.database = "postgres";
-    option.database.username = "postgres";
-    option.database.password = "123456";	
-    // option.database.username = "putao";
-    // option.database.password = "putao123";	
-
-    return option;
-}
-
 
 import hunt.serialization.JsonSerializer;
 import hunt.serialization.Common;
@@ -90,11 +27,6 @@ import std.json;
 
 void main()
 {
-
-        // JSONValue json = JsonSerializer.toJson(settings);
-        // info(json.toPrettyString());
-
-
 
     // EntityOption option = getMysqlOptions();
     // EntityOption option = getMysqlDevOptions(); // to test mysql 8
@@ -108,6 +40,7 @@ void main()
         em.close();
         // warning("checking");
     }
+    test_eql_insert(em);
     // test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
@@ -116,6 +49,10 @@ void main()
     // test_OneToMany(em);
     // test_ManyToOne(em);
     // test_ManyToMany(em);
+    // test_MixMapping1(em);
+    // test_MixMapping2(em);
+
+
     // test_merge(em);
     // test_persist(em);
     // test_comparison(em);
@@ -125,12 +62,13 @@ void main()
     // test_create_eql_by_queryBuilder(em);
     // test_statement(em);
     // test_valid(em);
-    test_pagination(em);
+    // test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
     // test_transaction(em);
     // test_other(em);
     // test_exception(em);
+
 
     // test_EntityRepository_Insert(em);
     // test_EntityRepository_Save(em);
@@ -245,14 +183,72 @@ void test_OneToOne(EntityManager em)
 {
     mixin(DO_TEST);
 
-    auto uinfo = em.find!(UserInfo)(1);
-    warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card));
 
-    // auto card = uinfo.getCard;
-    // logDebug("Card( %s , %s ) ".format(card.id, card.desc));
+    // {
+    //     UserInfo uinfo = em.find!(UserInfo)(1);
+    //     warningf("userInfo, id: %d, nickName: %s", uinfo.id, uinfo.nickName);
+    //     // warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card is null));
 
-    auto card2 = em.find!(IDCard)(1);
-    logDebug("Uinfo( %s , %s ) ".format(card2.user.id, card2.user.nickName));
+    //     IDCard idCard = uinfo.card; 
+
+    //     if(idCard !is null ) {
+    //         warningf("CardInfo, uid: %d, desc: %s, user: %s", idCard.uid, idCard.desc, idCard.user is null);
+
+    //         UserInfo uinfo2 = idCard.user;
+    //         assert(uinfo2 !is null && uinfo2.id > 0);
+    //         assert(uinfo is uinfo2);
+
+    //         if(uinfo2 !is null) {
+    //             warningf("userInfo, id: %d, nickName: %s", uinfo2.id, uinfo2.nickName);
+    //         }
+    //     }
+    // }
+
+    // {
+    //     IDCard idCardInfo = em.find!(IDCard)(1);
+    //     warningf("CardInfo, id: %s, desc: %s", idCardInfo.id, idCardInfo.desc);
+
+    //     UserInfo userInfo = idCardInfo.user;
+    //     if(userInfo !is null ) {
+    //         IDCard newCardInfo = userInfo.card;
+
+    //         warningf("userInfo, id: %d, nickName: %s, card: %s", userInfo.id, userInfo.nickName, newCardInfo is null);
+
+    //         if(idCardInfo !is null) {
+    //             assert(newCardInfo !is null && newCardInfo.id > 0);
+    //             assert(newCardInfo is idCardInfo);
+    //             warningf("CardInfo, id: %s, desc: %s", newCardInfo.id, newCardInfo.desc);
+    //         }
+    //     } else {
+    //         error("userInfo is null");
+    //     }
+    // }
+
+    // {
+    // 	UserInfo uinfo = em.find!(UserInfo)(1);
+    // 	warningf("userInfo, id: %d, nickName: %s", uinfo.id, uinfo.nickName);
+    // 	// warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card is null));
+
+    // 	Car car = uinfo.car; 
+
+    // 	if(car !is null ) {
+    // 		warningf("Car, uid: %d, name: %s", car.uid, car.name);
+    // 	}
+    // }
+
+    // {
+    // 	UserInfo uinfo = em.find!(UserInfo)(1);
+    // 	warningf("userInfo, id: %d, nickName: %s", uinfo.id, uinfo.nickName);
+    // 	// warningf("Uinfo.IDCard is loaded lazily: %s ".format(uinfo.card is null));
+
+    // 	Car[] cars = uinfo.cars; 
+
+    // 	if(cars !is null ) {
+    // 		foreach(Car car; cars) {
+    // 			warningf("Car, uid: %d, name: %s", car.uid, car.name);
+    // 		}
+    // 	}
+    // }	
 }
 
 void test_OneToMany(EntityManager em)
@@ -274,6 +270,57 @@ void test_ManyToOne(EntityManager em)
     auto car = em.find!(Car)(2);
     logDebug("Uinfo( %s , %s , %s ) ".format(car.user.id, car.user.nickName, car.user.age));
 }
+
+void test_MixMapping1(EntityManager em) {
+    UserInfo uinfo = em.find!(UserInfo)(1);
+    warningf("userInfo, id: %d, nickName: %s", uinfo.id, uinfo.nickName);
+
+    // ID Card
+    IDCard idCard = uinfo.card;
+    assert(idCard !is null);
+    warningf("CardInfo, uid: %d, desc: %s, user: %s", idCard.uid, idCard.desc, idCard.user is null);
+
+    UserInfo uinfo2 = idCard.user;
+    if (uinfo2 !is null) {
+        warningf("userInfo, id: %d, nickName: %s", uinfo2.id, uinfo2.nickName);
+    }
+
+    // assert(uinfo2 is uinfo);
+
+    // Cars
+    // Car[] cars = uinfo.getCars();
+    Car[] cars = uinfo.cars;
+    assert(cars.length > 0);
+
+    foreach (car; cars) {
+        warningf("Car, uid: %d, name: %s", car.uid, car.name);
+    }
+}
+
+void test_MixMapping2(EntityManager em) {
+
+    IDCard idCardInfo = em.find!(IDCard)(1);
+    warningf("CardInfo, id: %s, desc: %s", idCardInfo.id, idCardInfo.desc);
+
+    UserInfo userInfo = idCardInfo.user;
+    if(userInfo !is null ) {
+        
+        IDCard newCardInfo = userInfo.card;
+        warningf("userInfo, id: %d, nickName: %s, card: %s", userInfo.id, userInfo.nickName, newCardInfo is null);
+        
+        Car[] cars = userInfo.cars;
+        // cars = userInfo.getCars();
+        assert(cars.length > 0);
+
+        foreach (car; cars) {
+            warningf("Car, uid: %d, name: %s", car.uid, car.name);
+        }
+
+    } else {
+        error("userInfo is null");
+    }    
+}
+
 
 // void test_ManyToMany(EntityManager em)
 // {
@@ -550,9 +597,9 @@ void test_eql_update_with_reserved_word(EntityManager em)
 // {
 // 	mixin(DO_TEST);
 // 	/// update statement
-// 	auto update = em.createQuery!(UInfo)(" update UInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
+// 	auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
 // 		"u.age > 2 and u.age < :age2 and u.id = :id and u.nickName = :name " ); 
-// 		// update UInfo u set u.age = 5 where u.id = 2
+// 		// update UserInfo u set u.age = 5 where u.id = 2
 
 // 	update.setParameter("age",2);
 // 	update.setParameter("age2",55);
@@ -566,26 +613,31 @@ void test_eql_update_with_reserved_word(EntityManager em)
 // {
 // 	mixin(DO_TEST);
 // 	/// delete statement
-// 	auto del = em.createQuery!(UInfo)(" delete from UInfo u where u.id = 3 "); 
+// 	auto del = em.createQuery!(UserInfo)(" delete from UserInfo u where u.id = 3 "); 
 // 	// del.setParameter(1,3);
 // 	logDebug(" del result : ",del.exec());
 // }
 
-// void test_eql_insert(EntityManager em)
-// {
-// 	mixin(DO_TEST);
-// 	/// insert statement
-// 	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (:name,:age)"); 
-// 	insert.setParameter("name","momomo");
-// 	insert.setParameter("age",666);
-// 	logDebug(" insert result : ",insert.exec());
-// }
+void test_eql_insert(EntityManager em)
+{
+    mixin(DO_TEST);
+    /// insert statement
+    // string sqlString = "INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age) RETURNING id;";
+    string sqlString = "INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age)";
+    // string sqlString = "INSERT INTO UserInfo u(u.nickName,u.age) values (:name,:age);";
+    EqlQuery!UserInfo insert = em.createQuery!(UserInfo)(sqlString); 
+    insert.setParameter("name","momomo");
+    insert.setParameter("age",22);
+
+    logDebug(" insert result : ",insert.exec());
+    warningf(" last Id: %d", insert.lastInsertId());
+}
 
 // void test_eql_insert2(EntityManager em)
 // {
 // 	mixin(DO_TEST);
 // 	/// insert statement
-// 	auto insert = em.createQuery!(UInfo)("  INSERT INTO UInfo u(u.nickName,u.age) values (?,?)"); 
+// 	auto insert = em.createQuery!(UserInfo)("  INSERT INTO UserInfo u(u.nickName,u.age) values (?,?)"); 
 // 	insert.setParameter(1,"Jons");
 // 	insert.setParameter(2,2355);
 // 	logDebug(" insert result : ",insert.exec());
@@ -723,7 +775,7 @@ void testRepositoryWithTransaction(EntityManager em) {
 
     auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
         "u.age > 2 and u.id = :id and u.nickName = :name " ); 
-        // update UInfo u set u.age = 5 where u.id = 2
+        // update UserInfo u set u.age = 5 where u.id = 2
 
     update.setParameter("age",2);
     // update.setParameter("age2",55); // and u.sex < :age2 // bug test
@@ -758,7 +810,7 @@ void testRepositoryWithTransaction2(EntityManager em) {
 
     auto update = em.createQuery!(UserInfo)(" update UserInfo u set u.age = u.id, u.nickName = 'dd' where  " ~ 
         "u.age > 2 and u.sex < :age2 and u.id = :id and u.nickName = :name " ); 
-        // update UInfo u set u.age = 5 where u.id = 2
+        // update UserInfo u set u.age = 5 where u.id = 2
 
     update.setParameter("age",2);
     update.setParameter("age2",55);
@@ -841,3 +893,67 @@ void testJsonSerializationForModel() {
 
 }
 
+
+
+enum DO_TEST = `
+    logInfo("BEGIN ----------------" ~ __FUNCTION__ ~ "--------------------");
+    scope(success) logInfo("END   ----------------" ~ __FUNCTION__ ~ "----------OK----------");
+    scope(failure) logError("END   ----------------" ~ __FUNCTION__ ~ "----------FAIL----------");`;
+
+
+EntityOption getMysqlOptions() {
+
+    EntityOption option = new EntityOption();
+    option.database.driver = "mysql";
+    option.database.host = "10.1.11.171";
+    option.database.port = 3306;
+    option.database.database = "eql_test";
+    option.database.username = "root";
+    option.database.password = "123456";
+    option.database.prefix = "";
+
+    return option;
+}
+
+
+EntityOption getMysqlDevOptions() {
+
+    EntityOption option = new EntityOption();
+    option.database.driver = "mysql";
+    option.database.host = "10.1.222.110";
+    option.database.port = 3306;
+    option.database.database = "eql_test";
+    option.database.username = "root";
+    option.database.password = "123456789";
+    option.database.prefix = "";
+
+    return option;
+}
+
+EntityOption getPgOptions() {
+
+    EntityOption option = new EntityOption();
+    option.database.driver = "postgresql";
+    option.database.host = "10.1.11.44";
+    option.database.port = 5432;
+    option.database.database = "eql_test";
+    option.database.username = "postgres";
+    option.database.password = "123456";	
+
+    return option;
+}
+
+EntityOption getPgDevOptions() {
+
+    EntityOption option = new EntityOption();
+    option.database.driver = "postgresql";
+    option.database.host = "10.1.222.110";
+    option.database.port = 5432;
+    option.database.database = "postgres";
+    option.database.username = "postgres";
+    option.database.password = "123456";	
+    // option.database.username = "putao";
+    // option.database.password = "putao123";	
+
+    return option;
+}

@@ -11,11 +11,14 @@ class IDCard : Model {
     @AutoIncrement @PrimaryKey 
     int id;
 
+    
+    @Column("user_id")
     int uid;
 
     string desc;
 
     @OneToOne()
-    @JoinColumn("uid","id")
+    @JoinColumn(uid.stringof, UserInfo.id.stringof)
+    // @JoinColumn("user_id", UserInfo.id.stringof)
     UserInfo user;
 }

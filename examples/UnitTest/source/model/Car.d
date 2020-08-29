@@ -1,6 +1,5 @@
 module model.Car;
 
-import model.AppInfo;
 import hunt.entity;
 import model.UserInfo;
 
@@ -18,6 +17,6 @@ class Car : Model {
     int uid;
 
     @ManyToOne()
-    @JoinColumn("uid","id")
+    @JoinColumn(Car.uid.stringof, UserInfo.id.stringof)
     UserInfo user;
 }

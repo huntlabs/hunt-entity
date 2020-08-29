@@ -53,3 +53,4 @@ dub.*.json
 examples/postgresql/postgresql-demo
 examples/eql/eql-demo
 examples/UnitTest/unittest
+examples/simple/
