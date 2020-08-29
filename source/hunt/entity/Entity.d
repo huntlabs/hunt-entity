@@ -53,6 +53,8 @@ mixin template MakeModel()
 }
 
 mixin template MakeLazyData() {
+    import hunt.logging.ConsoleLogger;
+
     @Ignore
     private LazyData[string] _lazyDatas;
 
@@ -63,7 +65,9 @@ mixin template MakeLazyData() {
     EntityManager getManager() {return _manager;}
 
     void addLazyData(string key, LazyData data) {
-        if (data) {
+        if (data is null) {
+            warningf("No data for %s", key);
+        } else {
             _lazyDatas[key] = data;
         }
     }
@@ -73,16 +77,14 @@ mixin template MakeLazyData() {
     }
 
     LazyData getLazyData(string key ) {
-        
         version(HUNT_ENTITY_DEBUG) {
-            trace("lazyDatas : %s, get : %s".format(_lazyDatas, key));
-            // logDebug("Datas : %s".format(_lazyDatas[key]));
+            tracef("key: %s, lazyDatas size: %d", key, _lazyDatas.length);
         }
 
         auto itemPtr = key in _lazyDatas;
         
         if(itemPtr is null) {
-            warningf("No data found for %s", key);
+            warningf("No data found for [%s]", key);
             return null;
         } else {
             return *itemPtr;
@@ -138,7 +140,8 @@ mixin template MakeLazyLoadSingle(T) {
 
     private R lazyLoadSingle(R)(LazyData data) {
         if(data is null) {
-            warning("data is null");
+            warning("The parameter is null");
+            return R.init;
         }
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R, T);
@@ -181,7 +184,7 @@ string makeGetFunction(T)() {
                     static if(fetchType == FetchType.EAGER) {
                         allGetMethods ~= `
                             if(` ~ memberName ~ ` is null) {
-                                info("loading data for: ` ~ memberName ~ `");
+                                info("loading data for: ` ~ memberName ~ ` in ` ~ T.stringof ~ `");
                                 get` ~ capitalize(memberName) ~ `();
                             }
                         `;
@@ -219,7 +222,9 @@ string makeGetFunction(T)() {
     str ~= "\n";
     str ~= `
     void loadLazyMembers() {
-        infof("Try to load data for the other object members in %s", typeid(` ~ T.stringof ~ `));
+        version(HUNT_ENTITY_DEBUG) {
+            infof("Try to load data for the other object members in %s", typeid(` ~ T.stringof ~ `));
+        }
         ` ~ allGetMethods ~ `
     }
     `;

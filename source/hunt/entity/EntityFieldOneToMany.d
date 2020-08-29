@@ -26,9 +26,6 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     private string _findString;
     private T[][string] _decodeCache;
     
-
-
-
     this(EntityManager manager, string fieldName, string primaryKey, string tableName, OneToMany mode, F owner) {
         super(manager, fieldName, "", tableName, null, owner);
         init(primaryKey, mode, owner);
@@ -82,7 +79,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
     }    
 
 
-    T[] deSerialize(Row[] rows, int startIndex, bool isFromManyToOne) {
+    T[] deSerialize(Row[] rows, int startIndex, bool isFromManyToOne, F owner) {
         version(HUNT_ENTITY_DEBUG) {
             tracef("FetchType: %s, isFromManyToOne: %s", _mode.fetch, isFromManyToOne);
         }
@@ -102,13 +99,14 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
                 ret ~= Common.sampleCopy(value);
             }
         } else {
-            warning("11111");
+            version(HUNT_ENTITY_DEBUG) warning("start");
             foreach(value; rows) {
-                singleRet = _entityInfo.deSerialize([value], count);
+                singleRet = _entityInfo.deSerialize([value], count, 0, owner);
                 if (singleRet !is null)
-                    ret ~= Common.sampleCopy(singleRet);
+                    // ret ~= Common.sampleCopy(singleRet);
+                    ret ~= singleRet; // Common.sampleCopy(singleRet);
             }
-            warning("222222");
+            version(HUNT_ENTITY_DEBUG) warning("ended");
         }
         return ret;
     }

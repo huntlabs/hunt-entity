@@ -160,10 +160,19 @@ class EntityInfo(T : Object, F : Object = T) {
 
     EntityFieldInfo opDispatch(string name)() 
     {
-        EntityFieldInfo info = _fields.get(name,null);
-        if (info is null)
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("getting field info for: %s", name);
+        }
+
+        EntityFieldInfo fieldInfo = _fields.get(name,null);
+        if (fieldInfo is null) {
             throw new EntityException("Cannot find entityfieldinfo by name : " ~ name);
-        return info;
+        } else {
+            version(HUNT_ENTITY_DEBUG_MORE) {
+                tracef("The field info is a: %s", typeid(fieldInfo));
+            }
+        }
+        return fieldInfo;
     }
 
     public string getFactoryName() { return _factoryName; }
@@ -411,7 +420,7 @@ string makeInitEntityData(T,F)() {
 string makeDeSerialize(T,F)() {
     string str;
 
-    str ~= indent(4) ~ "/// T=" ~ T.stringof ~ ", F=" ~ F.stringof;
+    str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof ~ ", F=" ~ F.stringof;
     str ~= `
     T deSerialize(Row[] rows, ref long count, int startIndex = 0, F owner = null,  bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
@@ -490,14 +499,9 @@ string makeDeSerialize(T,F)() {
                     }
                     _data.`~memberName~` = `~memberName~`.deSerialize!(` ~ 
                         memType.stringof ~ `)(cvalue, isMemberDeserialized);
-
                     if(isMemberDeserialized) isObjectDeserialized = true;
-                }
-
-                version(HUNT_ENTITY_DEBUG) {
-                    warningf("member: `~memberName~`, isDeserialized: %s", isMemberDeserialized);
-                }
-                `;
+                }`;
+                
             } else { // Object
                 str ~= indent(8) ~ "isDeserializationNeed = true;\n";
 
@@ -508,7 +512,6 @@ string makeDeSerialize(T,F)() {
                             warning("The owner [` ~ F.stringof ~ `] of [` ~ T.stringof ~ `] is null.");
                         }
                     } else {
-
                         version(HUNT_ENTITY_DEBUG) {
                             warningf("set [` ~ memberName ~ 
                                 `] to the owner {Type: %s, isNull: false}", "` ~ F.stringof ~ `");
@@ -518,39 +521,64 @@ string makeDeSerialize(T,F)() {
                     }` ~ "\n\n";
                 } 
 
-                str ~= indent(8) ~ "if(isDeserializationNeed) {";
+                str ~= indent(8) ~ "if(isDeserializationNeed) {\n";
+                str ~= indent(12) ~ "version(HUNT_ENTITY_DEBUG) info(\"Deserializing member: " 
+                    ~ memberName ~ " \");\n";
+                str ~= indent(12) ~ "EntityFieldInfo fieldInfo = this.opDispatch!(\"" ~ memberName ~ "\")();\n";
 
                 static if (isArray!memType && hasUDA!(currentMember, OneToMany)) {
                     str ~=`
-                    auto `~memberName~` = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(this.`~memberName~`));
-                    _data.addLazyData("`~memberName~`", `~memberName~`.getLazyData(rows[startIndex]));
-                    _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                    auto fieldObject = (cast(EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`,T))(fieldInfo));
+                    if(fieldObject is null) {
+                        warningf("The field is not a EntityFieldManyToOne. It's a %s", typeid(fieldInfo));
+                    } else {
+                        _data.addLazyData("`~memberName~`", fieldObject.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = fieldObject.deSerialize(rows, startIndex, isFromManyToOne, actualOwner);
+                        isMemberDeserialized = true;
+                    }`;
 
-                } else static if (hasUDA!(currentMember, ManyToOne)){
+                } else static if (hasUDA!(currentMember, ManyToOne)) {
                     str ~=`
-                    auto `~memberName~` = (cast(EntityFieldManyToOne!(`~memType.stringof~`))(this.`~memberName~`));
-                    _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-                    _data.`~memberName~` = `~memberName~`.deSerialize(rows[startIndex]);`;
+                    auto fieldObject = (cast(EntityFieldManyToOne!(`~memType.stringof~`))(fieldInfo));
+                    if(fieldObject is null) {
+                        warningf("The field is not a EntityFieldManyToOne. It's a %s", typeid(fieldInfo));
+                    } else {
+                        _data.addLazyData("`~memberName~`", fieldObject.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = fieldObject.deSerialize(rows[startIndex]);
+                        isMemberDeserialized = true;
+                    }`;
 
                 } else static if (hasUDA!(currentMember, OneToOne)) {
-                    str ~= "\n" ~ indent(12) ~ `auto `~memberName~` = (cast(EntityFieldOneToOne!(`~memType.stringof~`,T))(this.`~memberName~`));`;
-                    str ~= "\n" ~ indent(12) ~ `_data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));`;
-                    str ~= "\n" ~ indent(12) ~ `_data.`~memberName~` = ` ~ memberName ~ `.deSerialize(rows[startIndex], actualOwner);`;
-
+                    str ~= `
+                    auto fieldObject = (cast(EntityFieldOneToOne!(`~memType.stringof~`, T))(fieldInfo));
+                    if(fieldObject is null) {
+                        warningf("The field is not a EntityFieldOneToOne. It's a %s", typeid(fieldInfo));
+                    } else {
+                        _data.addLazyData("`~memberName~`", fieldObject.getLazyData(rows[startIndex]));
+                        _data.`~memberName~` = fieldObject.deSerialize(rows[startIndex], actualOwner);
+                        isMemberDeserialized = true;
+                    }`;
                 } else static if (isArray!memType && hasUDA!(currentMember, ManyToMany)) {
                     static if ( memType.stringof.replace("[]","") == F.stringof) {
                         str ~=`
-                            auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(this.`~memberName~`));
+                            auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(fieldInfo));
                             _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                             _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
                     } else {
                         str ~=`
-                            auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(this.`~memberName~`));
+                            auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
                             _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
                             _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
                     }
     
                 }
+                
+                str ~= "\n" ~ indent(12) ~  "if(isMemberDeserialized) isObjectDeserialized = true;";
+                str ~= `
+                version(HUNT_ENTITY_DEBUG) {
+                    warningf("member: `~memberName~`, isDeserialized: %s, result: %s null", ` ~ 
+                        `isMemberDeserialized, _data.` ~ memberName ~ ` is null ? "is" : "is not");
+                }`;
 
                 str ~= "\n" ~ indent(8) ~ "}\n";
             }
