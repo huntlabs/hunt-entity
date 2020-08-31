@@ -77,13 +77,12 @@ string makeDeserializer(T,F)() {
                 mappedBy = "\""~getUDAs!(currentMember, ManyToMany)[0].mappedBy~"\"";
             }
 
-            str ~= "\n";
+            str ~= "\n\n";
             str ~= indent(8) ~ "// Handle membmer: " ~ memberName ~ ", type: " ~ memType.stringof ~ "\n";
 
             // string or basic type
             static if (isBasicType!memType || isSomeString!memType) {
-                str ~=`
-                isMemberDeserialized = false;
+                str ~= indent(8) ~ `isMemberDeserialized = false;
                 auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
                 columnAsName = `~memberName~`.getColumnAsName();
                 columnValue = row.getValue(columnAsName);

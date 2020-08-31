@@ -147,8 +147,18 @@ mixin template MakeLazyLoadSingle(T) {
         auto criteriaQuery = builder.createQuery!(R, T);
         auto r = criteriaQuery.from(null, this);
         auto p = builder.lazyEqual(r.get(data.key), data.value, false);
-        auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
-        R ret = cast(R)(query.getSingleResult());
+        TypedQuery!(R, T) query = _manager.createQuery(criteriaQuery.select(r).where(p));
+        Object singleResult = query.getSingleResult();
+
+        if(singleResult is null) {
+            warningf("The result (%s) is null", R.stringof);
+            return R.init;
+        }
+
+        R ret = cast(R)(singleResult);
+        if(ret is null) {
+            warningf("Type missmatched, expect: %s, actural: %s", typeid(R), typeid(singleResult));
+        }
         ret.setManager(_manager);
         return ret;
     }    
@@ -158,64 +168,63 @@ string makeGetFunction(T)() {
     string str;
     string allGetMethods;
 
-    foreach(memberName; __traits(derivedMembers, T)) { 
-        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
-            
-            alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!isFunction!(memType)) {{
+    static foreach (string memberName; FieldNameTuple!T) {{
+        alias currentMemeber = __traits(getMember, T, memberName);
+        alias memType = typeof(currentMemeber);
 
-                static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-                    enum bool lazyLoading = true;
-                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0].fetch;
-                } else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-                    enum bool lazyLoading = true;
-                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0].fetch;
-                } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
-                    enum bool lazyLoading = true;
-                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0].fetch;
-                } else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                    enum bool lazyLoading = true;
-                    enum FetchType fetchType = getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].fetch;
-                } else {
-                    enum bool lazyLoading = false;
+        static if (__traits(getProtection, currentMemeber) == "public") {
+
+            static if (hasUDA!(currentMemeber, OneToOne)) {
+                enum bool lazyLoading = true;
+                enum FetchType fetchType = getUDAs!(currentMemeber, OneToOne)[0].fetch;
+            } else static if (hasUDA!(currentMemeber, OneToMany)) {
+                enum bool lazyLoading = true;
+                enum FetchType fetchType = getUDAs!(currentMemeber, OneToMany)[0].fetch;
+            } else static if (hasUDA!(currentMemeber, ManyToOne)) {
+                enum bool lazyLoading = true;
+                enum FetchType fetchType = getUDAs!(currentMemeber, ManyToOne)[0].fetch;
+            } else static if (hasUDA!(currentMemeber, ManyToMany)) {
+                enum bool lazyLoading = true;
+                enum FetchType fetchType = getUDAs!(currentMemeber, ManyToMany)[0].fetch;
+            } else {
+                enum bool lazyLoading = false;
+            }
+
+            static if (lazyLoading) {
+                static if(fetchType == FetchType.EAGER && !hasUDA!(currentMemeber, JoinColumn)) {
+                    allGetMethods ~= `
+                        if(` ~ memberName ~ ` is null) {
+                            info("loading data for [` ~ memberName ~ `] in [` ~ T.stringof ~ `]");
+                            get` ~ capitalize(memberName) ~ `();
+                        }
+                    `;
                 }
 
-                static if (lazyLoading) {
-                    static if(fetchType == FetchType.EAGER) {
-                        allGetMethods ~= `
-                            if(` ~ memberName ~ ` is null) {
-                                info("loading data for: ` ~ memberName ~ ` in ` ~ T.stringof ~ `");
-                                get` ~ capitalize(memberName) ~ `();
-                            }
-                        `;
-                    }
-
-                    str ~= `
-                    public `~memType.stringof ~ " get" ~ capitalize(memberName) ~ `() {`;
+                str ~= `
+                public `~memType.stringof ~ " get" ~ capitalize(memberName) ~ `() {`;
+                
+                static if (isArray!memType) {
+                    string mappedBy;
+                static if(hasUDA!(currentMemeber, ManyToMany)) {
+                    str ~= "\n bool manyToMany = true ;";
                     
-                    static if (isArray!memType) {
-                        string mappedBy;
-                    static if(hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-                        str ~= "\n bool manyToMany = true ;";
-                        
-                        mappedBy = "\"" ~ getUDAs!(__traits(getMember, T ,memberName), ManyToMany)[0].mappedBy ~ "\"";
-                    } else {
-                        str ~= "\n bool manyToMany = false ;";
-                    }
-
-                    str ~= "\n" ~ memberName ~ ` = lazyLoadList!(` ~ memType.stringof.replace("[]","") ~ 
-                                `)(getLazyData("`~memberName~`"), manyToMany, `~mappedBy~`);`;
-                    } else {
-                        str ~= "\n" ~ memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
-                    }
-
-                    str ~= `
-                        return `~memberName~`;
-                    }`;
+                    mappedBy = "\"" ~ getUDAs!(currentMemeber, ManyToMany)[0].mappedBy ~ "\"";
+                } else {
+                    str ~= "\n bool manyToMany = false ;";
                 }
-            }}
+
+                str ~= "\n" ~ memberName ~ ` = lazyLoadList!(` ~ memType.stringof.replace("[]","") ~ 
+                            `)(getLazyData("`~memberName~`"), manyToMany, `~mappedBy~`);`;
+                } else {
+                    str ~= "\n" ~ memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
+                }
+
+                str ~= `
+                    return `~memberName~`;
+                }`;
+            }
         }
-    }
+    }}
 
     // Try to load the other members which is not loaed in current mapping.
     

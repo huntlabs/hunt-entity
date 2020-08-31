@@ -32,8 +32,9 @@ struct EntityMetaInfo {
     string toColumnName(string fieldName) {
         auto itemPtr = fieldName in fieldColumnMaps;
         if(itemPtr is null) {
-            version(HUNT_ENTITY_DEBUG) warningf("No mapped column name found for field [%s] in %s", 
-                fieldName, qualifiedName);
+            version(HUNT_ENTITY_DEBUG) {
+                warningf("No mapped column name found for field [%s] in %s", fieldName, qualifiedName);
+            }
             return fieldName;
         }
 
