@@ -16,7 +16,7 @@ import std.traits;
 import std.variant;
 
 
-string makeDeSerialize(T,F)() {
+string makeDeserializer(T,F)() {
     string str;
 
     str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof ~ ", F=" ~ F.stringof;

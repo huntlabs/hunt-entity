@@ -60,13 +60,13 @@ class ResultDes(T : Object) {
 
 
     // pragma(msg, "T = "~T.stringof);
-    // pragma(msg,makeDeSerialize!(T));
+    // pragma(msg,makeDeserializer!(T));
     // pragma(msg,makeInitEntityData!(T));
 
 
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T)());
-    mixin(makeDeSerialize!(T)());
+    mixin(makeDeserializer!(T)());
 
     string getTableName()
     {
@@ -136,7 +136,7 @@ string makeInitEntityData(T)() {
     return str;
 }
 
-string makeDeSerialize(T)() {
+string makeDeserializer(T)() {
     string str = `
     public T deSerialize(Row[] rows, ref long count, int startIndex = 0) {
 
