@@ -29,10 +29,11 @@ struct EntityMetaInfo {
     // fully qualified name
     string qualifiedName;
 
-    string toClumnName(string fieldName) {
+    string toColumnName(string fieldName) {
         auto itemPtr = fieldName in fieldColumnMaps;
         if(itemPtr is null) {
-            version(HUNT_ENTITY_DEBUG) warningf("No mapped column name found for field: %s", fieldName);
+            version(HUNT_ENTITY_DEBUG) warningf("No mapped column name found for field [%s] in %s", 
+                fieldName, qualifiedName);
             return fieldName;
         }
 

@@ -36,6 +36,9 @@ struct JoinColumn {
     bool nullable = true;
 }
 
+struct Transient {
+}
+
 struct JoinTable {
     string name;
 }

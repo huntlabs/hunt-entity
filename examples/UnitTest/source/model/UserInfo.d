@@ -20,6 +20,9 @@ class UserInfo : Model {
     @Max(150)
     int age;
 
+    @Transient
+    string sex;
+
     @ManyToMany("uinfos")
     AppInfo[] apps;
 

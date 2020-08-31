@@ -62,8 +62,16 @@ string makeDeserializer(T,F)() {
     static foreach (string memberName; FieldNameTuple!T) {{
         alias currentMember = __traits(getMember, T, memberName);
         alias memType = typeof(currentMember);
+        
+        static if (__traits(getProtection, currentMember) != "public") {
+            enum isEntityMember = false;
+        } else static if(hasUDA!(currentMember, Transient)) {
+            enum isEntityMember = false;
+        } else {
+            enum isEntityMember = true;
+        }
 
-        static if (__traits(getProtection, currentMember) == "public") {
+        static if (isEntityMember) {
             string mappedBy;
             static if(hasUDA!(currentMember, ManyToMany)) {
                 mappedBy = "\""~getUDAs!(currentMember, ManyToMany)[0].mappedBy~"\"";

@@ -232,10 +232,20 @@ string makeInitEntityData(T,F)() {
         _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
     }
 
-    foreach(memberName; __traits(derivedMembers, T)) {
-        static if (__traits(getProtection, __traits(getMember, T, memberName)) == "public") {
+    static foreach (string memberName; FieldNameTuple!T) {{
+        alias currentMember = __traits(getMember, T, memberName);
+        
+        static if (__traits(getProtection, currentMember) != "public") {
+            enum isEntityMember = false;
+        } else static if(hasUDA!(currentMember, Transient)) {
+            enum isEntityMember = false;
+        } else {
+            enum isEntityMember = true;
+        }
+        
+        static if (isEntityMember) {
             alias memType = typeof(__traits(getMember, T ,memberName));
-            static if (!isFunction!(memType)) {
+            
                 //columnName nullable
                 string nullable;
                 string columnName;
@@ -319,9 +329,9 @@ string makeInitEntityData(T,F)() {
         `~fieldName~`.setAuto(true);
         `~fieldName~`.setNullable(false);`;
                 }
-            }
         }    
-    }
+    }}
+
     str ~=`
         if (_fields.length == 0) {
             throw new EntityException("Entity class member cannot be empty : `~ T.stringof~`");
