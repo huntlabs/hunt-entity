@@ -362,7 +362,7 @@ class EqlParse
 
         _parsedEql = SQLUtils.toSQLString(select_copy, _dbtype);
 
-        warning(_parsedEql);
+        version(HUNT_ENTITY_DEBUG) warning(_parsedEql);
 
     }
 

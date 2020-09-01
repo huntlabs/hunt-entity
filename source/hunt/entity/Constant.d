@@ -36,9 +36,6 @@ struct JoinColumn {
     bool nullable = true;
 }
 
-struct Transient {
-}
-
 struct JoinTable {
     string name;
 }
@@ -80,9 +77,12 @@ struct ManyToOne {
 enum {
     Auto = 0x1,
     AutoIncrement = 0x1,
-    PrimaryKey = 0x2,
-    Id = 0x4
+    Id = 0x2,
+    Transient = 0x3
 }
+
+// deprecated("Using Id instead.")
+alias PrimaryKey = Id;
 
 enum OrderBy {
     ASC = 0,
