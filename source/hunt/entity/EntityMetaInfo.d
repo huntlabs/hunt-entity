@@ -23,17 +23,17 @@ struct EntityMetaInfo {
     // TODO: Tasks pending completion -@zhangxueping at 2020-08-28T09:35:46+08:00
     // 
     string tableName;
-    string modelName;
+    string simpleName;
     // TypeInfo typeInfo;
 
     // fully qualified name
-    string qualifiedName;
+    string fullName;
 
     string toColumnName(string fieldName) {
         auto itemPtr = fieldName in fieldColumnMaps;
         if(itemPtr is null) {
             version(HUNT_ENTITY_DEBUG) {
-                warningf("No mapped column name found for field [%s] in %s", fieldName, qualifiedName);
+                warningf("No mapped column name found for field [%s] in %s", fieldName, fullName);
             }
             return fieldName;
         }
@@ -48,6 +48,15 @@ struct EntityMetaInfo {
  */
 EntityMetaInfo extractEntityInfo(T)() {
     EntityMetaInfo metaInfo;
+
+    metaInfo.fullName = fullyQualifiedName!T;
+    metaInfo.simpleName = T.stringof;
+
+    static if (hasUDA!(T,Table)) {
+        metaInfo.tableName = getUDAs!(T, Table)[0].name;
+    } else {
+        metaInfo.tableName = T.stringof;
+    }
 
     static foreach (string memberName; FieldNameTuple!T) {{
         alias currentMemeber = __traits(getMember, T, memberName);

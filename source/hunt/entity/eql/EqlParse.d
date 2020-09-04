@@ -61,6 +61,8 @@ class EqlParse
     private Object[string] _parameters;
 
     private EntityMetaInfo _entityInfo;
+    private FormatOption _formatOption;
+    private string _nativeSql;
 
     this(string eql, ref EntityMetaInfo entityInfo, string dbtype = "mysql")
     {
@@ -69,7 +71,17 @@ class EqlParse
         _dbtype = dbtype;
         _aliasVistor = new ExportTableAliasVisitor();
         _schemaVistor = SQLUtils.createSchemaStatVisitor(_dbtype);
-        // logDebug("EQL DBType : ",_dbtype);
+
+        _formatOption = new FormatOption(true, true);
+        _formatOption.config(VisitorFeature.OutputQuotedIdentifier, true);
+    }
+
+    FormatOption formatOption() {
+        return _formatOption;
+    }
+
+    void formatOption(FormatOption value) {
+        _formatOption = value;
     }
 
     string getEql()
@@ -119,6 +131,7 @@ class EqlParse
 
     private void init()
     {
+        _nativeSql = "";
         auto aliasMap = _aliasVistor.getAliasMap();
         foreach (objName, v; aliasMap)
         {
@@ -140,12 +153,11 @@ class EqlParse
 
         foreach (objName, obj; _eqlObj)
         {
-            if (obj.className() != null)
+            if (!obj.className().empty())
             {
-                auto tableName = _clsNameToTbName.get(obj.className(), null);
-                if (tableName is null)
-                {
-                    eql_throw(obj.className(), "Class is not found");
+                string tableName = _clsNameToTbName.get(obj.className(), null);
+                if (tableName.empty()) {
+                    eql_throw(obj.className(), "table is not found");
                 }
                 obj.setTableName(tableName);
             }
@@ -210,16 +222,28 @@ class EqlParse
                 if (eqlObj !is null)
                 {
                     auto clsName = eqlObj.className();
-                    auto fields = _tableFields.get(clsName, null);
+                    EntityFieldInfo[string] fields = _tableFields.get(clsName, null);
+
                     if (fields !is null)
                     {
-                        foreach (clsFiled, entFiled; fields)
+                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
                         {
                             if (!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
                             {
-                                select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null
+                                string columnAlias = selectItem.getAlias();
+
+                                version(HUNT_ENTITY_DEBUG) {
+                                    tracef("columnAlias: %s, SelectColumn: %s, fullColumn: %s", 
+                                        columnAlias, entFiled.getSelectColumn(), entFiled.getFullColumn());
+                                }
+
+                                // SQLIdentifierExpr identifierExpr = new SQLIdentifierExpr(entFiled.getFullColumn());                                    
+
+                                SQLIdentifierExpr identifierExpr = new SQLIdentifierExpr(columnAlias.empty()
                                         ? entFiled.getSelectColumn()
-                                        : entFiled.getFullColumn()), selectItem.getAlias());
+                                        : entFiled.getFullColumn());
+
+                                select_copy.addSelectItem(identifierExpr, columnAlias);
                                 // logDebug("sql replace : (%s ,%s) ".format(clsName ~ "." ~ clsFiled,clsName ~ "." ~ entFiled.getSelectColumn()));
                             }
                         }
@@ -457,15 +481,15 @@ class EqlParse
         parseFromTable(fromExpr);
 
         ///where 
-        auto whereCond = updateBlock.getWhere();
+        SQLExpr whereCond = updateBlock.getWhere();
         if (whereCond !is null)
         {
-            auto where = SQLUtils.toSQLString(whereCond);
+            string where = SQLUtils.toSQLString(whereCond);
             where = convertAttrExpr(where);
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
+        _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype, _formatOption);
 
         version (HUNT_ENTITY_DEBUG_MORE)
             trace(_parsedEql);
@@ -490,7 +514,7 @@ class EqlParse
             delBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype);
+        _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype, _formatOption);
     }
 
     private void doInsertParse()
@@ -568,7 +592,7 @@ class EqlParse
         //     logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
         parseFromTable(fromExpr);
 
-        _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
+        _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype, _formatOption);
 
         if(_dbtype == DBType.POSTGRESQL) {
             string autoIncrementKey = _entityInfo.autoIncrementKey;
@@ -903,6 +927,9 @@ class EqlParse
 
     public string getNativeSql()
     {
+        if(!_nativeSql.empty())
+            return _nativeSql;
+
         string sql = _parsedEql;
 
         version (HUNT_ENTITY_DEBUG_MORE)
@@ -935,15 +962,20 @@ class EqlParse
             {
                 params.add(_params[e]);
             }
-            sql = SQLUtils.format(sql, _dbtype, params);
+            sql = SQLUtils.format(sql, _dbtype, params, _formatOption);
+        } else {
+            sql = SQLUtils.format(sql, _dbtype, _formatOption);
         }
 
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T14:41:55+08:00
         // why?
-        if (_dbtype == DBType.POSTGRESQL.name && _params.length == 0)
-            sql = SQLUtils.format(sql, _dbtype);
+        // if (_dbtype == DBType.POSTGRESQL.name && _params.length == 0) {
+        //     sql = SQLUtils.format(sql, _dbtype, _formatOption);
+        //     warning(sql);
+        // }
 
         version(HUNT_ENTITY_DEBUG) infof("result sql : %s", sql);
+        _nativeSql = sql;
         return sql;
     }
 }

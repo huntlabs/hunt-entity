@@ -162,7 +162,7 @@ class EntityManager : Closeable {
 
     EntitySession getSession() {
         if(_entitySession is null) {
-            trace("Creating a new session");
+            version(HUNT_DEBUG) info("Creating a new session");
             _entitySession = new EntitySession(_db);
         }
         return _entitySession;

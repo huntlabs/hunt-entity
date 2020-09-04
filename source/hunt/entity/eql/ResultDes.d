@@ -194,25 +194,26 @@ string makeDeserializer(T)() {
                             }
                             columnValue = row.getValue(columnAsName);
                         }
-                        
-                        if (columnValue.hasValue()) {
-                            version(HUNT_ENTITY_DEBUG_MORE) {
-                                string value = columnValue.toString();
-                                if(value.length > 128) {
-                                    tracef("field: %s, column: %s, type: %s, value: %s", "` 
-                                        ~ memberName ~ `", ` ~ columnName ~ `, "` 
-                                        ~ memType.stringof ~ `", value[0..128]);
-                                } else {
-                                    tracef("field: name=%s, type=%s; column: name=%s / %s, type=%s; value: %s", "` 
-                                        ~ memberName ~ `", "` ~ memType.stringof ~ `", ` 
-                                        ~ columnName ~ `, columnAsName, columnValue.type,` 
-                                        ~ ` value.empty() ? "(empty)" : value);
+                        version(HUNT_ENTITY_DEBUG) {
+                            if (columnValue.hasValue()) {
+                                version(HUNT_ENTITY_DEBUG_MORE) {
+                                    string value = columnValue.toString();
+                                    if(value.length > 128) {
+                                        tracef("field: %s, column: %s, type: %s, value: %s", "` 
+                                            ~ memberName ~ `", ` ~ columnName ~ `, "` 
+                                            ~ memType.stringof ~ `", value[0..128]);
+                                    } else {
+                                        tracef("field: name=%s, type=%s; column: name=%s / %s, type=%s; value: %s", "` 
+                                            ~ memberName ~ `", "` ~ memType.stringof ~ `", ` 
+                                            ~ columnName ~ `, columnAsName, columnValue.type,` 
+                                            ~ ` value.empty() ? "(empty)" : value);
+                                    }
                                 }
+                            } else {
+                                warningf("field: name=%s, type=%s;, column: %s / %s, value: (null)", "` 
+                                    ~ memberName ~ `", "` ~ memType.stringof ~ `", ` ~ columnName 
+                                    ~ `, columnAsName);
                             }
-                        } else {
-                            warningf("field: name=%s, type=%s;, column: %s / %s, value: (null)", "` 
-                                ~ memberName ~ `", "` ~ memType.stringof ~ `", ` ~ columnName 
-                                ~ `, columnAsName);
                         }
                         `;
 

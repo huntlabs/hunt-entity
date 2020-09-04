@@ -93,9 +93,18 @@ class EntityInfo(T : Object, F : Object = T) {
                 _data.setManager(_manager);
             _tablePrefix = _manager.getPrefix();
         }
+        
+        initializeEntityInfo();
+    }
 
+    private void initializeEntityInfo() {
         // _metaInfo = extractEntityInfo!(T)();
         _metaInfo = T.metaInfo; // extractEntityInfo!(T)();
+
+        _entityClassName = _metaInfo.simpleName;
+        _tableName = _tablePrefix ~ _metaInfo.tableName;
+        _tableNameInLower = _tableName.toLower();
+
         initEntityData();
     }
 
@@ -258,23 +267,9 @@ string makeInitEntityData(T,F)() {
 
     string str = `
     private void initEntityData() {
-        _entityClassName = "`~T.stringof~`";`;
-
-    static if (hasUDA!(T,Table)) {
-        str ~= `
-        _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
-    }
-    else {
-        str ~= `
-        _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
-    }
-
-    str ~= `
-        _tableNameInLower = _tableName.toLower();
     `;
 
-    static if (hasUDA!(T, Factory))
-    {
+    static if (hasUDA!(T, Factory)) {
         str ~= `
         _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
     }

@@ -157,10 +157,10 @@ class EqlQuery(T...)
             return;
         _isExtracted ~= ObjType.stringof;
 
-        static if (isAggregateType!(ObjType) && hasUDA!(ObjType, Table))
+        static if (isAggregateType!(ObjType)) //  && hasUDA!(ObjType, Table)
         {
             {
-                auto entInfo = new EqlInfo!(ObjType)(_manager);
+                EqlInfo!(ObjType) entInfo = new EqlInfo!(ObjType)(_manager);
 
                 _eqlParser.putFields(entInfo.getEntityClassName(), entInfo.getFields);
                 _eqlParser.putClsTbName(entInfo.getEntityClassName(), entInfo.getTableName());
@@ -316,10 +316,10 @@ class EqlQuery(T...)
 
     public Page!ResultObj getPageResult()
     {
-        if (_pageable)
+        if (_pageable) {
             _countEql = PagerUtils.count(_eqlParser.getNativeSql, _eqlParser.getDBType());
-        else
-        {
+            version(HUNT_SQL_DEBUG) info(_countEql);
+        } else {
             throw new Exception("please use 'createPageQuery'");
         }
 

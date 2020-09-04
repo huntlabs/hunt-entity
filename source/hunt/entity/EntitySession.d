@@ -37,27 +37,27 @@ class EntitySession
         // close();
     }
 
-    public void beginTransaction()
+    void beginTransaction()
     {
         // alway return a new Transaction;
         _trans = _db.getTransaction(getConnection());
     }
 
-    public void commit()
+    void commit()
     {
         assert(_trans !is null, "Execute beginTransaction first");
         checkConnection();
         _trans.commit();
     }
 
-    public void rollback()
+    void rollback()
     {
         assert(_trans !is null, "Execute beginTransaction first");
         checkConnection();
         _trans.rollback();
     }
 
-    public Statement prepare(string sql)
+    Statement prepare(string sql)
     {
         return _db.prepare(getConnection(), sql);
     }
@@ -76,16 +76,16 @@ class EntitySession
 		return rs;
 	}
 
-    public SqlConnection getConnection() 
+    SqlConnection getConnection() 
     {
         if(_conn is null)
            _conn = _db.getConnection(); 
         return _conn;
     }
 
-    public Transaction getTransaction() {return _trans;}
+    Transaction getTransaction() {return _trans;}
 
-    public void close() 
+    void close() 
     {
         Util.info("closing");
         if (_conn !is null && _db !is null)
