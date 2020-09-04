@@ -40,7 +40,7 @@ void main()
         em.close();
         // warning("checking");
     }
-    test_eql_insert(em);
+    // test_eql_insert(em);
     // test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
@@ -62,7 +62,7 @@ void main()
     // test_create_eql_by_queryBuilder(em);
     // test_statement(em);
     // test_valid(em);
-    // test_pagination(em);
+    test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
     // test_transaction(em);
@@ -372,14 +372,14 @@ void test_pagination(EntityManager em)
     {
         string queryString = "select a, b from UserInfo a left join AppInfo b on a.id = b.id " ~ 
             " where a.age > :age order by a.id ";
-        auto query = em.createQuery!(UserInfo, AppInfo)(queryString, new Pageable(0,2))
+        EqlQuery!(UserInfo, AppInfo) query = em.createQuery!(UserInfo, AppInfo)(queryString, new Pageable(0,2))
             .setParameter("age",10);
             
-        auto page = query.getPageResult();
+        Page!UserInfo page = query.getPageResult();
         logDebug("UserInfo -- Page(PageNo : %s ,size of Page : %s ,Total Pages: %s,Total : %s)".format(page.getNumber(),
                 page.getSize(),page.getTotalPages(),page.getTotalElements()));
 
-        foreach(d ; page.getContent())
+        foreach(UserInfo d ; page.getContent())
         {
             logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
         }
@@ -477,27 +477,30 @@ void test_eql_select(EntityManager em)
     /// select statement
 
 
+    // case 1
 // SELECT Car.uid AS Car__as__uid, Car.id AS Car__as__id, Car.name AS Car__as__name
 // FROM Car 
 // WHERE Car.id = 1
     // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.id = 1;");
-    EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a;");
-    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name is null;");
-    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name = '';");
-    Car[] results = query0.getResultList();
-    foreach (Car d; results)
-    {
-        logDebug("Car( %s , %s , %s ) ".format(d.id, d.name, d.uid));
-        infof("%s , %s", d.name is null, d.name == "");
-    }
+    // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a;");
+    // // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name is null;");
+    // // EqlQuery!(Car) query0 = em.createQuery!(Car)(" select a from Car a where a.name = '';");
+    // Car[] results = query0.getResultList();
+    // foreach (Car d; results)
+    // {
+    //     logDebug("Car( %s , %s , %s ) ".format(d.id, d.name, d.uid));
+    //     infof("%s , %s", d.name is null, d.name == "");
+    // }
 
 
-    // EqlQuery!(UserInfo) query1 = em.createQuery!(UserInfo)(" select a from UserInfo a ;");
+    // case 2
+    // EqlQuery!(UserInfo) query1 = em.createQuery!(UserInfo)(" select a from UserInfo a where a.id = 1;");
     // foreach (UserInfo d; query1.getResultList())
     // {
     // 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
     // }
 
+    // case 3
     // auto query2 = em.createQuery!(LoginInfo)(
     // 		" select a,b  from LoginInfo a left join a.uinfo b ;");
     // foreach (d; query2.getResultList())
@@ -588,6 +591,10 @@ void test_eql_update_with_reserved_word(EntityManager em)
     auto update = em.createQuery!(AppInfo)(sql);
     logDebug(" update result : ",update.exec());
 
+// UPDATE appinfo
+// SET "desc" = 'test'
+// WHERE "appinfo"."id" = 1
+
     // UPDATE AppInfo 
     // SET AppInfo.desc = 'test'
     // WHERE AppInfo.id = 1
@@ -630,7 +637,7 @@ void test_eql_insert(EntityManager em)
     insert.setParameter("age",22);
 
     logDebug(" insert result : ",insert.exec());
-    warningf(" last Id: %d", insert.lastInsertId());
+    warningf(" last id: %d", insert.lastInsertId());
 }
 
 // void test_eql_insert2(EntityManager em)

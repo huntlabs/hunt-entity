@@ -7,7 +7,7 @@
  Target Server Version : 50710
  File Encoding         : 65001
 
- Date: 18/08/2020 15:07:13
+ Date: 03/09/2020 17:14:30
 */
 
 SET NAMES utf8mb4;
@@ -29,7 +29,8 @@ CREATE TABLE `AppInfo`  (
 -- Records of AppInfo
 -- ----------------------------
 INSERT INTO `AppInfo` VALUES (1, 'Vitis', 'test1', b'1');
-INSERT INTO `AppInfo` VALUES (2, 'no name', '', b'0');
+INSERT INTO `AppInfo` VALUES (2, '葡萄乐园', '葡萄商城app', b'1');
+INSERT INTO `AppInfo` VALUES (3, 'no name', '', b'0');
 
 -- ----------------------------
 -- Table structure for Car
@@ -59,7 +60,7 @@ DROP TABLE IF EXISTS `IDCard`;
 CREATE TABLE `IDCard`  (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `desc` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '0',
-  `uid` int(11) NOT NULL DEFAULT 0,
+  `user_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin ROW_FORMAT = Dynamic;
 
@@ -159,4 +160,3 @@ INSERT INTO `UserInfo` VALUES (145, 'momomo', 666);
 INSERT INTO `UserInfo` VALUES (146, 'Jons', 2355);
 
 SET FOREIGN_KEY_CHECKS = 1;
-
