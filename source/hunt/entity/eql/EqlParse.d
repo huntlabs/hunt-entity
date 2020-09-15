@@ -962,9 +962,11 @@ class EqlParse
             {
                 params.add(_params[e]);
             }
-            sql = SQLUtils.format(sql, _dbtype, params, _formatOption);
+            // sql = SQLUtils.format(sql, _dbtype, params, _formatOption);
+            sql = SQLUtils.format(sql, _dbtype, params);
         } else {
-            sql = SQLUtils.format(sql, _dbtype, _formatOption);
+            // sql = SQLUtils.format(sql, _dbtype, _formatOption);
+            sql = SQLUtils.format(sql, _dbtype);
         }
 
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T14:41:55+08:00
