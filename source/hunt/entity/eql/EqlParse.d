@@ -132,8 +132,8 @@ class EqlParse
     private void init()
     {
         _nativeSql = "";
-        auto aliasMap = _aliasVistor.getAliasMap();
-        foreach (objName, v; aliasMap)
+        Map!(string, SQLTableSource) aliasMap = _aliasVistor.getAliasMap();
+        foreach (string objName, SQLTableSource v; aliasMap)
         {
             string clsName;
             auto expr = (cast(SQLExprTableSource) v).getExpr();
@@ -151,16 +151,18 @@ class EqlParse
             _eqlObj[objName] = obj;
         }
 
-        foreach (objName, obj; _eqlObj)
+        version (HUNT_ENTITY_DEBUG) trace(_clsNameToTbName);
+
+        foreach (string objName, EqlObject obj; _eqlObj)
         {
-            if (!obj.className().empty())
-            {
-                string tableName = _clsNameToTbName.get(obj.className(), null);
-                if (tableName.empty()) {
-                    eql_throw(obj.className(), "table is not found");
-                }
-                obj.setTableName(tableName);
+            string className = obj.className();
+            assert(!className.empty());
+
+            string tableName = _clsNameToTbName.get(className, null);
+            if (tableName.empty()) {
+                eql_throw(className, "table is not found");
             }
+            obj.setTableName(tableName);
         }
 
         // logDebug("aliasMap : %s".format(aliasMap));
@@ -213,8 +215,9 @@ class EqlParse
         {
             auto expr = selectItem.getExpr();
             
-            auto oo = cast(Object)expr;
+            Object oo = cast(Object)expr;
             // version(HUNT_DEBUG) infof("Expr: %s, item: %s", typeid(oo).name, SQLUtils.toSQLString(selectItem));
+            version(HUNT_ENTITY_DEBUG) infof("Expr: %s", typeid(oo).name);
 
             if (cast(SQLIdentifierExpr) expr !is null)
             {
@@ -336,14 +339,35 @@ class EqlParse
 
         ///from
         auto fromExpr = select_copy.getFrom();
+
+        SQLExprTableSource  tableSource = cast(SQLExprTableSource)queryBlock.getFrom();
+        SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)tableSource.getExpr(); 
+        string tableAlias = tableSource.getAlias();
+        string className = identifierExpr.getName();
+        
+        string[string] aliasModelMap;
+        if(!tableAlias.empty()) {
+            aliasModelMap[tableAlias] = className;
+        }
+
+        version (HUNT_ENTITY_DEBUG) trace(aliasModelMap);
         parseFromTable(fromExpr);
+               
 
         ///where 
         auto whereCond = select_copy.getWhere();
         if (whereCond !is null)
         {
-            auto where = SQLUtils.toSQLString(whereCond);
+            // version (HUNT_ENTITY_DEBUG) {
+            //     infof("Parsing the WHERE clause. The type is %s", typeid(cast(Object)whereCond));
+            // }
+
+            updateOwner(whereCond, _clsNameToTbName, aliasModelMap);
+            
+            string where = SQLUtils.toSQLString(whereCond);
+            version (HUNT_ENTITY_DEBUG) warning(where);
             where = convertAttrExpr(where);
+            version (HUNT_ENTITY_DEBUG) trace(where);
             select_copy.setWhere(SQLUtils.toSQLExpr(where));
         }
 
@@ -351,6 +375,7 @@ class EqlParse
         auto orderBy = select_copy.getOrderBy();
         if (orderBy !is null)
         {
+            version (HUNT_ENTITY_DEBUG) infof("Parsing the orderBy clause.");
             foreach (item; orderBy.getItems)
             {
                 auto exprStr = SQLUtils.toSQLString(item.getExpr(), _dbtype);
@@ -369,6 +394,7 @@ class EqlParse
         auto groupBy = select_copy.getGroupBy();
         if (groupBy !is null)
         {
+            version (HUNT_ENTITY_DEBUG) infof("Parsing the groupBy clause.");
             groupBy.getItems().clear();
             foreach (item; queryBlock.getGroupBy().getItems())
             {
@@ -384,8 +410,8 @@ class EqlParse
             select_copy.setGroupBy(groupBy);
         }
 
+        version(HUNT_ENTITY_DEBUG) info("The parsing done. Now, converting to native SQL...");
         _parsedEql = SQLUtils.toSQLString(select_copy, _dbtype);
-
         version(HUNT_ENTITY_DEBUG) warning(_parsedEql);
 
     }
@@ -666,6 +692,7 @@ class EqlParse
     /// remove alias & a.xx -- > Table
     private void parseFromTable(SQLTableSource fromExpr)
     {
+        version (HUNT_ENTITY_DEBUG) infof("Parsing the FROM clause. The type is: %s", typeid(cast(Object)fromExpr));
         if (fromExpr is null)
         {
             eql_throw("Table", "no found table");
@@ -979,5 +1006,59 @@ class EqlParse
         version(HUNT_ENTITY_DEBUG) infof("result sql : %s", sql);
         _nativeSql = sql;
         return sql;
+    }
+
+    static void updateOwner(SQLExpr sqlExpr, string[string] modelTableMap, string[string] aliasModelMap) {
+    // static void updateOwner(SQLSelectStatement statement, string[string] mappedNames) {
+    //     SQLSelectQueryBlock queryBlock = selStmt.getSelect().getQueryBlock();
+
+    //     // where
+    //     SQLExpr sqlExpr = queryBlock.getWhere();
+    //     infof("Where: %s", typeid(cast(Object)sqlExpr));
+        version (HUNT_ENTITY_DEBUG) {
+            infof("Parsing the WHERE clause. The type is %s", typeid(cast(Object)sqlExpr));
+        }
+
+
+        SQLInSubQueryExpr subQueryExpr = cast(SQLInSubQueryExpr)sqlExpr;
+
+        if(subQueryExpr !is null) {
+
+            // in express
+            SQLPropertyExpr expr =  cast(SQLPropertyExpr)subQueryExpr.getExpr();
+            string ownerName = expr.getOwnernName();
+            auto itemPtr = ownerName in aliasModelMap;
+            if(itemPtr !is null) {
+                ownerName = *itemPtr;
+                ownerName = modelTableMap.get(ownerName, ownerName);
+                expr.setOwner(ownerName);
+            }
+
+            // version (HUNT_ENTITY_DEBUG) warningf("ownerName: %s", ownerName);
+
+
+            // alias
+            SQLSelect subSelect = subQueryExpr.getSubQuery();
+            SQLSelectQueryBlock selectQuery = cast(SQLSelectQueryBlock)subSelect.getQuery();
+            SQLExprTableSource  subFromExpr = cast(SQLExprTableSource)selectQuery.getFrom();
+
+            string tableAlias = subFromExpr.getAlias();
+            SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)subFromExpr.getExpr();
+            string className = identifierExpr.getName();
+            version (HUNT_ENTITY_DEBUG) tracef("tableAlias: %s, className: %s", tableAlias, className);
+
+            itemPtr = className in modelTableMap;
+            if(itemPtr is null) {
+                warningf("No mapped model name found for class: %s", className);
+            } else {
+                identifierExpr.setName(*itemPtr);
+            }
+            subFromExpr.setAlias("");
+
+            // 
+        } else {
+            warning("unhandled");
+        }
+
     }
 }
