@@ -43,10 +43,32 @@ void eql_throw(string type, string message) {
 /**
  * 
  */
-class EqlSubstitutionContext {
-    EqlObject[string] eqlObjs;
+private class EqlSubstitutionContext {
+    // EqlObject[string] eqlObjs;
+    EntityFieldInfo[string][string] tableFields;
+
     string[string] modelTableMap;
     string[string] aliasModelMap;
+
+    string getTableByModel(string name, string defaultValue) {
+        auto itemPtr = name in modelTableMap;
+        if(itemPtr is null) {
+            version (HUNT_ENTITY_DEBUG) warningf("Can't find the table name for a mode: %s", name);
+            return defaultValue;
+        } else {
+            return *itemPtr;
+        }
+    }
+
+    string getModelByAlias(string name, string defaultValue) {
+        auto itemPtr = name in aliasModelMap;
+        if(itemPtr is null) {
+            version (HUNT_ENTITY_DEBUG) warningf("Can't find the model name for an alias: %s", name);
+            return defaultValue;
+        } else {
+            return *itemPtr;
+        }
+    }
 }
 
 /**
@@ -369,7 +391,8 @@ class EqlParse {
             EqlSubstitutionContext context = new EqlSubstitutionContext();
             context.modelTableMap = _clsNameToTbName;
             context.aliasModelMap = aliasModelMap;
-            context.eqlObjs = _eqlObj;
+            context.tableFields = _tableFields;
+            // context.eqlObjs = _eqlObj;
 
             // substituteInExpress(whereCond, context);
 
@@ -555,7 +578,7 @@ class EqlParse {
             delBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype, _formatOption);
+        _parsedEql = SQLUtils.toSQLString(delBlock, _dbtype);
     }
 
     private void doInsertParse()
@@ -633,7 +656,7 @@ class EqlParse {
         //     logDebug("Insert into: %s".format(SQLUtils.toSQLString(fromExpr)));
         parseFromTable(fromExpr);
 
-        _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype, _formatOption);
+        _parsedEql = SQLUtils.toSQLString(insertBlock, _dbtype);
 
         if(_dbtype == DBType.POSTGRESQL) {
             string autoIncrementKey = _entityInfo.autoIncrementKey;
@@ -1064,13 +1087,33 @@ class EqlParse {
     // SQLPropertyExpr
     static void substitute(SQLPropertyExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLPropertyExpr");
+
+        // owner
         string ownerName = expr.getOwnernName();
-        string newOwnerName = context.aliasModelMap.get(ownerName, ownerName);
-        newOwnerName = context.modelTableMap.get(newOwnerName, newOwnerName);
-        if(newOwnerName != ownerName) {
-            // version (HUNT_ENTITY_DEBUG) tracef("New owner: %s", newOwnerName);
-            expr.setOwner(newOwnerName);
+        string newOwnerName = ownerName;
+
+        if(!ownerName.empty()) {
+            newOwnerName = context.getModelByAlias(ownerName, ownerName);
+            newOwnerName = context.getTableByModel(newOwnerName, newOwnerName);
+            if(newOwnerName != ownerName) {
+                // version (HUNT_ENTITY_DEBUG) tracef("New owner: %s", newOwnerName);
+                expr.setOwner(newOwnerName);
+            }
         }
+        version (HUNT_ENTITY_DEBUG) tracef("ownerName, old: %s, new: %s", ownerName, newOwnerName);
+
+        // name
+        string name = expr.getName();
+        EntityFieldInfo[string] fields = context.tableFields.get(newOwnerName, null);
+        if (fields !is null) {
+            foreach (string clsFiled, EntityFieldInfo entFiled; fields) {
+                tracef("xx=>%s", clsFiled);
+                if(clsFiled == newOwnerName) {
+
+                }
+            }
+        }
+
 
         // TODO: Tasks pending completion -@zhangxueping at 2020-09-21T11:41:18+08:00
         // a => *
@@ -1092,6 +1135,11 @@ class EqlParse {
     
     static void substitute(SQLNumericLiteralExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLNumericLiteralExpr");
+        // do nothing
+    }
+    
+    static void substitute(SQLTextLiteralExpr expr, EqlSubstitutionContext context) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLTextLiteralExpr");
         // do nothing
     }
     
@@ -1138,6 +1186,12 @@ class EqlParse {
         SQLNumericLiteralExpr numberExpr = cast(SQLNumericLiteralExpr)sqlExpr;
         if(numberExpr !is null) {
             substitute(numberExpr, context);
+            return;
+        }
+
+        SQLTextLiteralExpr textExpr = cast(SQLTextLiteralExpr)sqlExpr;
+        if(numberExpr !is null) {
+            substitute(textExpr, context);
             return;
         }
         
