@@ -359,11 +359,11 @@ class EqlParse
 
             replaceOwnerInExpress(whereCond, _clsNameToTbName, aliasModelMap);
             
-            // string where = SQLUtils.toSQLString(whereCond);
-            // version (HUNT_ENTITY_DEBUG) warning(where);
-            // where = convertAttrExpr(where);
-            // version (HUNT_ENTITY_DEBUG) trace(where);
-            // select_copy.setWhere(SQLUtils.toSQLExpr(where));
+            string where = SQLUtils.toSQLString(whereCond);
+            version (HUNT_ENTITY_DEBUG) warning(where);
+            where = convertAttrExpr(where);
+            version (HUNT_ENTITY_DEBUG) trace(where);
+            select_copy.setWhere(SQLUtils.toSQLExpr(where));
         }
 
         ///order by
