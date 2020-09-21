@@ -23,24 +23,25 @@ class EqlObject
         _className = clsName;
     }
 
-    public string className() { return _className ;}
-    public void setClassName(string name)
+    string className() { return _className ;}
+
+    void setClassName(string name)
     {
         _className = name;
     }
 
-    public string tableName() { return _tableName; }
-    public void setTableName(string tbName)
+    string tableName() { return _tableName; }
+    void setTableName(string tbName)
     {
         _tableName = tbName;
     }
 
-    public void putSelectItem( Object o)
+    void putSelectItem( Object o)
     {
         _selectItem ~= o;
     }
 
-    public Object[] getSelectItems()
+    Object[] getSelectItems()
     {
         return _selectItem;
     }
@@ -114,14 +115,14 @@ class EqlInfo(T : Object, F : Object = T) {
         initEntityData();
     }
 
-    public EntityFieldInfo getPrimaryField() {
+    EntityFieldInfo getPrimaryField() {
         if (_primaryKey.length > 0) 
             return _fields[_primaryKey];
         return null;
     }
 
 
-    public EntityFieldInfo opDispatch(string name)() 
+    EntityFieldInfo opDispatch(string name)() 
     {
         EntityFieldInfo info = _fields.get(name,null);
         if (info is null)
@@ -129,18 +130,18 @@ class EqlInfo(T : Object, F : Object = T) {
         return info;
     }
 
-    public string getFactoryName() { return _factoryName; };
-    public string getEntityClassName() { return _entityClassName; }
-    public string getTableName() { return _tableName; }
-    public string getAutoIncrementKey() { return _autoIncrementKey; }
-    public EntityFieldInfo[string] getFields() { return _fields; }
-    public string getPrimaryKeyString() { return _primaryKey; }
-    public EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
-    public string getJoinCond(string member) { 
+    string getFactoryName() { return _factoryName; };
+    string getEntityClassName() { return _entityClassName; }
+    string getTableName() { return _tableName; }
+    string getAutoIncrementKey() { return _autoIncrementKey; }
+    EntityFieldInfo[string] getFields() { return _fields; }
+    string getPrimaryKeyString() { return _primaryKey; }
+    EntityFieldInfo getSingleField(string name) { return _fields.get(name,null); }
+    string getJoinCond(string member) { 
         auto cond =  _joinConds.get(member,null);
         return cond !is null ? cond.toString() : null;
     }
-    public Object[string] getJoinConds() { 
+    Object[string] getJoinConds() { 
         return _joinConds;
     }
 

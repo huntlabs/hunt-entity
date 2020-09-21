@@ -350,25 +350,20 @@ class EqlParse
             aliasModelMap[tableAlias] = className;
         }
 
-        version (HUNT_ENTITY_DEBUG) trace(aliasModelMap);
         parseFromTable(fromExpr);
                
 
         ///where 
         auto whereCond = select_copy.getWhere();
-        if (whereCond !is null)
-        {
-            // version (HUNT_ENTITY_DEBUG) {
-            //     infof("Parsing the WHERE clause. The type is %s", typeid(cast(Object)whereCond));
-            // }
+        if (whereCond !is null) {
 
-            updateOwner(whereCond, _clsNameToTbName, aliasModelMap);
+            replaceOwnerInExpress(whereCond, _clsNameToTbName, aliasModelMap);
             
-            string where = SQLUtils.toSQLString(whereCond);
-            version (HUNT_ENTITY_DEBUG) warning(where);
-            where = convertAttrExpr(where);
-            version (HUNT_ENTITY_DEBUG) trace(where);
-            select_copy.setWhere(SQLUtils.toSQLExpr(where));
+            // string where = SQLUtils.toSQLString(whereCond);
+            // version (HUNT_ENTITY_DEBUG) warning(where);
+            // where = convertAttrExpr(where);
+            // version (HUNT_ENTITY_DEBUG) trace(where);
+            // select_copy.setWhere(SQLUtils.toSQLExpr(where));
         }
 
         ///order by
@@ -1008,57 +1003,141 @@ class EqlParse
         return sql;
     }
 
-    static void updateOwner(SQLExpr sqlExpr, string[string] modelTableMap, string[string] aliasModelMap) {
-    // static void updateOwner(SQLSelectStatement statement, string[string] mappedNames) {
-    //     SQLSelectQueryBlock queryBlock = selStmt.getSelect().getQueryBlock();
 
-    //     // where
-    //     SQLExpr sqlExpr = queryBlock.getWhere();
-    //     infof("Where: %s", typeid(cast(Object)sqlExpr));
-        version (HUNT_ENTITY_DEBUG) {
-            infof("Parsing the WHERE clause. The type is %s", typeid(cast(Object)sqlExpr));
+    // SQLInSubQueryExpr
+    static void replaceOwner(SQLInSubQueryExpr subQueryExpr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling a SQLInSubQueryExpr");
+
+        // in express
+        SQLPropertyExpr expr =  cast(SQLPropertyExpr)subQueryExpr.getExpr();
+        string ownerName = expr.getOwnernName();
+        auto itemPtr = ownerName in aliasModelMap;
+        if(itemPtr !is null) {
+            ownerName = *itemPtr;
+            ownerName = modelTableMap.get(ownerName, ownerName);
+            expr.setOwner(ownerName);
         }
 
+        // version (HUNT_ENTITY_DEBUG) warningf("ownerName: %s", ownerName);
+
+        // select clause
+        replaceOwner(subQueryExpr.getSubQuery(), modelTableMap, aliasModelMap);
+
+    }
+
+    // SQLIdentifierExpr
+    static void replaceOwner(SQLIdentifierExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLIdentifierExpr");
+        string className = expr.getName();
+        // version (HUNT_ENTITY_DEBUG) tracef("className: %s",  className);
+
+        auto itemPtr = className in modelTableMap;
+        if(itemPtr is null) {
+            warningf("No mapped model name found for class: %s", className);
+        } else {
+            expr.setName(*itemPtr);
+        }
+    }
+
+    // SQLPropertyExpr
+    static void replaceOwner(SQLPropertyExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLPropertyExpr");
+        string ownerName = expr.getOwnernName();
+        string newOwnerName = aliasModelMap.get(ownerName, ownerName);
+        newOwnerName = modelTableMap.get(newOwnerName, newOwnerName);
+        if(newOwnerName != ownerName) {
+            // version (HUNT_ENTITY_DEBUG) tracef("New owner: %s", newOwnerName);
+            expr.setOwner(newOwnerName);
+        }
+
+        // TODO: Tasks pending completion -@zhangxueping at 2020-09-21T11:41:18+08:00
+        // a => *
+    }
+
+
+    // SQLBinaryOpExpr
+    static void replaceOwner(SQLBinaryOpExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLBinaryOpExpr");
+
+        // Left
+        SQLExpr leftExpr = expr.getLeft();
+        replaceOwnerInExpress(leftExpr, modelTableMap, aliasModelMap);
+
+        // Right
+        SQLExpr rightExpr = expr.getRight();
+        replaceOwnerInExpress(rightExpr, modelTableMap, aliasModelMap);
+    }
+    
+    static void replaceOwner(SQLNumericLiteralExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLNumericLiteralExpr");
+        // do nothing
+    }
+
+    static void replaceOwnerInExpress(SQLExpr sqlExpr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) infof("Handling an express: %s", typeid(cast(Object)sqlExpr));
+
+        SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)sqlExpr;
+        if(identifierExpr !is null) {
+            replaceOwner(identifierExpr, modelTableMap, aliasModelMap);
+            return;
+        }
+
+        SQLPropertyExpr propertyExpr = cast(SQLPropertyExpr)sqlExpr;
+        if(propertyExpr !is null) {
+            replaceOwner(propertyExpr, modelTableMap, aliasModelMap);
+            return;
+        }
 
         SQLInSubQueryExpr subQueryExpr = cast(SQLInSubQueryExpr)sqlExpr;
-
         if(subQueryExpr !is null) {
-
-            // in express
-            SQLPropertyExpr expr =  cast(SQLPropertyExpr)subQueryExpr.getExpr();
-            string ownerName = expr.getOwnernName();
-            auto itemPtr = ownerName in aliasModelMap;
-            if(itemPtr !is null) {
-                ownerName = *itemPtr;
-                ownerName = modelTableMap.get(ownerName, ownerName);
-                expr.setOwner(ownerName);
-            }
-
-            // version (HUNT_ENTITY_DEBUG) warningf("ownerName: %s", ownerName);
-
-
-            // alias
-            SQLSelect subSelect = subQueryExpr.getSubQuery();
-            SQLSelectQueryBlock selectQuery = cast(SQLSelectQueryBlock)subSelect.getQuery();
-            SQLExprTableSource  subFromExpr = cast(SQLExprTableSource)selectQuery.getFrom();
-
-            string tableAlias = subFromExpr.getAlias();
-            SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)subFromExpr.getExpr();
-            string className = identifierExpr.getName();
-            version (HUNT_ENTITY_DEBUG) tracef("tableAlias: %s, className: %s", tableAlias, className);
-
-            itemPtr = className in modelTableMap;
-            if(itemPtr is null) {
-                warningf("No mapped model name found for class: %s", className);
-            } else {
-                identifierExpr.setName(*itemPtr);
-            }
-            subFromExpr.setAlias("");
-
-            // 
-        } else {
-            warning("unhandled");
+            replaceOwner(subQueryExpr, modelTableMap, aliasModelMap);
+            return;
         }
 
+        SQLBinaryOpExpr opExpr = cast(SQLBinaryOpExpr)sqlExpr;
+        if(opExpr !is null) {
+            replaceOwner(opExpr, modelTableMap, aliasModelMap);
+            return;
+        }
+
+        SQLNumericLiteralExpr numberExpr = cast(SQLNumericLiteralExpr)sqlExpr;
+        if(numberExpr !is null) {
+            replaceOwner(numberExpr, modelTableMap, aliasModelMap);
+            return;
+        }
+
+        warningf("A express can't be handled: %s", typeid(cast(Object)sqlExpr));
+    }
+
+    static void replaceOwner(SQLSelect subSelect, string[string] modelTableMap, string[string] aliasModelMap) {
+        SQLSelectQueryBlock queryBlock = cast(SQLSelectQueryBlock)subSelect.getQuery();
+
+        // The FROM clause 
+        SQLExprTableSource  fromExpr = cast(SQLExprTableSource)queryBlock.getFrom();
+        string tableAlias = fromExpr.getAlias();
+        if(!tableAlias.empty()) {
+            fromExpr.setAlias("");
+        
+            SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)fromExpr.getExpr();
+            if(identifierExpr !is null) {
+                version (HUNT_ENTITY_DEBUG) tracef("Removing the alias: %s", tableAlias);
+                aliasModelMap[tableAlias] = identifierExpr.getName();
+            }
+        }
+
+        SQLExpr sqlExpr = fromExpr.getExpr();
+        replaceOwnerInExpress(sqlExpr, modelTableMap, aliasModelMap);
+
+        // The selected fields
+        foreach (SQLSelectItem selectItem; queryBlock.getSelectList()) {
+            SQLExpr expr = selectItem.getExpr();
+            replaceOwnerInExpress(expr, modelTableMap, aliasModelMap);
+        }
+
+        // where
+        SQLExpr whereExpr = queryBlock.getWhere();
+        if(whereExpr !is null) {
+            replaceOwnerInExpress(whereExpr, modelTableMap, aliasModelMap);
+        }
     }
 }

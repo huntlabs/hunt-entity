@@ -222,7 +222,7 @@ string makeDeserializer(T)() {
                     str ~=`
                         if(columnValue.type == typeid(null)) {
                             version(HUNT_DEBUG) {
-                                warningf("The value of column [%s] is null. So use its default.", "` 
+                                warningf("The value of column [%s] is null. So use its default value.", "` 
                                     ~ memberName ~ `");
                             }
                         } else if(columnValue.hasValue()) {

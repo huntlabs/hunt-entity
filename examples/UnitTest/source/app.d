@@ -40,6 +40,7 @@ void main()
         em.close();
         // warning("checking");
     }
+
     // test_eql_insert(em);
     // test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
@@ -62,13 +63,13 @@ void main()
     // test_create_eql_by_queryBuilder(em);
     // test_statement(em);
     // test_valid(em);
-    test_pagination(em);
+    test_subquery(em);
+    // test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
     // test_transaction(em);
     // test_other(em);
     // test_exception(em);
-
 
     // test_EntityRepository_Insert(em);
     // test_EntityRepository_Save(em);
@@ -77,8 +78,8 @@ void main()
     // test_EntityRepository_Count(em);
     // test_EntityRepository_Sum(em);
     // testRepositoryWithTransaction(em);
-    // getchar();
-    // em.close();
+    // testRepositoryWithTransaction2(em);
+    getchar();
 
     // testBinarySerializationForModel();
     // testJsonSerializationForModel();
@@ -349,6 +350,15 @@ void test_valid(EntityManager em)
     auto uinfos = query.getResultList();
     foreach(u;uinfos)
         assert(u.valid.isValid);
+}
+
+void test_subquery(EntityManager em) {
+    string queryString = "select a from Car a where a.uid in (select b.id from UserInfo b where b.age = 5) ";
+    EqlQuery!(Car, UserInfo) query = em.createQuery!(Car, UserInfo)(queryString);
+
+    Car[] cars = query.getResultList();
+
+    warning(cars.length);
 }
 
 void test_pagination(EntityManager em)
@@ -762,10 +772,11 @@ void test_EntityRepository_Save_with_reserved_word(EntityManager em)
     infof("AppInfo(id: %d, desc: %s, available: %s) ".format(info.id, info.desc, info.isAvailable));
 
     info.desc = "test1";
-    rep.save(info);
-    // UPDATE AppInfo
-    // SET desc = 'test1', name = 'Vitis'
-    // WHERE AppInfo.id = 1	
+    rep.save(info);	
+
+    // UPDATE "appinfo"
+    // SET "desc" = 'test1', "available" = true, "name" = 'Vitis'
+    // WHERE "appinfo"."id" = 1    
     
     // info = rep.findById(1);
     // warning("AppInfo(id: %d, desc: %s) ".format(info.id, info.desc));
@@ -867,16 +878,43 @@ void test_EntityRepository_Sum(EntityManager em)
 }
 
 void testBinarySerializationForModel() {
-    Car car = new Car();
-    car.name = "Ferrari";
-    car.id = 123;
-
     import hunt.serialization.BinarySerialization;
+    // {
+    //     Car car = new Car();
+    //     car.name = "Ferrari";
+    //     car.id = 123;
 
-    ubyte[] buffer = serialize!(SerializationOptions.OnlyPublicWithNull)(car);
-    tracef("%(%02X %)", buffer);
-    Car newCar = unserialize!(Car, SerializationOptions.OnlyPublicWithNull)(buffer);
-    tracef(newCar.name);
+    //     ubyte[] buffer = serialize!(SerializationOptions.OnlyPublicWithNull)(car);
+    //     tracef("%(%02X %)", buffer);
+    //     Car newCar = unserialize!(Car, SerializationOptions.OnlyPublicWithNull)(buffer);
+    //     tracef(newCar.name);
+    // }
+
+
+    {
+        Car car1 = new Car();
+        car1.name = "Ferrari";
+        car1.id = 11;
+
+        Car car2 = new Car();
+        car2.name = "BMW";
+        car2.id = 22;
+
+        Car[] cars = [car1, car2];
+
+
+        ubyte[] buffer = serialize!(SerializationOptions.OnlyPublicWithNull)(cars);
+        tracef("%(%02X %)", buffer);
+        Car[] newCars = unserialize!(Car[], SerializationOptions.OnlyPublicWithNull)(buffer);
+
+        trace(newCars.length);
+        assert(newCars.length == 2);
+
+        foreach(Car c; newCars) {
+            assert(c !is null);
+            tracef(c.name);
+        }
+    }    
 }
 
 

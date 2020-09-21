@@ -128,7 +128,7 @@ class EqlQuery(T...)
             throw new Exception("not support dbtype : %s".format(opt.schemeName()));
         }
         version(HUNT_SQL_DEBUG) {
-            tracef("Raw sql: %s", _eql);
+            tracef("Raw eql: %s", _eql);
         }
 
         auto parsedEql = eqlCache.get(_eql);
