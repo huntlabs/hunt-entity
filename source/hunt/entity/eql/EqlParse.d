@@ -36,13 +36,23 @@ import std.format;
 import std.regex;
 import std.string;
 
-void eql_throw(string type, string message)
-{
+void eql_throw(string type, string message) {
     throw new Exception("[EQL PARSE EXCEPTION. " ~ type ~ "] " ~ message);
 }
 
-class EqlParse
-{
+/**
+ * 
+ */
+class EqlSubstitutionContext {
+    EqlObject[string] eqlObjs;
+    string[string] modelTableMap;
+    string[string] aliasModelMap;
+}
+
+/**
+ * 
+ */
+class EqlParse {
     alias EntityField = EntityFieldInfo[string];
     private string _eql;
     private string _parsedEql;
@@ -356,8 +366,12 @@ class EqlParse
         ///where 
         auto whereCond = select_copy.getWhere();
         if (whereCond !is null) {
+            EqlSubstitutionContext context = new EqlSubstitutionContext();
+            context.modelTableMap = _clsNameToTbName;
+            context.aliasModelMap = aliasModelMap;
+            context.eqlObjs = _eqlObj;
 
-            // replaceOwnerInExpress(whereCond, _clsNameToTbName, aliasModelMap);
+            // substituteInExpress(whereCond, context);
 
             // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
             // Remove this block below.
@@ -367,7 +381,7 @@ class EqlParse
             where = convertAttrExpr(where);
             version (HUNT_ENTITY_DEBUG) trace(where);
             SQLExpr newExpr = SQLUtils.toSQLExpr(where);
-            replaceOwnerInExpress(newExpr, _clsNameToTbName, aliasModelMap);
+            substituteInExpress(newExpr, context);
             select_copy.setWhere(newExpr);
 
         }
@@ -1013,33 +1027,33 @@ class EqlParse
 
 
     // SQLInSubQueryExpr
-    static void replaceOwner(SQLInSubQueryExpr subQueryExpr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLInSubQueryExpr subQueryExpr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling a SQLInSubQueryExpr");
 
         // in express
         SQLPropertyExpr expr =  cast(SQLPropertyExpr)subQueryExpr.getExpr();
         string ownerName = expr.getOwnernName();
-        auto itemPtr = ownerName in aliasModelMap;
+        auto itemPtr = ownerName in context.aliasModelMap;
         if(itemPtr !is null) {
             ownerName = *itemPtr;
-            ownerName = modelTableMap.get(ownerName, ownerName);
+            ownerName = context.modelTableMap.get(ownerName, ownerName);
             expr.setOwner(ownerName);
         }
 
         // version (HUNT_ENTITY_DEBUG) warningf("ownerName: %s", ownerName);
 
         // select clause
-        replaceOwner(subQueryExpr.getSubQuery(), modelTableMap, aliasModelMap);
+        substitute(subQueryExpr.getSubQuery(), context);
 
     }
 
     // SQLIdentifierExpr
-    static void replaceOwner(SQLIdentifierExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLIdentifierExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLIdentifierExpr");
         string className = expr.getName();
         // version (HUNT_ENTITY_DEBUG) tracef("className: %s",  className);
 
-        auto itemPtr = className in modelTableMap;
+        auto itemPtr = className in context.modelTableMap;
         if(itemPtr is null) {
             warningf("No mapped model name found for class: %s", className);
         } else {
@@ -1048,11 +1062,11 @@ class EqlParse
     }
 
     // SQLPropertyExpr
-    static void replaceOwner(SQLPropertyExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLPropertyExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLPropertyExpr");
         string ownerName = expr.getOwnernName();
-        string newOwnerName = aliasModelMap.get(ownerName, ownerName);
-        newOwnerName = modelTableMap.get(newOwnerName, newOwnerName);
+        string newOwnerName = context.aliasModelMap.get(ownerName, ownerName);
+        newOwnerName = context.modelTableMap.get(newOwnerName, newOwnerName);
         if(newOwnerName != ownerName) {
             // version (HUNT_ENTITY_DEBUG) tracef("New owner: %s", newOwnerName);
             expr.setOwner(newOwnerName);
@@ -1064,79 +1078,79 @@ class EqlParse
 
 
     // SQLBinaryOpExpr
-    static void replaceOwner(SQLBinaryOpExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLBinaryOpExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLBinaryOpExpr");
 
         // Left
         SQLExpr leftExpr = expr.getLeft();
-        replaceOwnerInExpress(leftExpr, modelTableMap, aliasModelMap);
+        substituteInExpress(leftExpr, context);
 
         // Right
         SQLExpr rightExpr = expr.getRight();
-        replaceOwnerInExpress(rightExpr, modelTableMap, aliasModelMap);
+        substituteInExpress(rightExpr, context);
     }
     
-    static void replaceOwner(SQLNumericLiteralExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLNumericLiteralExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLNumericLiteralExpr");
         // do nothing
     }
     
-    static void replaceOwner(SQLInListExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLInListExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLInListExpr");
         SQLExpr sqlExpr = expr.getExpr();
 
-        replaceOwnerInExpress(sqlExpr, modelTableMap, aliasModelMap);
+        substituteInExpress(sqlExpr, context);
 
         //
         List!SQLExpr targets = expr.getTargetList();
         foreach(SQLExpr se; targets) {
-            replaceOwnerInExpress(se, modelTableMap, aliasModelMap);
+            substituteInExpress(se, context);
         }
     }
 
-    static void replaceOwnerInExpress(SQLExpr sqlExpr, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substituteInExpress(SQLExpr sqlExpr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) infof("Handling an express: %s", typeid(cast(Object)sqlExpr));
 
         SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)sqlExpr;
         if(identifierExpr !is null) {
-            replaceOwner(identifierExpr, modelTableMap, aliasModelMap);
+            substitute(identifierExpr, context);
             return;
         }
 
         SQLPropertyExpr propertyExpr = cast(SQLPropertyExpr)sqlExpr;
         if(propertyExpr !is null) {
-            replaceOwner(propertyExpr, modelTableMap, aliasModelMap);
+            substitute(propertyExpr, context);
             return;
         }
 
         SQLInSubQueryExpr subQueryExpr = cast(SQLInSubQueryExpr)sqlExpr;
         if(subQueryExpr !is null) {
-            replaceOwner(subQueryExpr, modelTableMap, aliasModelMap);
+            substitute(subQueryExpr, context);
             return;
         }
 
         SQLBinaryOpExpr opExpr = cast(SQLBinaryOpExpr)sqlExpr;
         if(opExpr !is null) {
-            replaceOwner(opExpr, modelTableMap, aliasModelMap);
+            substitute(opExpr, context);
             return;
         }
 
         SQLNumericLiteralExpr numberExpr = cast(SQLNumericLiteralExpr)sqlExpr;
         if(numberExpr !is null) {
-            replaceOwner(numberExpr, modelTableMap, aliasModelMap);
+            substitute(numberExpr, context);
             return;
         }
         
         SQLInListExpr inListExpr = cast(SQLInListExpr)sqlExpr;
         if(inListExpr !is null) {
-            replaceOwner(inListExpr, modelTableMap, aliasModelMap);
+            substitute(inListExpr, context);
             return;
         }
 
         warningf("A express can't be handled: %s", typeid(cast(Object)sqlExpr));
     }
 
-    static void replaceOwner(SQLSelect subSelect, string[string] modelTableMap, string[string] aliasModelMap) {
+    static void substitute(SQLSelect subSelect, EqlSubstitutionContext context) {
         SQLSelectQueryBlock queryBlock = cast(SQLSelectQueryBlock)subSelect.getQuery();
 
         // The FROM clause 
@@ -1148,23 +1162,23 @@ class EqlParse
             SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)fromExpr.getExpr();
             if(identifierExpr !is null) {
                 version (HUNT_ENTITY_DEBUG) tracef("Removing the alias: %s", tableAlias);
-                aliasModelMap[tableAlias] = identifierExpr.getName();
+                context.aliasModelMap[tableAlias] = identifierExpr.getName();
             }
         }
 
         SQLExpr sqlExpr = fromExpr.getExpr();
-        replaceOwnerInExpress(sqlExpr, modelTableMap, aliasModelMap);
+        substituteInExpress(sqlExpr, context);
 
         // The selected fields
         foreach (SQLSelectItem selectItem; queryBlock.getSelectList()) {
             SQLExpr expr = selectItem.getExpr();
-            replaceOwnerInExpress(expr, modelTableMap, aliasModelMap);
+            substituteInExpress(expr, context);
         }
 
         // where
         SQLExpr whereExpr = queryBlock.getWhere();
         if(whereExpr !is null) {
-            replaceOwnerInExpress(whereExpr, modelTableMap, aliasModelMap);
+            substituteInExpress(whereExpr, context);
         }
     }
 }
