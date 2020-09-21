@@ -357,13 +357,19 @@ class EqlParse
         auto whereCond = select_copy.getWhere();
         if (whereCond !is null) {
 
-            replaceOwnerInExpress(whereCond, _clsNameToTbName, aliasModelMap);
+            // replaceOwnerInExpress(whereCond, _clsNameToTbName, aliasModelMap);
+
+            // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
+            // Remove this block below.
             
             string where = SQLUtils.toSQLString(whereCond);
             version (HUNT_ENTITY_DEBUG) warning(where);
             where = convertAttrExpr(where);
             version (HUNT_ENTITY_DEBUG) trace(where);
-            select_copy.setWhere(SQLUtils.toSQLExpr(where));
+            SQLExpr newExpr = SQLUtils.toSQLExpr(where);
+            replaceOwnerInExpress(newExpr, _clsNameToTbName, aliasModelMap);
+            select_copy.setWhere(newExpr);
+
         }
 
         ///order by
@@ -663,10 +669,12 @@ class EqlParse
                 continue;
             else
                 handerFlag[newCond] = true;
-            auto eqlObj = _eqlObj.get(cond.captures[1], null);
+            
+            string owner = cond.captures[1];
+            auto eqlObj = _eqlObj.get(owner, null);
             if (eqlObj !is null)
             {
-                newCond = newCond.replace(cond.captures[1] ~ ".", eqlObj.tableName() ~ ".");
+                newCond = newCond.replace(owner ~ ".", eqlObj.tableName() ~ ".");
                 auto fields = _tableFields.get(eqlObj.className(), null);
                 if (fields !is null)
                 {
@@ -984,11 +992,11 @@ class EqlParse
             {
                 params.add(_params[e]);
             }
-            // sql = SQLUtils.format(sql, _dbtype, params, _formatOption);
-            sql = SQLUtils.format(sql, _dbtype, params);
+            sql = SQLUtils.format(sql, _dbtype, params, _formatOption);
+            // sql = SQLUtils.format(sql, _dbtype, params);
         } else {
-            // sql = SQLUtils.format(sql, _dbtype, _formatOption);
-            sql = SQLUtils.format(sql, _dbtype);
+            sql = SQLUtils.format(sql, _dbtype, _formatOption);
+            // sql = SQLUtils.format(sql, _dbtype);
         }
 
         // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T14:41:55+08:00
@@ -1072,6 +1080,19 @@ class EqlParse
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLNumericLiteralExpr");
         // do nothing
     }
+    
+    static void replaceOwner(SQLInListExpr expr, string[string] modelTableMap, string[string] aliasModelMap) {
+        version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLInListExpr");
+        SQLExpr sqlExpr = expr.getExpr();
+
+        replaceOwnerInExpress(sqlExpr, modelTableMap, aliasModelMap);
+
+        //
+        List!SQLExpr targets = expr.getTargetList();
+        foreach(SQLExpr se; targets) {
+            replaceOwnerInExpress(se, modelTableMap, aliasModelMap);
+        }
+    }
 
     static void replaceOwnerInExpress(SQLExpr sqlExpr, string[string] modelTableMap, string[string] aliasModelMap) {
         version (HUNT_ENTITY_DEBUG) infof("Handling an express: %s", typeid(cast(Object)sqlExpr));
@@ -1103,6 +1124,12 @@ class EqlParse
         SQLNumericLiteralExpr numberExpr = cast(SQLNumericLiteralExpr)sqlExpr;
         if(numberExpr !is null) {
             replaceOwner(numberExpr, modelTableMap, aliasModelMap);
+            return;
+        }
+        
+        SQLInListExpr inListExpr = cast(SQLInListExpr)sqlExpr;
+        if(inListExpr !is null) {
+            replaceOwner(inListExpr, modelTableMap, aliasModelMap);
             return;
         }
 
