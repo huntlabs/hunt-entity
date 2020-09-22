@@ -380,7 +380,7 @@ class EqlParse {
             SQLExprTableSource exprTableSource = cast(SQLExprTableSource)joinTableSource.getLeft();
             if(exprTableSource !is null) {
                 SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
-                string tableAlias = tableSource.getAlias();
+                string tableAlias = exprTableSource.getAlias();
                 
                 if(!tableAlias.empty()) {
                     aliasModelMap[tableAlias] = identifierExpr.getName();
@@ -390,7 +390,7 @@ class EqlParse {
             exprTableSource = cast(SQLExprTableSource)joinTableSource.getRight();
             if(exprTableSource !is null) {
                 SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
-                string tableAlias = tableSource.getAlias();
+                string tableAlias = exprTableSource.getAlias();
                 
                 if(!tableAlias.empty()) {
                     aliasModelMap[tableAlias] = identifierExpr.getName();
@@ -427,18 +427,18 @@ class EqlParse {
             context.tableFields = _tableFields;
             // context.eqlObjs = _eqlObj;
 
-            // substituteInExpress(whereCond, context);
+            substituteInExpress(whereCond, context);
 
             // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
             // Remove this block below.
             
-            string where = SQLUtils.toSQLString(whereCond);
-            version (HUNT_ENTITY_DEBUG) warning(where);
-            where = convertAttrExpr(where);
-            version (HUNT_ENTITY_DEBUG) trace(where);
-            SQLExpr newExpr = SQLUtils.toSQLExpr(where);
-            substituteInExpress(newExpr, context);
-            select_copy.setWhere(newExpr);
+            // string where = SQLUtils.toSQLString(whereCond);
+            // version (HUNT_ENTITY_DEBUG) warning(where);
+            // where = convertAttrExpr(where);
+            // version (HUNT_ENTITY_DEBUG) trace(where);
+            // SQLExpr newExpr = SQLUtils.toSQLExpr(where);
+            // substituteInExpress(newExpr, context);
+            // select_copy.setWhere(newExpr);
 
         }
 
@@ -586,7 +586,7 @@ class EqlParse {
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
-        _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype, _formatOption);
+        _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
 
         version (HUNT_ENTITY_DEBUG_MORE)
             trace(_parsedEql);
