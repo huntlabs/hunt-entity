@@ -6,7 +6,7 @@ import model.AppInfo;
 
 
 
-@Table("LoginInfo")
+@Table("logininfo")
 class LoginInfo : Model
 {
     mixin MakeModel;

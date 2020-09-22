@@ -57,13 +57,13 @@ void main()
     // test_merge(em);
     // test_persist(em);
     // test_comparison(em);
-    // test_delete(em);
+    test_delete(em);
     // test_CriteriaQuery(em);
     // test_nativeQuery(em);
     // test_create_eql_by_queryBuilder(em);
     // test_statement(em);
     // test_valid(em);
-    test_subquery(em);
+    // test_subquery(em);
     // test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
@@ -90,44 +90,44 @@ void main()
 /*                                                      EQL tests                                                     */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-// void test_persist(EntityManager em)
-// {
-// 	mixin(DO_TEST);
+void test_persist(EntityManager em)
+{
+	mixin(DO_TEST);
 
-// 	UserInfo user = new UserInfo();
-// 	user.nickName = "Jame\"s Ha'Deng";
-// 	user.age = 30;
-// 	em.persist(user);
-// }
+	UserInfo user = new UserInfo();
+	user.nickName = "Jame\"s Ha'Deng";
+	user.age = 30;
+	em.persist(user);
+}
 
-// void test_merge(EntityManager em)
-// {
-// 	mixin(DO_TEST);
-// 	auto u = em.find!(UserInfo)(1);
-// 	u.age = 100;
-// 	em.merge!(UserInfo)(u);
-// }
+void test_merge(EntityManager em)
+{
+	mixin(DO_TEST);
+	auto u = em.find!(UserInfo)(1);
+	u.age = 100;
+	em.merge!(UserInfo)(u);
+}
 
-// void test_CriteriaQuery(EntityManager em)
-// {
-// 	mixin(DO_TEST);
+void test_CriteriaQuery(EntityManager em)
+{
+	mixin(DO_TEST);
 
-// 	CriteriaBuilder builder = em.getCriteriaBuilder();
-// 	CriteriaQuery!UserInfo criteriaQuery = builder.createQuery!(UserInfo);
-// 	Root!UserInfo root = criteriaQuery.from();
-// 	string name = "tom";
-// 	Predicate c1 = builder.equal(root.UserInfo.nickName, name);
-// 	Predicate c2 = builder.gt(root.UserInfo.age, 0);
-// 	criteriaQuery.orderBy(builder.asc(root.UserInfo.age), builder.asc(root.UserInfo.id));
-// 	TypedQuery!UserInfo typedQuery = em.createQuery(criteriaQuery.select(root)
-// 			.where(builder.or(c1, c2)));
-// 	auto uinfos = typedQuery.getResultList();
-// 	foreach (u; uinfos)
-// 	{
-// 		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
-// 	}
+	CriteriaBuilder builder = em.getCriteriaBuilder();
+	CriteriaQuery!UserInfo criteriaQuery = builder.createQuery!(UserInfo);
+	Root!UserInfo root = criteriaQuery.from();
+	string name = "tom";
+	Predicate c1 = builder.equal(root.UserInfo.nickName, name);
+	Predicate c2 = builder.gt(root.UserInfo.age, 0);
+	criteriaQuery.orderBy(builder.asc(root.UserInfo.age), builder.asc(root.UserInfo.id));
+	TypedQuery!UserInfo typedQuery = em.createQuery(criteriaQuery.select(root)
+			.where(builder.or(c1, c2)));
+	auto uinfos = typedQuery.getResultList();
+	foreach (u; uinfos)
+	{
+		logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
+	}
 
-// }
+}
 
 void test_comparison(EntityManager em)
 {
@@ -135,26 +135,26 @@ void test_comparison(EntityManager em)
 
     auto rep = new EntityRepository!(UserInfo, int)(em);
     string name = "Jame\"s Ha'Deng";
-    auto uinfos = rep.findAll(new Expr().eq("nickName", name));
+    auto uinfos = rep.findAll(new Expr().eq(rep.Field().nickName, name));
     foreach (u; uinfos)
     {
         logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
     }
 }
 
-// void test_delete(EntityManager em)
-// {
-// 	mixin(DO_TEST);
+void test_delete(EntityManager em)
+{
+	mixin(DO_TEST);
 
-// 	CriteriaBuilder builder = em.getCriteriaBuilder();
-// 	CriteriaDelete!UserInfo criteriaDelete = builder.createCriteriaDelete!(UserInfo);
-// 	Root!UserInfo root = criteriaDelete.from();
-// 	string name = "Jame\"s Ha'Deng";
-// 	Predicate c1 = builder.equal(root.UserInfo.nickName, name);
-// 	Query!UserInfo query = em.createQuery(criteriaDelete.where(c1));
-// 	auto res = query.executeUpdate();
-// 	logDebug("exec delete : ", res);
-// }
+	CriteriaBuilder builder = em.getCriteriaBuilder();
+	CriteriaDelete!UserInfo criteriaDelete = builder.createCriteriaDelete!(UserInfo);
+	Root!UserInfo root = criteriaDelete.from();
+	string name = "Jame\"s Ha'Deng";
+	Predicate c1 = builder.equal(root.UserInfo.nickName, name);
+	Query!UserInfo query = em.createQuery(criteriaDelete.where(c1));
+	auto res = query.executeUpdate();
+	logDebug("exec delete : ", res);
+}
 
 // void test_nativeQuery(EntityManager em)
 // {
@@ -354,12 +354,18 @@ void test_valid(EntityManager em)
 
 void test_subquery(EntityManager em) {
     string queryString = "select a from Car a where a.uid in (select b.id from UserInfo b where b.age = 5) ";
+    // string queryString = "select a from Car a where a.uid in (1, 2) ";
     EqlQuery!(Car, UserInfo) query = em.createQuery!(Car, UserInfo)(queryString);
 
     Car[] cars = query.getResultList();
 
     warning(cars.length);
+
+    foreach(Car car; cars) {
+        warningf("Car, uid: %d, name: %s", car.uid, car.name);
+    }
 }
+
 
 void test_pagination(EntityManager em)
 {

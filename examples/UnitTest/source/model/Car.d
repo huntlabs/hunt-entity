@@ -3,7 +3,7 @@ module model.Car;
 import hunt.entity;
 import model.UserInfo;
 
-@Table("Car")
+@Table("car")
 class Car : Model {
 
     mixin MakeModel;
