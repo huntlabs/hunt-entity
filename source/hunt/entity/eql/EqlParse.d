@@ -372,16 +372,48 @@ class EqlParse {
 
         ///from
         auto fromExpr = select_copy.getFrom();
-
-        SQLExprTableSource  tableSource = cast(SQLExprTableSource)queryBlock.getFrom();
-        SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)tableSource.getExpr(); 
-        string tableAlias = tableSource.getAlias();
-        string className = identifierExpr.getName();
-        
         string[string] aliasModelMap;
-        if(!tableAlias.empty()) {
-            aliasModelMap[tableAlias] = className;
+
+        SQLTableSource  tableSource = cast(SQLTableSource)queryBlock.getFrom();
+        SQLJoinTableSource joinTableSource = cast(SQLJoinTableSource)tableSource;
+        if(joinTableSource !is null) {
+            SQLExprTableSource exprTableSource = cast(SQLExprTableSource)joinTableSource.getLeft();
+            if(exprTableSource !is null) {
+                SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
+                string tableAlias = tableSource.getAlias();
+                
+                if(!tableAlias.empty()) {
+                    aliasModelMap[tableAlias] = identifierExpr.getName();
+                }
+            }
+
+            exprTableSource = cast(SQLExprTableSource)joinTableSource.getRight();
+            if(exprTableSource !is null) {
+                SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
+                string tableAlias = tableSource.getAlias();
+                
+                if(!tableAlias.empty()) {
+                    aliasModelMap[tableAlias] = identifierExpr.getName();
+                }
+            }
+        } else {
+            SQLExprTableSource exprTableSource = cast(SQLExprTableSource)tableSource;
+            if(exprTableSource !is null) {
+                SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
+                string tableAlias = tableSource.getAlias();
+                
+                if(!tableAlias.empty()) {
+                    aliasModelMap[tableAlias] = identifierExpr.getName();
+                }
+            } else {
+                warningf("Can't handle table source: %s", typeid(cast(Object)tableSource));
+            }
         }
+
+        version(HUNT_ENTITY_DEBUG) {
+            warning(aliasModelMap);
+        }
+
 
         parseFromTable(fromExpr);
                
@@ -395,18 +427,18 @@ class EqlParse {
             context.tableFields = _tableFields;
             // context.eqlObjs = _eqlObj;
 
-            substituteInExpress(whereCond, context);
+            // substituteInExpress(whereCond, context);
 
             // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
             // Remove this block below.
             
-            // string where = SQLUtils.toSQLString(whereCond);
-            // version (HUNT_ENTITY_DEBUG) warning(where);
-            // where = convertAttrExpr(where);
-            // version (HUNT_ENTITY_DEBUG) trace(where);
-            // SQLExpr newExpr = SQLUtils.toSQLExpr(where);
-            // substituteInExpress(newExpr, context);
-            // select_copy.setWhere(newExpr);
+            string where = SQLUtils.toSQLString(whereCond);
+            version (HUNT_ENTITY_DEBUG) warning(where);
+            where = convertAttrExpr(where);
+            version (HUNT_ENTITY_DEBUG) trace(where);
+            SQLExpr newExpr = SQLUtils.toSQLExpr(where);
+            substituteInExpress(newExpr, context);
+            select_copy.setWhere(newExpr);
 
         }
 
