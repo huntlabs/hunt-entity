@@ -284,11 +284,22 @@ class CriteriaBuilder
     private string quoteSqlfNeed(T)(T t)
     {
         static if(is(T == string)) {
-            // return _manager.getDatabase.escapeWithQuotes(t);
-            implementationMissing(false);
-            return t;
+            return escapeWithQuotes(t);
         } else {
             return t.to!string;
         }
     }
+
+    string escapeWithQuotes(string str) {
+
+        DatabaseOption options = _manager.getDbOption();
+
+		if(options.isPgsql()) {
+			return PgUtil.escapeWithQuotes(str);
+		} else if(options.isMysql) {
+            return MySQLUtil.escapeWithQuotes(str);
+        }
+
+		return str;
+	}    
 }

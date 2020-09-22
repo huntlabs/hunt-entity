@@ -427,19 +427,18 @@ class EqlParse {
             context.tableFields = _tableFields;
             // context.eqlObjs = _eqlObj;
 
-            substituteInExpress(whereCond, context);
+            // substituteInExpress(whereCond, context);
 
             // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
             // Remove this block below.
             
-            // string where = SQLUtils.toSQLString(whereCond);
-            // version (HUNT_ENTITY_DEBUG) warning(where);
-            // where = convertAttrExpr(where);
-            // version (HUNT_ENTITY_DEBUG) trace(where);
-            // SQLExpr newExpr = SQLUtils.toSQLExpr(where);
-            // substituteInExpress(newExpr, context);
-            // select_copy.setWhere(newExpr);
-
+            string where = SQLUtils.toSQLString(whereCond);
+            version (HUNT_ENTITY_DEBUG) warning(where);
+            where = convertAttrExpr(where);
+            version (HUNT_ENTITY_DEBUG) trace(where);
+            SQLExpr newExpr = SQLUtils.toSQLExpr(where);
+            substituteInExpress(newExpr, context);
+            select_copy.setWhere(newExpr);
         }
 
         ///order by
