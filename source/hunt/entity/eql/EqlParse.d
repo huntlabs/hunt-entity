@@ -45,6 +45,7 @@ void eql_throw(string type, string message) {
  */
 private class EqlSubstitutionContext {
     // EqlObject[string] eqlObjs;
+    // The key is the name of a model.
     EntityFieldInfo[string][string] tableFields;
 
     string[string] modelTableMap;
@@ -394,18 +395,18 @@ class EqlParse {
             context.tableFields = _tableFields;
             // context.eqlObjs = _eqlObj;
 
-            // substituteInExpress(whereCond, context);
+            substituteInExpress(whereCond, context);
 
             // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-09-21T14:59:49+08:00
             // Remove this block below.
             
-            string where = SQLUtils.toSQLString(whereCond);
-            version (HUNT_ENTITY_DEBUG) warning(where);
-            where = convertAttrExpr(where);
-            version (HUNT_ENTITY_DEBUG) trace(where);
-            SQLExpr newExpr = SQLUtils.toSQLExpr(where);
-            substituteInExpress(newExpr, context);
-            select_copy.setWhere(newExpr);
+            // string where = SQLUtils.toSQLString(whereCond);
+            // version (HUNT_ENTITY_DEBUG) warning(where);
+            // where = convertAttrExpr(where);
+            // version (HUNT_ENTITY_DEBUG) trace(where);
+            // SQLExpr newExpr = SQLUtils.toSQLExpr(where);
+            // substituteInExpress(newExpr, context);
+            // select_copy.setWhere(newExpr);
 
         }
 
@@ -1088,32 +1089,40 @@ class EqlParse {
     static void substitute(SQLPropertyExpr expr, EqlSubstitutionContext context) {
         version (HUNT_ENTITY_DEBUG) tracef("Handling an SQLPropertyExpr");
 
-        // owner
         string ownerName = expr.getOwnernName();
-        string newOwnerName = ownerName;
+        string fieldName = expr.getName();
 
-        if(!ownerName.empty()) {
-            newOwnerName = context.getModelByAlias(ownerName, ownerName);
-            newOwnerName = context.getTableByModel(newOwnerName, newOwnerName);
-            if(newOwnerName != ownerName) {
-                // version (HUNT_ENTITY_DEBUG) tracef("New owner: %s", newOwnerName);
-                expr.setOwner(newOwnerName);
-            }
+        if(ownerName.empty()) {
+            warningf("No owner found before [%s]", fieldName);
+            return;
         }
-        version (HUNT_ENTITY_DEBUG) tracef("ownerName, old: %s, new: %s", ownerName, newOwnerName);
+
+        version (HUNT_ENTITY_DEBUG) trace(context.tableFields.keys);
+        
+        // owner
+        string modelName = context.getModelByAlias(ownerName, ownerName);
+        string tableName = context.getTableByModel(modelName, modelName);
+
+        if(tableName != ownerName) {
+            expr.setOwner(tableName);
+        }
+
+        version (HUNT_ENTITY_DEBUG) {
+            tracef("ownerName, alias: %s, model: %s, table: %s", ownerName, modelName, tableName);
+        }
 
         // name
-        string name = expr.getName();
-        EntityFieldInfo[string] fields = context.tableFields.get(newOwnerName, null);
-        if (fields !is null) {
-            foreach (string clsFiled, EntityFieldInfo entFiled; fields) {
-                tracef("xx=>%s", clsFiled);
-                if(clsFiled == newOwnerName) {
-
+        EntityFieldInfo[string] fields = context.tableFields.get(modelName, null);
+        foreach (string member, EntityFieldInfo entFiled; fields) {
+            if(member == fieldName) {
+                string columnName = entFiled.getColumnName();
+                version (HUNT_ENTITY_DEBUG_MORE) {
+                    tracef("The field's name is substituted from [%s] to [%s]", fieldName, columnName);
                 }
+                expr.setName(columnName);
+                break;
             }
         }
-
 
         // TODO: Tasks pending completion -@zhangxueping at 2020-09-21T11:41:18+08:00
         // a => *
@@ -1190,7 +1199,7 @@ class EqlParse {
         }
 
         SQLTextLiteralExpr textExpr = cast(SQLTextLiteralExpr)sqlExpr;
-        if(numberExpr !is null) {
+        if(textExpr !is null) {
             substitute(textExpr, context);
             return;
         }
