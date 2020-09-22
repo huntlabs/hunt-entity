@@ -23,6 +23,8 @@ struct Factory
 
 struct Table {
     string name;
+    
+    string prefix;
 }
 
 struct Column {

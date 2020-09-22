@@ -8,7 +8,7 @@
  * Licensed under the Apache-2.0 License.
  *
  */
- 
+
 module hunt.entity.repository.EntityRepository;
 
 import hunt.entity.criteria;
@@ -23,85 +23,78 @@ import hunt.database.query;
 
 public import hunt.entity.domain;
 
-class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
-{
+class EntityRepository(T, ID) : CrudRepository!(T, ID) if (is(T : Model)) {
     this(EntityManager manager = null) {
         super(manager);
         _member = new Member!T(entityManager.getPrefix());
     }
 
-    static string initObjects()
-    {
+    static string initObjects() {
+        // dfmt off
         return `
         auto em = _manager ? _manager : createEntityManager();
         scope(exit) {if (!_manager) em.close();}
         CriteriaBuilder builder = em.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!T;
         Root!T root = criteriaQuery.from();`;
-    }
- 
 
-    alias count =  CrudRepository!(T, ID).count;
+        // dfmt on
+    }
+
+    alias count = CrudRepository!(T, ID).count;
     alias findAll = CrudRepository!(T, ID).findAll;
-   
-    long count(Condition condition)
-    {
+
+    long count(Condition condition) {
         mixin(initObjects);
 
         criteriaQuery.select(builder.count(root)).where(condition.toPredicate());
-        
+
         Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
         return result.longValue();
     }
 
-
-    long count(Specification specification)
-    {
+    long count(Specification specification) {
         mixin(initObjects);
 
-        criteriaQuery.select(builder.count(root)).where(specification.toPredicate(
-                root , criteriaQuery , builder));
-        
+        criteriaQuery.select(builder.count(root))
+            .where(specification.toPredicate(root, criteriaQuery, builder));
+
         Long result = cast(Long)(em.createQuery(criteriaQuery).getSingleResult());
         return result.longValue();
         // return 0;
     }
 
-    T find(Condition condition)
-    {
+    T find(Condition condition) {
         // auto list = findAll(condition);
         // if(list.length > 0)
         //     return list[0];
         // return null;
         mixin(initObjects);
 
-         //condition
+        //condition
         criteriaQuery.select(root).where(condition.toPredicate());
 
         // page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(0)
-            .setMaxResults(1);
-            
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(0).setMaxResults(1);
+
         // result
         auto res = typedQuery.getResultList();
-        if(res.length >0){
+        if (res.length > 0) {
             return res[0];
         }
-        return null;        
+        return null;
     }
 
-    T find(ID id)
-    {
+    T find(ID id) {
         return this.findById(id);
     }
 
-    T[] findAll(Sort sort)
-    {
+    T[] findAll(Sort sort) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; sort.list) {
-            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
+        foreach (o; sort.list) {
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
         }
 
         //all
@@ -110,13 +103,10 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        
-
         return res;
     }
 
-    T[] findAll(Condition condition)
-    {
+    T[] findAll(Condition condition) {
         mixin(initObjects);
 
         //specification
@@ -128,8 +118,7 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-     T[] findAll(R)(Comparison!R condition)
-    {
+    T[] findAll(R)(Comparison!R condition) {
         mixin(initObjects);
 
         //specification
@@ -141,13 +130,11 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-    T[] findAll(Specification specification)
-    {
+    T[] findAll(Specification specification) {
         mixin(initObjects);
 
         //specification
-        criteriaQuery.select(root).where(specification.toPredicate(
-                root , criteriaQuery , builder));
+        criteriaQuery.select(root).where(specification.toPredicate(root, criteriaQuery, builder));
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
@@ -155,13 +142,12 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-    T[] findAll(Condition condition , Sort sort)
-    {
+    T[] findAll(Condition condition, Sort sort) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; sort.list)
-            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
+        foreach (o; sort.list)
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
         criteriaQuery.select(root).where(condition.toPredicate());
@@ -172,110 +158,94 @@ class EntityRepository (T, ID) : CrudRepository!(T, ID) if(is(T : Model))
         return res;
     }
 
-    T[] findAll(Specification specification , Sort sort)
-    {
+    T[] findAll(Specification specification, Sort sort) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; sort.list)
+        foreach (o; sort.list)
             criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
-        criteriaQuery.select(root).where(specification.toPredicate(
-            root , criteriaQuery , builder));
+        criteriaQuery.select(root).where(specification.toPredicate(root, criteriaQuery, builder));
 
         TypedQuery!T typedQuery = em.createQuery(criteriaQuery);
         auto res = typedQuery.getResultList();
 
-        
-
         return res;
     }
 
-    Page!T findAll(Pageable pageable)
-    {
+    Page!T findAll(Pageable pageable) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; pageable.getSort.list)
+        foreach (o; pageable.getSort.list)
             criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //all
         criteriaQuery.select(root);
 
         //page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-            .setMaxResults(pageable.getPageSize());
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery)
+            .setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
 
         auto res = typedQuery.getResultList();
         auto page = new Page!T(res, pageable, super.count());
-
-        
 
         return page;
     }
 
     ///
-    Page!T findAll(Condition condition, Pageable pageable)
-    {
+    Page!T findAll(Condition condition, Pageable pageable) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; pageable.getSort.list)
+        foreach (o; pageable.getSort.list)
             criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
-
 
         //condition
         criteriaQuery.select(root).where(condition.toPredicate());
-                
+
         //page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-            .setMaxResults(pageable.getPageSize());
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery)
+            .setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
         auto res = typedQuery.getResultList();
         auto page = new Page!T(res, pageable, count(condition));
 
-        
-
         return page;
     }
 
-    Page!T findAll(Specification specification, Pageable pageable)
-    {
+    Page!T findAll(Specification specification, Pageable pageable) {
         mixin(initObjects);
 
         //sort
-        foreach(o ; pageable.getSort.list)
-            criteriaQuery.getQueryBuilder().orderBy( o.getColumn() ~ " " ~ o.getOrderType());
+        foreach (o; pageable.getSort.list)
+            criteriaQuery.getQueryBuilder().orderBy(o.getColumn() ~ " " ~ o.getOrderType());
 
         //specification
-        criteriaQuery.select(root).where(specification.toPredicate(
-            root , criteriaQuery , builder));
-                
+        criteriaQuery.select(root).where(specification.toPredicate(root, criteriaQuery, builder));
+
         //page
-        TypedQuery!T typedQuery = em.createQuery(criteriaQuery).setFirstResult(pageable.getOffset())
-            .setMaxResults(pageable.getPageSize());
+        TypedQuery!T typedQuery = em.createQuery(criteriaQuery)
+            .setFirstResult(pageable.getOffset()).setMaxResults(pageable.getPageSize());
         auto res = typedQuery.getResultList();
         auto page = new Page!T(res, pageable, count(specification));
-
-        
 
         return page;
     }
 
-    @property Member!T Field()
-    {
-        // auto em = _manager ? _manager : createEntityManager();
-        // scope(exit) {if (!_manager) em.close();}
-        // return new Member!T(em);
+    @property Member!T field() {
+        return _member;
+    }
+
+    deprecated("Using field instead.") 
+    @property Member!T Field() {
         return _member;
     }
 
 private:
 
     Member!T _member;
- 
 }
-
 
 /*
 version(unittest)

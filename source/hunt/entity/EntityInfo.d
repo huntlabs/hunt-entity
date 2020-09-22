@@ -109,7 +109,7 @@ class EntityInfo(T : Object, F : Object = T) {
     }
 
     private string toColumnName(string fieldName) {
-        return _metaInfo.toColumnName(fieldName);
+        return _metaInfo.columnName(fieldName);
     }
 
     public EntityFieldInfo getPrimaryField() {

@@ -16,31 +16,61 @@ import std.traits;
  * 
  */
 struct EntityMetaInfo {
-    string autoIncrementKey;
 
-    string[string] fieldColumnMaps;
-
-    // TODO: Tasks pending completion -@zhangxueping at 2020-08-28T09:35:46+08:00
-    // 
+    string tablePrfix;
     string tableName;
     string simpleName;
-    // TypeInfo typeInfo;
 
     // fully qualified name
     string fullName;
 
-    string toColumnName(string fieldName) {
-        auto itemPtr = fieldName in fieldColumnMaps;
-        if(itemPtr is null) {
-            version(HUNT_ENTITY_DEBUG) {
-                warningf("No mapped column name found for field [%s] in %s", fieldName, fullName);
+    string primaryKey;
+    string autoIncrementKey;
+
+    private EntityField[] _fields;
+
+    EntityField[] fields() {
+        return _fields;
+    }
+
+    EntityField field(string name) {
+        foreach(ref EntityField f; _fields) {
+            if(name == f.name) {
+                return f;
             }
-            return fieldName;
         }
+        warningf("Can't find the field for %s", name);
+        return EntityField.init;
+    }
 
-        return *itemPtr;
-    }    
+    string columnName(string name) {
+        EntityField f = field(name);
+        string r = f.columnName;
+        if(r.empty)
+            return name;
+        else
+            return r;
+    }
 
+    string fullColumnName(string name) {
+        string column = columnName(name);
+        return tablePrfix ~ tableName ~ "." ~ column;
+    }
+}
+
+struct EntityField {
+    string name;
+
+    // fully qualified name
+    string fullName;
+
+    string columnName;
+
+    bool isPrimary = false;
+
+    bool isAutoIncrement = false;
+
+    bool isAvaliable = true; 
 }
 
 /**
@@ -52,27 +82,51 @@ EntityMetaInfo extractEntityInfo(T)() {
     metaInfo.fullName = fullyQualifiedName!T;
     metaInfo.simpleName = T.stringof;
 
-    static if (hasUDA!(T,Table)) {
-        metaInfo.tableName = getUDAs!(T, Table)[0].name;
+    static if (hasUDA!(T, Table)) {
+        enum tableUda = getUDAs!(T, Table)[0];
+        metaInfo.tableName = tableUda.name;
+        metaInfo.tablePrfix = tableUda.prefix;
     } else {
         metaInfo.tableName = T.stringof;
     }
 
     static foreach (string memberName; FieldNameTuple!T) {{
-        alias currentMemeber = __traits(getMember, T, memberName);
-        // alias memberType = typeof(currentMemeber);
+        alias currentMember = __traits(getMember, T, memberName);
+        alias memberType = typeof(currentMember);
 
-        static if (__traits(getProtection, currentMemeber) == "public") {
-
-            // The autoIncrementKey
-            static if (hasUDA!(currentMemeber, AutoIncrement) || hasUDA!(currentMemeber, Auto)) {
-                    metaInfo.autoIncrementKey = memberName;
-            }  
+        static if (__traits(getProtection, currentMember) == "public") {
 
             // The field and column mapping
-            static if (hasUDA!(currentMemeber, Column)) {
-                metaInfo.fieldColumnMaps[memberName] = getUDAs!(currentMemeber, Column)[0].name;
-            }     
+            EntityField currentField;
+            currentField.name = memberName;
+            currentField.fullName = fullyQualifiedName!memberType;
+
+            // Column
+            static if (hasUDA!(currentMember, Column)) {
+                enum columnName = getUDAs!(currentMember, Column)[0].name;
+                currentField.columnName = columnName;
+            } else {
+                currentField.columnName = memberName;
+            }
+
+            // The autoIncrementKey
+            static if (hasUDA!(currentMember, AutoIncrement) || hasUDA!(currentMember, Auto)) {
+                currentField.isAutoIncrement = true;
+                metaInfo.autoIncrementKey = memberName;
+            }
+
+            // PrimaryKey
+            static if (hasUDA!(currentMember, PrimaryKey)) {
+                currentField.isPrimary = true;
+                metaInfo.primaryKey = memberName;
+            }
+
+            // Transient
+            static if (hasUDA!(currentMember, Transient)) {
+                currentField.isAvaliable = false;
+            }
+
+            metaInfo._fields ~= currentField;
         }
     }}  
 
