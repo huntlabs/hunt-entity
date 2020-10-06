@@ -14,6 +14,8 @@ module hunt.entity.criteria.CriteriaQuery;
 import hunt.entity;
 import hunt.logging;
 
+import std.format;
+
 interface ICriteriaQuery {
 
 }
@@ -28,8 +30,11 @@ class CriteriaQuery (T : Object, F : Object = T) : CriteriaBase!(T,F), ICriteria
     public CriteriaQuery!(T,F) select(Root!(T,F) root)
     {
         string[] selectColumn = root.getAllSelectColumn();
-        foreach(value; root.getJoins()) {
-            // logDebug("####join sql : %s".format(value));
+        foreach(JoinSqlBuild value; root.getJoins()) {
+            version(HUNT_ENTITY_DEBUG) {
+                logDebug("####join sql : %s".format(value));
+            }
+
             if (value.joinType == JoinType.INNER) {
                 _sqlBuidler.innerJoin(value.tableName, value.joinWhere);
                 foreach(v; value.columnNames) {

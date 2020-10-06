@@ -33,6 +33,16 @@ struct EntityMetaInfo {
         return _fields;
     }
 
+    bool hasField(string name) {
+        foreach(ref EntityField f; _fields) {
+            if(name == f.name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     EntityField field(string name) {
         foreach(ref EntityField f; _fields) {
             if(name == f.name) {
@@ -44,12 +54,16 @@ struct EntityMetaInfo {
     }
 
     string columnName(string name) {
-        EntityField f = field(name);
-        string r = f.columnName;
-        if(r.empty)
+        if(hasField(name)) {
+            EntityField f = field(name);
+            string r = f.columnName;
+            if(r.empty)
+                return name;
+            else
+                return r;
+        } else {
             return name;
-        else
-            return r;
+        }
     }
 
     string fullColumnName(string name) {

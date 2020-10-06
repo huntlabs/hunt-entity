@@ -105,9 +105,20 @@ class Root(T : Object, F: Object = T) : IRoot {
 
     Root!(T, F) autoJoin() {
         // logDebug("#### join Fields : ",_entityInfo.getFields());
-        foreach (value; _entityInfo.getFields()) {
-            if (value.getJoinSqlData() && (_enableJoin || value.isEnableJoin())) // logDebug("** join sql : ",value.getJoinSqlData());
-                _joins ~= value.getJoinSqlData();
+        foreach (EntityFieldInfo value; _entityInfo.getFields()) {
+            JoinSqlBuild build = value.getJoinSqlData();
+            if(build is null) {
+                version(HUNT_ENTITY_DEBUG) {
+                    infof("No join for the field [%s] in %s.", value.getFieldName(), T.stringof);
+                }
+                continue;
+            }
+
+            if (_enableJoin || value.isEnableJoin())
+                version(HUNT_ENTITY_DEBUG) {
+                    warning("** join sql : ", build.toString());
+                }
+                _joins ~= build;
         }
         return this;
     }

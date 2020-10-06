@@ -100,7 +100,7 @@ class EntityFieldOneToOne(T : Object , F : Object) : EntityFieldObject!(T,F) {
 
     T deSerialize(Row row, F owner) {
         version(HUNT_ENTITY_DEBUG) {
-            warningf("Deserializing %s based on a row, the owner %s null", 
+            infof("Deserializing %s based on a row, the owner %s null", 
                 T.stringof, owner is null ? "is" : "is not");
         }
         

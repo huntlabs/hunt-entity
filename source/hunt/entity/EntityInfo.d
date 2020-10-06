@@ -171,7 +171,7 @@ class EntityInfo(T : Object, F : Object = T) {
     EntityFieldInfo opDispatch(string name)() 
     {
         version(HUNT_ENTITY_DEBUG) {
-            tracef("getting field info for: %s", name);
+            infof("getting field info for: %s", name);
         }
 
         EntityFieldInfo fieldInfo = _fields.get(name,null);

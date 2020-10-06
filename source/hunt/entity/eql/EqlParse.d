@@ -389,11 +389,23 @@ class EqlParse {
 
             exprTableSource = cast(SQLExprTableSource)joinTableSource.getRight();
             if(exprTableSource !is null) {
-                SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
                 string tableAlias = exprTableSource.getAlias();
+                string realName;
                 
-                if(!tableAlias.empty()) {
-                    aliasModelMap[tableAlias] = identifierExpr.getName();
+                SQLIdentifierExpr identifierExpr = cast(SQLIdentifierExpr)exprTableSource.getExpr(); 
+                if(identifierExpr !is null) {
+                    realName = identifierExpr.getName();
+                } 
+
+                SQLPropertyExpr propertyExpr = cast(SQLPropertyExpr)exprTableSource.getExpr(); 
+                if(propertyExpr !is null) {
+                    realName = propertyExpr.getName();
+                } 
+                
+                if(realName.empty()) {
+                    warningf("The actual type: %s", typeid(cast(Object)identifierExpr));
+                } else if(!tableAlias.empty()) {
+                    aliasModelMap[tableAlias] = realName;
                 }
             }
         } else {

@@ -117,7 +117,7 @@ class JoinSqlBuild  {
 
     override string toString()
     {
-        return "(%s , %s , %s , %s )".format(tableName,joinWhere,joinType,columnNames);
+        return "(%s, %s, %s, %s)".format(tableName,joinWhere,joinType,columnNames);
     }
 }
 

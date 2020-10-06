@@ -186,13 +186,13 @@ string makeDeserializer(T)() {
                         version(HUNT_ENTITY_DEBUG_MORE) {
                             tracef("columnAsName: %s, columnName: %s", columnAsName, `~ columnName ~`);
                         }
+                        columnValue = row.getValue(columnAsName);
 
-                        columnValue = row.getValue(`~ columnName ~`);
                         if (!columnValue.hasValue()) { // try use columnAsName to get the value
                             version(HUNT_ENTITY_DEBUG_MORE) {
-                                warningf("No value for %s found. Try %s again.", `~ columnName ~`, columnAsName);
+                                warningf("No value found for %s. Try %s again.", columnAsName, `~ columnName ~`);
                             }
-                            columnValue = row.getValue(columnAsName);
+                            columnValue = row.getValue(`~ columnName ~`);
                         }
                         version(HUNT_ENTITY_DEBUG) {
                             if (columnValue.hasValue()) {
