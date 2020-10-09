@@ -44,6 +44,7 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
     }
 
     public CriteriaUpdate!(T,F) set(EntityFieldInfo field) {
+        string fieldName = field.getFieldName();
         Variant value = field.getColumnFieldData();
 
         version(HUNT_ENTITY_DEBUG_MORE) {
@@ -51,14 +52,15 @@ class CriteriaUpdate(T : Object, F : Object = T) : CriteriaBase!(T,F)
                 field.getColumnFieldData().type);
         }
 
-        // FIXME: Needing refactor or cleanup -@zxp at Sat, 21 Sep 2019 03:02:07 GMT
-        // skip field which type is non-db
-        TypeInfo valueTypeInfo = typeid(value.type);
-        if(valueTypeInfo == typeid(TypeInfo_Class) || valueTypeInfo == typeid(TypeInfo_Interface)) {
-            version(HUNT_DEBUG) warningf("Skipped Object field, field: %s", field.getFieldName());
+        version(HUNT_ENTITY_DEBUG) {
+            TypeInfo valueTypeInfo = typeid(value.type);
+            tracef("field: %s, isAggregateType: %s, Type: %s", fieldName, field.isAggregateType(), valueTypeInfo);
+        }
+
+        if(field.isAggregateType()) {
+            version(HUNT_DEBUG) warningf("An aggregate field ignored: %s", fieldName);
         } else {
-            _sqlBuidler.set(field.getFieldName(), 
-                field.getColumnName(), field.getTableName(), value);
+            _sqlBuidler.set(fieldName, field.getColumnName(), field.getTableName(), value);
 
             // if(_criteriaBuilder.getDbOption().isPgsql())
             // {  
