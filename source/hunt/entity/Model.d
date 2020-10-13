@@ -12,8 +12,11 @@
 module hunt.entity.Model;
 
 import hunt.validation.Valid;
+import hunt.validation.ConstraintValidatorContext;
 
-interface Model : Valid
+abstract class Model : Valid
 {
+    void onInitialized() {
+    }
 }
 

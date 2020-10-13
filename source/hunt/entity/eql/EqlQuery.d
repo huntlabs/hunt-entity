@@ -370,6 +370,8 @@ class EqlQuery(T...)
                     {
                         throw new EntityException("empty row data");
                     }
+                } else {
+                    t.onInitialized();
                 }
                 ret ~= t;
             }
