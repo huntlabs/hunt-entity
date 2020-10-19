@@ -11,7 +11,9 @@
  
 module hunt.entity.EntityExpression;
 
+import hunt.logging.ConsoleLogger;
 import std.string;
+
 
 class EntityExpression
 {
@@ -32,19 +34,19 @@ class EntityExpression
         _selectColumn = _fullColumn ~ " AS " ~ _columnAs;
     }
 
-    public string getFullColumn() {return _fullColumn;}
-    public string getColumnName() {return _columnName;}
-    public string getTableName() {return _tableName;}
-    public string getColumnAs() {return _selectColumn;}
-    public string getColumnAsName() {return _columnAs;}
+    string getFullColumn() {return _fullColumn;}
+    string getColumnName() {return _columnName;}
+    string getTableName() {return _tableName;}
+    string getColumnAs() {return _selectColumn;}
+    string getColumnAsName() {return _columnAs;}
 
-    public string getSelectColumn()
+    string getSelectColumn()
     {
         return _fullColumn ~ " AS " ~ _columnAs;
     }
 
     //s: max min avg sum count
-    public EntityExpression setColumnSpecifier(string s)
+    EntityExpression setColumnSpecifier(string s)
     {
         _fullColumn = s ~ "(" ~ _fullColumn ~ ")";
         if (s == "COUNT" || s == "count") {
@@ -53,7 +55,7 @@ class EntityExpression
         return this;
     }
 
-    public EntityExpression setDistinct(bool b)
+    EntityExpression setDistinct(bool b)
     {
         if (b)
             _fullColumn = "DISTINCT "~_fullColumn;
