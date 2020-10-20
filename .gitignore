@@ -54,3 +54,4 @@ examples/postgresql/postgresql-demo
 examples/eql/eql-demo
 examples/UnitTest/unittest
 examples/simple/
+examples/UnitTest/unittest-mysql

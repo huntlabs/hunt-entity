@@ -262,25 +262,34 @@ class EqlParse {
 
                     if (fields !is null)
                     {
-                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
+                        foreach (string classMember, EntityFieldInfo fieldInfo; fields)
                         {
-                            if (!(clsName ~ "." ~ clsFiled in _objType)) /// ordinary member
+                            if(fieldInfo.isAggregateType()) {
+                                // ignore all the aggregative members;
+                                version(HUNT_DEBUG) {
+                                    infof("Aggregative member ignored: %s", classMember);
+                                }
+
+                                continue;
+                            }
+
+                            if (!(clsName ~ "." ~ classMember in _objType)) /// ordinary member
                             {
                                 string columnAlias = selectItem.getAlias();
 
                                 version(HUNT_ENTITY_DEBUG) {
-                                    tracef("columnAlias: %s, SelectColumn: %s, fullColumn: %s", 
-                                        columnAlias, entFiled.getSelectColumn(), entFiled.getFullColumn());
+                                    tracef("columnAlias: [%s], SelectColumn: [%s], fullColumn: [%s]", 
+                                        columnAlias, fieldInfo.getSelectColumn(), fieldInfo.getFullColumn());
                                 }
 
-                                // SQLIdentifierExpr identifierExpr = new SQLIdentifierExpr(entFiled.getFullColumn());                                    
+                                // SQLIdentifierExpr identifierExpr = new SQLIdentifierExpr(fieldInfo.getFullColumn());                                    
 
                                 SQLIdentifierExpr identifierExpr = new SQLIdentifierExpr(columnAlias.empty()
-                                        ? entFiled.getSelectColumn()
-                                        : entFiled.getFullColumn());
+                                        ? fieldInfo.getSelectColumn()
+                                        : fieldInfo.getFullColumn());
 
                                 select_copy.addSelectItem(identifierExpr, columnAlias);
-                                // logDebug("sql replace : (%s ,%s) ".format(clsName ~ "." ~ clsFiled,clsName ~ "." ~ entFiled.getSelectColumn()));
+                                // logDebug("sql replace : (%s ,%s) ".format(clsName ~ "." ~ classMember,clsName ~ "." ~ fieldInfo.getSelectColumn()));
                             }
                         }
                     }
@@ -295,16 +304,16 @@ class EqlParse {
                     auto fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (clsFiled, entFiled; fields)
+                        foreach (classMember, fieldInfo; fields)
                         {
-                            if (clsFiled == clsFieldName)
+                            if (classMember == clsFieldName)
                             {
                                 select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null
-                                        ? entFiled.getSelectColumn()
-                                        : entFiled.getFullColumn()), selectItem.getAlias());
+                                        ? fieldInfo.getSelectColumn()
+                                        : fieldInfo.getFullColumn()), selectItem.getAlias());
                                 break;
                             }
-                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+                            // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ classMember,k ~ "." ~ fieldInfo.getColumnName()));
                         }
                     }
                 }
@@ -339,12 +348,12 @@ class EqlParse {
                             auto fields = _tableFields.get(eqlObj.className(), null);
                             if (fields !is null)
                             {
-                                foreach (clsFiled, entFiled; fields)
+                                foreach (classMember, fieldInfo; fields)
                                 {
-                                    if (clsFiled == clsFieldName)
+                                    if (classMember == clsFieldName)
                                     {
                                         newArgs.add(new SQLPropertyExpr(eqlObj.tableName(),
-                                                entFiled.getColumnName()));
+                                                fieldInfo.getColumnName()));
                                         break;
                                     }
                                 }
@@ -426,7 +435,6 @@ class EqlParse {
             warning(aliasModelMap);
         }
 
-
         parseFromTable(fromExpr);
                
 
@@ -492,7 +500,7 @@ class EqlParse {
             select_copy.setGroupBy(groupBy);
         }
 
-        version(HUNT_ENTITY_DEBUG) info("The parsing done. Now, converting to native SQL...");
+        version(HUNT_ENTITY_DEBUG) info("The parsing done. Now, converting it to native SQL...");
         _parsedEql = SQLUtils.toSQLString(select_copy, _dbtype);
         version(HUNT_ENTITY_DEBUG) warning(_parsedEql);
 
@@ -523,28 +531,28 @@ class EqlParse {
                     EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
+                        foreach (string classMember, EntityFieldInfo fieldInfo; fields)
                         {
                             version(HUNT_ENTITY_DEBUG_MORE)
                             {
-                                tracef("sql replace %s with %s, table: %s ", clsFiled,
-                                        entFiled.getColumnName(), eqlObj.tableName());
+                                tracef("sql replace %s with %s, table: %s ", classMember,
+                                        fieldInfo.getColumnName(), eqlObj.tableName());
                             }
 
-                            if (clsFiled == clsFieldName)
+                            if (classMember == clsFieldName)
                             {
                                 if (_dbtype == DBType.POSTGRESQL.name)
                                 { // PostgreSQL
                                     // https://www.postgresql.org/docs/9.1/sql-update.html
                                     updateItem.setColumn(new SQLIdentifierExpr(
-                                            entFiled.getColumnName()));
+                                            fieldInfo.getColumnName()));
                                     // updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
-                                    //         entFiled.getColumnName()));
+                                    //         fieldInfo.getColumnName()));
                                 }
                                 else
                                 {
                                     updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
-                                            entFiled.getColumnName()));
+                                            fieldInfo.getColumnName()));
                                 }
                                 break;
                             }
@@ -568,15 +576,15 @@ class EqlParse {
                     EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (string clsFiled, EntityFieldInfo entFiled; fields)
+                        foreach (string classMember, EntityFieldInfo fieldInfo; fields)
                         {
-                            if (clsFiled == clsFieldName)
+                            if (classMember == clsFieldName)
                             {
                                 updateItem.setValue(new SQLPropertyExpr(eqlObj.tableName(),
-                                        entFiled.getColumnName()));
+                                        fieldInfo.getColumnName()));
                                 break;
                             }
-                            // tracef("sql replace : (%s ,%s) ", clsFiled, entFiled.getColumnName());
+                            // tracef("sql replace : (%s ,%s) ", classMember, fieldInfo.getColumnName());
                         }
                     }
                 }
@@ -650,11 +658,11 @@ class EqlParse {
                     auto fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (clsFiled, entFiled; fields)
+                        foreach (classMember, fieldInfo; fields)
                         {
-                            if (clsFiled == clsFieldName)
+                            if (classMember == clsFieldName)
                             {
-                                newColumns.add(new SQLIdentifierExpr(entFiled.getColumnName()));
+                                newColumns.add(new SQLIdentifierExpr(fieldInfo.getColumnName()));
                                 break;
                             }
                         }
@@ -679,15 +687,15 @@ class EqlParse {
             //         auto fields = _tableFields.get(eqlObj.className(), null);
             //         if (fields !is null)
             //         {
-            //             foreach (clsFiled, entFiled; fields)
+            //             foreach (classMember, fieldInfo; fields)
             //             {
-            //                 if (clsFiled == clsFieldName)
+            //                 if (classMember == clsFieldName)
             //                 {
             //                     updateItem.setValue(new SQLPropertyExpr(eqlObj.tableName(),
-            //                             entFiled.getColumnName()));
+            //                             fieldInfo.getColumnName()));
             //                     break;
             //                 }
-            //                 // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ clsFiled,k ~ "." ~ entFiled.getColumnName()));
+            //                 // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ classMember,k ~ "." ~ fieldInfo.getColumnName()));
             //             }
             //         }
             //     }
@@ -759,11 +767,11 @@ class EqlParse {
                 auto fields = _tableFields.get(eqlObj.className(), null);
                 if (fields !is null)
                 {
-                    foreach (clsFiled, entFiled; fields)
+                    foreach (classMember, fieldInfo; fields)
                     {
-                        if (clsFiled == cond.captures[2])
+                        if (classMember == cond.captures[2])
                             newCond = newCond.replace("." ~ cond.captures[2],
-                                    "." ~ entFiled.getColumnName());
+                                    "." ~ fieldInfo.getColumnName());
 
                     }
                 }
@@ -1020,6 +1028,13 @@ class EqlParse {
 
     public void putFields(string table, EntityField ef)
     {
+        version(HUNT_ENTITY_DEBUG) {
+            infof("table: %s", table);
+            foreach (string classMember, EntityFieldInfo fieldInfo; ef) {
+                    tracef("classMember: %s,  isAggregateType: %s, fullColumn: [%s]", 
+                        classMember, fieldInfo.isAggregateType(), fieldInfo.getFullColumn());
+                }  
+        }      
         _tableFields[table] = ef;
     }
 
@@ -1156,9 +1171,9 @@ class EqlParse {
 
         // name
         EntityFieldInfo[string] fields = context.tableFields.get(modelName, null);
-        foreach (string member, EntityFieldInfo entFiled; fields) {
+        foreach (string member, EntityFieldInfo fieldInfo; fields) {
             if(member == fieldName) {
-                string columnName = entFiled.getColumnName();
+                string columnName = fieldInfo.getColumnName();
                 version (HUNT_ENTITY_DEBUG_MORE) {
                     tracef("The field's name is substituted from [%s] to [%s]", fieldName, columnName);
                 }
