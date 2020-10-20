@@ -911,8 +911,8 @@ class EqlParse {
 
                 if (cast(SQLPropertyExpr)(leftExpr.getExpr()) !is null)
                 {
-                    auto convertStr = convertExprAlias(cast(SQLPropertyExpr)(leftExpr.getExpr()));
-                    auto clsName = _objType.get(convertStr, null);
+                    string convertStr = convertExprAlias(cast(SQLPropertyExpr)(leftExpr.getExpr()));
+                    string clsName = _objType.get(convertStr, null);
                     if (clsName !is null)
                     {
                         auto tableName = _clsNameToTbName.get(clsName, null);
@@ -921,8 +921,12 @@ class EqlParse {
                             leftExpr.setExpr(tableName);
                         }
                     }
-                    auto joinCond = _joinConds.get(convertStr, null);
-                    // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+
+                    Object joinCond = _joinConds.get(convertStr, null);
+                    version(HUNT_ENTITY_DEBUG) {
+                        logDebugf("add cond (left): ( %s , %s ), convertStr: %s", clsName, joinCond, convertStr);
+                    }
+                    
                     if (joinCond !is null)
                     {
                         joinExpr.setCondition(SQLUtils.toSQLExpr(joinCond.toString()));
@@ -955,7 +959,10 @@ class EqlParse {
                     }
                 }
                 auto joinCond = _joinConds.get(convertStr, null);
-                // logDebug("add cond : ( %s , %s )".format(clsName,joinCond));
+                warning(_joinConds);
+                version(HUNT_ENTITY_DEBUG) {
+                    logDebugf("add cond (right) : ( %s , %s ), convertStr: %s", clsName, joinCond, convertStr);
+                }
 
                 if (joinCond !is null)
                 {

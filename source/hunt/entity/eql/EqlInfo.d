@@ -95,6 +95,7 @@ class EqlInfo(T : Object, F : Object = T) {
 
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
+    mixin(makeJoinConds!(T,F)());
     mixin(makeDeserializer!(T,F)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
@@ -120,6 +121,7 @@ class EqlInfo(T : Object, F : Object = T) {
             _tablePrefix = _manager.getPrefix();
         }
         initializeEntityInfo();
+
     }
 
     
@@ -132,6 +134,7 @@ class EqlInfo(T : Object, F : Object = T) {
         _tableNameInLower = _tableName.toLower();
 
         initEntityData();
+        initJoinConds();
     }
 
     EntityFieldInfo getPrimaryField() {
@@ -237,6 +240,45 @@ string makeSetIncreaseKey(T)() {
     }`;
 }
 
+private string makeJoinConds(T, F)() {
+    string str = `
+    private void initJoinConds() {`;    
+
+    static foreach (string memberName; FieldNameTuple!T) {{
+        alias currentMember = __traits(getMember, T, memberName);
+
+        static if (__traits(getProtection, currentMember) != "public") {
+            enum isEntityMember = false;
+        } else static if(hasUDA!(currentMember, Transient)) {
+            enum isEntityMember = false;
+        } else {
+            enum isEntityMember = true;
+        }
+
+        static if (isEntityMember) {
+            alias memType = typeof(currentMember);
+            string columnName;
+            string referencedColumnName;
+
+            static if (hasUDA!(currentMember, JoinColumn) && is(memType == class)) {
+                columnName = "\""~getUDAs!(currentMember, JoinColumn)[0].name~"\"";
+                referencedColumnName = "\""~getUDAs!(currentMember, JoinColumn)[0].referencedColumnName~"\"";
+                
+                str ~= `
+                {
+                    auto joinCond = new JoinCond!(` ~ memType.stringof ~ `)(_manager,_entityClassName,` ~ 
+                        memberName.stringof~ `, ` ~ columnName ~ `,` ~ referencedColumnName ~ `, _tableName);
+                    _joinConds[_entityClassName ~ "." ~ ` ~ memberName.stringof ~ `] = joinCond;
+                }
+                `;                
+            } 
+        }
+    }}
+
+    str ~=`
+    }`;
+    return str;
+}
 
 // string makeInitEntityData(T,F)() {
 //     string str = `

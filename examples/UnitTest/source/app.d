@@ -42,7 +42,7 @@ void main()
     }
 
     // test_eql_insert(em);
-    // test_eql_select(em);
+    test_eql_select(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
@@ -57,7 +57,7 @@ void main()
     // test_merge(em);
     // test_persist(em);
     // test_comparison(em);
-    test_delete(em);
+    // test_delete(em);
     // test_CriteriaQuery(em);
     // test_nativeQuery(em);
     // test_create_eql_by_queryBuilder(em);
@@ -135,7 +135,7 @@ void test_comparison(EntityManager em)
 
     auto rep = new EntityRepository!(UserInfo, int)(em);
     string name = "Jame\"s Ha'Deng";
-    auto uinfos = rep.findAll(new Expr().eq(rep.Field().nickName, name));
+    auto uinfos = rep.findAll(new Expr().eq(rep.field().nickName, name));
     foreach (u; uinfos)
     {
         logDebug("Uinfo( %s , %s , %s ) ".format(u.id, u.nickName, u.age));
@@ -397,6 +397,17 @@ void test_pagination(EntityManager em)
 
         foreach(UserInfo d ; page.getContent())
         {
+            IDCard card = d.getCard();
+            if(card is null) {
+                warning("No data for IDCard");
+            }
+
+            AppInfo[] apps = d.apps;
+            trace(apps.length);
+            foreach(AppInfo app; apps) {
+                warning(app.name);
+            }
+
             logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
         }
     }
@@ -419,15 +430,15 @@ void test_count(EntityManager em)
 
     // FIXME: Needing refactor or cleanup -@zhangxueping at 2019-10-09T15:23:59+08:00
     // Give some warning message.
-    string sql = " select count(UserInfo.id) as num from UserInfo a "; // bug
+    // string sql = " select count(UserInfo.id) as num from UserInfo a "; // bug
     // sql = " select count(a.id) as num from UserInfo a "; 
-    // sql = " select count(*) as num from UserInfo a "; 
+    string sql = " select count(*) as num from UserInfo a where a.id < 5 "; 
 
-    auto query = em.createQuery!(UserInfo)(sql);
+    EqlQuery!UserInfo query = em.createQuery!(UserInfo)(sql);
     logDebug("UserInfo( %s ) ".format(query.getNativeResult()));
     RowSet rs = query.getNativeResult();
     assert(rs.size() > 0);
-    Row row = rs.iterator.front();
+    Row row = rs.firstRow();
     long count = row.getLong(0);
     warningf("count: %d", count);
 }
@@ -543,15 +554,20 @@ void test_eql_select(EntityManager em)
 
     // auto query5 = em.createQuery!(LoginInfo)(
     // 		" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");
-    // query5.setParameter("id", 2);
-    // foreach (d; query5.getResultList())
-    // {
-    // 	logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
-    // 			d.uinfo.nickName, d.uinfo.age));
-    // 	logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
-    // 	logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
-    // }
 
+{
+	auto query5 = em.createQuery!(LoginInfo)(
+			" select a, b ,c from LoginInfo a left join a.uinfo b  join a.app c where a.id = :id order by a.id desc;");    
+    query5.setParameter("id", 2);
+    foreach (d; query5.getResultList())
+    {
+    	logDebug("LoginInfo.UserInfo( %s , %s , %s ) ".format(d.uinfo.id,
+    			d.uinfo.nickName, d.uinfo.age));
+    	logDebug("LoginInfo.AppInfo( %s , %s , %s ) ".format(d.app.id, d.app.name, d.app.desc));
+    	logDebug("LoginInfo( %s , %s , %s ) ".format(d.id, d.create_time, d.updated));
+    }
+
+// The generated sql:
 // SELECT LoginInfo.location AS LoginInfo__as__location, LoginInfo.id AS LoginInfo__as__id, LoginInfo.uid AS LoginInfo__as__uid, LoginInfo.update_time AS LoginInfo__as__update_time, LoginInfo.create_time AS LoginInfo__as__create_time
 //         , UserInfo.nickname AS UserInfo__as__nickname, UserInfo.age AS UserInfo__as__age, UserInfo.id AS UserInfo__as__id, AppInfo.desc AS AppInfo__as__desc, AppInfo.id AS AppInfo__as__id
 //         , AppInfo.name AS AppInfo__as__name
@@ -560,11 +576,25 @@ void test_eql_select(EntityManager em)
 //         JOIN AppInfo  ON LoginInfo.appid = AppInfo.id
 // WHERE LoginInfo.id = 2	
 
+// SELECT "logininfo"."location" AS "logininfo__as__location", "logininfo"."id" AS "logininfo__as__id", "logininfo"."appid" AS "logininfo__as__appid", "logininfo"."uid" AS "logininfo__as__uid", "logininfo"."update_time" AS "logininfo__as__update_time"
+//         , "logininfo"."create_time" AS "logininfo__as__create_time", "userinfo"."nickname" AS "userinfo__as__nickname", "userinfo"."age" AS "userinfo__as__age", "userinfo"."id" AS "userinfo__as__id", "appinfo"."desc" AS "appinfo__as__desc"
+//         , "appinfo"."id" AS "appinfo__as__id", "appinfo"."available" AS "appinfo__as__available", "appinfo"."name" AS "appinfo__as__name"
+// FROM "logininfo"
+//         LEFT JOIN "userinfo" ON "logininfo"."uid" = "userinfo"."id"
+//         JOIN "appinfo" ON "logininfo"."appid" = "appinfo"."id"
+// WHERE "logininfo"."id" = 2
+// ORDER BY "logininfo"."id" DESC
+}
+
     // auto query6 = em.createQuery!(UserInfo,
-    // 		AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id ;");
-    // foreach (d; query6.getResultList())
+    // 		AppInfo)(" select a , b from UserInfo a left join AppInfo b on a.id = b.id limit 2;");
+    // foreach (UserInfo d; query6.getResultList())
     // {
     // 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+    //     IDCard card = d.card;
+    //     if(card is null) {
+    //         warning("xxxx");
+    //     }
     // }
 
     // auto query7 = em.createQuery!(UserInfo)(
@@ -863,7 +893,7 @@ void test_EntityRepository_Count(EntityManager em)
     EntityRepository!(LoginInfo, int) rep = new EntityRepository!(LoginInfo, int)(em);
 
     // LoginInfo.update_time 
-    warningf("'updated' field: %s", rep.Field().updated);
+    warningf("'updated' field: %s", rep.field().updated);
 
     long count = rep.count();
     tracef("count by id: %d", count);
@@ -971,7 +1001,7 @@ EntityOption getMysqlDevOptions() {
 
     EntityOption option = new EntityOption();
     option.database.driver = "mysql";
-    option.database.host = "10.1.222.110";
+    option.database.host = "10.1.223.222";
     option.database.port = 3306;
     option.database.database = "eql_test";
     option.database.username = "root";
@@ -998,7 +1028,7 @@ EntityOption getPgDevOptions() {
 
     EntityOption option = new EntityOption();
     option.database.driver = "postgresql";
-    option.database.host = "10.1.222.110";
+    option.database.host = "10.1.223.222";
     option.database.port = 5432;
     option.database.database = "postgres";
     option.database.username = "postgres";
@@ -1008,3 +1038,4 @@ EntityOption getPgDevOptions() {
 
     return option;
 }
+
