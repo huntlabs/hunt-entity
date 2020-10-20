@@ -298,15 +298,21 @@ class EqlParse {
             else if (cast(SQLPropertyExpr) expr !is null)
             {
                 auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
-                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                auto currentFieldName = (cast(SQLPropertyExpr) expr).getName();
                 if (eqlObj !is null)
                 {
+                    bool isHandled = false;
                     auto fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (classMember, fieldInfo; fields)
-                        {
-                            if (classMember == clsFieldName)
+                        foreach (string classMember, EntityFieldInfo fieldInfo; fields) {
+                            string columnName = fieldInfo.getColumnName();
+                            version(HUNT_ENTITY_DEBUG_MORE) {
+                                tracef("classMember: %s, columnName: %s, currentField: %s", 
+                                    classMember, columnName, currentFieldName);
+                            }
+                            isHandled = classMember == currentFieldName || columnName == currentFieldName;
+                            if (isHandled)
                             {
                                 select_copy.addSelectItem(new SQLIdentifierExpr(selectItem.getAlias() is null
                                         ? fieldInfo.getSelectColumn()
@@ -316,6 +322,16 @@ class EqlParse {
                             // logDebug("sql replace : (%s ,%s) ".format(k ~ "." ~ classMember,k ~ "." ~ fieldInfo.getColumnName()));
                         }
                     }
+
+                    if(!isHandled) {
+                        string msg = format("Found a undefined memeber [%s] in class [%s]", 
+                            currentFieldName, eqlObj.className());
+                        warningf(msg);
+
+                        // TODO: Tasks pending completion -@zhangxueping at 2020-10-20T14:32:17+08:00
+                        // 
+                        // throw new EntityException(msg);
+                    }                    
                 }
                 else
                 {
@@ -342,21 +358,40 @@ class EqlParse {
                     {
                         SQLPropertyExpr pExpr = cast(SQLPropertyExpr) subExpr;
                         auto eqlObj = _eqlObj.get(pExpr.getOwnernName(), null);
-                        auto clsFieldName = (cast(SQLPropertyExpr) subExpr).getName();
+                        auto currentFieldName = (cast(SQLPropertyExpr) subExpr).getName();
                         if (eqlObj !is null)
                         {
+                            bool isHandled = false;
                             auto fields = _tableFields.get(eqlObj.className(), null);
                             if (fields !is null)
                             {
-                                foreach (classMember, fieldInfo; fields)
+                                foreach (string classMember, EntityFieldInfo fieldInfo; fields)
                                 {
-                                    if (classMember == clsFieldName)
+                                    string columnName = fieldInfo.getColumnName();
+
+                                    version(HUNT_ENTITY_DEBUG_MORE) {
+                                        tracef("classMember: %s, columnName: %s, currentField: %s", 
+                                            classMember, columnName, currentFieldName);
+                                    }
+
+                                    isHandled = classMember == currentFieldName || columnName == currentFieldName;
+                                    if (isHandled)
                                     {
                                         newArgs.add(new SQLPropertyExpr(eqlObj.tableName(),
                                                 fieldInfo.getColumnName()));
                                         break;
                                     }
                                 }
+                            }
+                        
+                            if(!isHandled) {
+                                string msg = format("Found a undefined memeber [%s] in class [%s]", 
+                                    currentFieldName, eqlObj.className());
+                                warningf(msg);
+
+                                // TODO: Tasks pending completion -@zhangxueping at 2020-10-20T14:32:17+08:00
+                                // 
+                                // throw new EntityException(msg);
                             }
                         }
                     }
@@ -512,57 +547,75 @@ class EqlParse {
         /// update item
         foreach (SQLUpdateSetItem updateItem; updateBlock.getItems())
         {
-            version(HUNT_ENTITY_DEBUG_MORE)
+            version(HUNT_ENTITY_DEBUG)
             {
-                tracef("clone select : ( %s , %s ) ", SQLUtils.toSQLString(updateItem.getColumn()),
+                tracef("Update item (name: %s, value: %s)", SQLUtils.toSQLString(updateItem.getColumn()),
                         SQLUtils.toSQLString(updateItem.getValue));
             }
-            auto expr = updateItem.getColumn();
-            if (cast(SQLIdentifierExpr) expr !is null)
-            {
+            SQLExpr expr = updateItem.getColumn();
 
+            if (cast(SQLIdentifierExpr) expr !is null) {
+                warning("Do nothing");
             }
+
             if (cast(SQLPropertyExpr) expr !is null)
             {
                 EqlObject eqlObj = _eqlObj.get((cast(SQLPropertyExpr) expr).getOwnernName(), null);
-                string clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                string currentFieldName = (cast(SQLPropertyExpr) expr).getName();
                 if (eqlObj !is null)
                 {
+                    bool isHandled = false;
                     EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
-                        foreach (string classMember, EntityFieldInfo fieldInfo; fields)
-                        {
-                            version(HUNT_ENTITY_DEBUG_MORE)
-                            {
-                                tracef("sql replace %s with %s, table: %s ", classMember,
-                                        fieldInfo.getColumnName(), eqlObj.tableName());
+                        foreach (string classMember, EntityFieldInfo fieldInfo; fields) {
+                            if(fieldInfo.isAggregateType()) {
+                                // ignore all the aggregative members;
+                                version(HUNT_DEBUG) {
+                                    infof("Aggregative member ignored: %s", classMember);
+                                }
+
+                                continue;
+                            }
+                            string columnName = fieldInfo.getColumnName();
+
+                            version(HUNT_ENTITY_DEBUG_MORE) {
+                                tracef("classMember: %s, columnName: %s, currentField: %s", 
+                                    classMember, columnName, currentFieldName);
                             }
 
-                            if (classMember == clsFieldName)
-                            {
-                                if (_dbtype == DBType.POSTGRESQL.name)
-                                { // PostgreSQL
+                            isHandled = classMember == currentFieldName || columnName == currentFieldName;
+                            if (isHandled) {
+                                if (_dbtype == DBType.POSTGRESQL.name) {
+                                    // PostgreSQL
                                     // https://www.postgresql.org/docs/9.1/sql-update.html
-                                    updateItem.setColumn(new SQLIdentifierExpr(
-                                            fieldInfo.getColumnName()));
+                                    updateItem.setColumn(new SQLIdentifierExpr(columnName));
                                     // updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
                                     //         fieldInfo.getColumnName()));
+                                } else {
+                                    updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(), columnName));
                                 }
-                                else
-                                {
-                                    updateItem.setColumn(new SQLPropertyExpr(eqlObj.tableName(),
-                                            fieldInfo.getColumnName()));
-                                }
+                                
                                 break;
                             }
                         }
+                    }
+
+                    if(!isHandled) {
+                        string msg = format("Found a undefined memeber [%s] in class [%s]", 
+                            currentFieldName, eqlObj.className());
+                        warningf(msg);
+
+                        // TODO: Tasks pending completion -@zhangxueping at 2020-10-20T14:32:17+08:00
+                        // 
+                        // throw new EntityException(msg);
                     }
                 }
                 else
                 {
                     eql_throw("Statement",
-                    " undefined sql object  '%s' in '%s': ".format((cast(SQLPropertyExpr) expr).getOwnernName(),SQLUtils.toSQLString(expr)));
+                        " undefined sql object  '%s' in '%s': ".format((cast(SQLPropertyExpr) expr).getOwnernName(),
+                        SQLUtils.toSQLString(expr)));
                 }
             }
 
@@ -570,22 +623,41 @@ class EqlParse {
             if (cast(SQLPropertyExpr) valueExpr !is null)
             {
                 auto eqlObj = _eqlObj.get((cast(SQLPropertyExpr) valueExpr).getOwnernName(), null);
-                auto clsFieldName = (cast(SQLPropertyExpr) valueExpr).getName();
+                string currentFieldName = (cast(SQLPropertyExpr) valueExpr).getName();
                 if (eqlObj !is null)
                 {
+                    bool isHandled = false;
                     EntityField fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
                         foreach (string classMember, EntityFieldInfo fieldInfo; fields)
                         {
-                            if (classMember == clsFieldName)
+                            string columnName = fieldInfo.getColumnName();
+
+                            version(HUNT_ENTITY_DEBUG_MORE) {
+                                tracef("classMember: %s, columnName: %s, currentField: %s", 
+                                    classMember, columnName, currentFieldName);
+                            }
+
+                            isHandled = classMember == currentFieldName || columnName == currentFieldName;
+                            if (isHandled)
                             {
                                 updateItem.setValue(new SQLPropertyExpr(eqlObj.tableName(),
-                                        fieldInfo.getColumnName()));
+                                        columnName));
                                 break;
                             }
                             // tracef("sql replace : (%s ,%s) ", classMember, fieldInfo.getColumnName());
                         }
+                    }
+                    
+                    if(!isHandled) {
+                        string msg = format("Found a undefined memeber [%s] in class [%s]", 
+                            currentFieldName, eqlObj.className());
+                        warningf(msg);
+
+                        // TODO: Tasks pending completion -@zhangxueping at 2020-10-20T14:32:17+08:00
+                        // 
+                        // throw new EntityException(msg);
                     }
                 }
             }
@@ -605,10 +677,11 @@ class EqlParse {
             updateBlock.setWhere(SQLUtils.toSQLExpr(where));
         }
 
+        version(HUNT_ENTITY_DEBUG) info("The parsing done. Now, converting it to native SQL...");
         _parsedEql = SQLUtils.toSQLString(updateBlock, _dbtype);
-
-        version (HUNT_ENTITY_DEBUG_MORE)
-            trace(_parsedEql);
+        version (HUNT_ENTITY_DEBUG) {
+            warning(_parsedEql);
+        }
     }
 
     private void doDeleteParse()
@@ -652,19 +725,39 @@ class EqlParse {
             {
                 SQLPropertyExpr pExpr = cast(SQLPropertyExpr) expr;
                 auto eqlObj = _eqlObj.get(pExpr.getOwnernName(), null);
-                auto clsFieldName = (cast(SQLPropertyExpr) expr).getName();
+                string currentFieldName = (cast(SQLPropertyExpr) expr).getName();
                 if (eqlObj !is null)
                 {
+                    bool isHandled = false;
                     auto fields = _tableFields.get(eqlObj.className(), null);
                     if (fields !is null)
                     {
                         foreach (classMember, fieldInfo; fields)
                         {
-                            if (classMember == clsFieldName)
+                            string columnName = fieldInfo.getColumnName();
+
+                            version(HUNT_ENTITY_DEBUG_MORE) {
+                                tracef("classMember: %s, columnName: %s, currentField: %s", 
+                                    classMember, columnName, currentFieldName);
+                            }
+
+                            isHandled = classMember == currentFieldName || columnName == currentFieldName;
+
+                            if (isHandled)
                             {
                                 newColumns.add(new SQLIdentifierExpr(fieldInfo.getColumnName()));
                                 break;
                             }
+                        }
+                        
+                        if(!isHandled) {
+                            string msg = format("Found a undefined memeber [%s] in class [%s]", 
+                                currentFieldName, eqlObj.className());
+                            warningf(msg);
+
+                            // TODO: Tasks pending completion -@zhangxueping at 2020-10-20T14:32:17+08:00
+                            // 
+                            // throw new EntityException(msg);
                         }
                     }
                 }
