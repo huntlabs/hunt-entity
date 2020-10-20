@@ -266,8 +266,11 @@ private string makeJoinConds(T, F)() {
                 
                 str ~= `
                 {
-                    auto joinCond = new JoinCond!(` ~ memType.stringof ~ `)(_manager,_entityClassName,` ~ 
-                        memberName.stringof~ `, ` ~ columnName ~ `,` ~ referencedColumnName ~ `, _tableName);
+                    EntityMetaInfo memberMetaInfo = ` ~ memType.stringof ~ `.metaInfo;
+                    string rightTableName = _tablePrefix ~ memberMetaInfo.tableName;
+                    auto joinCond = new JoinCond(_tableName, ` ~ 
+                        memberName.stringof~ `, ` ~ columnName ~ `,` ~ referencedColumnName ~ 
+                        `, rightTableName, memberMetaInfo.primaryKey);
                     _joinConds[_entityClassName ~ "." ~ ` ~ memberName.stringof ~ `] = joinCond;
                 }
                 `;                
@@ -280,306 +283,26 @@ private string makeJoinConds(T, F)() {
     return str;
 }
 
-// string makeInitEntityData(T,F)() {
-//     string str = `
-//     private void initEntityData() {
-//         _entityClassName = "`~T.stringof~`";`;
-//     static if (hasUDA!(T,Table)) {
-//         str ~= `
-//         _tableName = _tablePrefix ~ "` ~ getUDAs!(getSymbolsByUDA!(T,Table)[0], Table)[0].name ~`";`;
-//     }
-//     else {
-//         str ~= `
-//         _tableName = _tablePrefix ~ "` ~ T.stringof ~ `";`;
-//     }
 
-//     static if (hasUDA!(T, Factory))
-//     {
-//         str ~= `
-//         _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
-//     }
-
-//     static foreach (string memberName; FieldNameTuple!T) {{
-//         alias currentMember = __traits(getMember, T, memberName);
-        
-//         static if (__traits(getProtection, currentMember) != "public") {
-//             enum isEntityMember = false;
-//         } else static if(hasUDA!(currentMember, Transient)) {
-//             enum isEntityMember = false;
-//         } else {
-//             enum isEntityMember = true;
-//         }
-        
-//         static if (isEntityMember) {
-//             alias memType = typeof(__traits(getMember, T ,memberName));
-            
-//                 //columnName nullable
-//                 string nullable;
-//                 string columnName;
-//                 string referencedColumnName;
-//                 static if (hasUDA!(__traits(getMember, T ,memberName), Column)) {
-//                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), Column)[0].name~"\"";
-//                     nullable = getUDAs!(__traits(getMember, T ,memberName), Column)[0].nullable.to!string;
-//                 }
-//                 else static if (hasUDA!(__traits(getMember, T ,memberName), JoinColumn)) {
-//                     columnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].name~"\"";
-//                     referencedColumnName = "\""~getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].referencedColumnName~"\"";
-//                     nullable = getUDAs!(__traits(getMember, T ,memberName), JoinColumn)[0].nullable.to!string;
-//                     static if(is(memType == class))
-//                     {
-//                         str ~= `
-//                         {
-//                             auto joinCond = new JoinCond!(`~memType.stringof~`)(_manager,_entityClassName,`~memberName.stringof~`, `~columnName~`,`~referencedColumnName~`, _tableName);
-//                             _joinConds[_entityClassName ~ "." ~ `~memberName.stringof~`] = joinCond;
-//                         }
-//                         `;
-//                     }
-//                 }
-//                 else {
-//                     columnName = "\""~__traits(getMember, T ,memberName).stringof~"\"";
-//                 }
-           
-//                 string value = "_data."~memberName;
-//                 string fieldName = "_fields["~memberName.stringof~"]";
-//                 static if (is(F == memType)) {
-//         str ~= `
-//         `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, `~columnName~`, _tableName);`;
-//                 }
-//                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToOne)) {
-//                     string owner = (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
-
-//         str ~= `
-//         `~ fieldName ~ ` = new EntityFieldOneToOne!(` ~ memType.stringof ~ ", T)(_manager, " ~ memberName.stringof ~
-//                     `, _primaryKey, ` ~ columnName ~ ", _tableName, " ~ value ~ ", " ~ 
-//                     (getUDAs!(__traits(getMember, T ,memberName), OneToOne)[0]).stringof ~ 
-//                     `, ` ~ owner ~ `);`;
-//                 }
-//                 else static if (hasUDA!(__traits(getMember, T ,memberName), OneToMany)) {
-//         //             static if (is(T==F)) {
-//         // str ~= `
-//         // `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, F)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//         //                                 ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~`, _owner);`;
-//         //             }
-//         //             else {
-//         // str ~= `
-//         // `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, T)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//         //                                 ~(getUDAs!(__traits(getMember, T ,memberName), OneToMany)[0]).stringof~`, _data);`;
-//         //             }
-//                 }
-//                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToOne)) {
-//         str ~= `
-//         `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`, `
-//                                     ~(getUDAs!(__traits(getMember, T ,memberName), ManyToOne)[0]).stringof~`);`;
-//                 }
-//                 else static if (hasUDA!(__traits(getMember, T ,memberName), ManyToMany)) {
-//                     //TODO                                                                 
-//                 }
-//                 else {
-//         str ~= `
-//         `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager,`~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
-//             }
-
-//                 //nullable
-//                 if (nullable != "" && nullable != "true")
-//         str ~= `
-//         `~fieldName~`.setNullable(`~nullable~`);`;
-//                 //primary key
-//                 static if (hasUDA!(__traits(getMember, T ,memberName), PrimaryKey) || hasUDA!(__traits(getMember, T ,memberName), Id)) {
-//         str ~= `
-//         _primaryKey = `~memberName.stringof~`;
-//         `~fieldName~`.setPrimary(true);`;
-//                 }
-//                 //autoincrease key
-//                 static if (hasUDA!(__traits(getMember, T ,memberName), AutoIncrement) || hasUDA!(__traits(getMember, T ,memberName), Auto)) {
-//         str ~= `
-//         _autoIncrementKey = `~memberName.stringof~`;
-//         `~fieldName~`.setAuto(true);
-//         `~fieldName~`.setNullable(false);`;
-//                 }
-//         }    
-//     }}
-
-//     str ~=`
-//         if (_fields.length == 0) {
-//             throw new EntityException("Entity class member cannot be empty : `~ T.stringof~`");
-//         }
-//     }`;
-//     return str;
-// }
-
-
-
-// string makeInitEntityData(T,F)() {
-//     import std.conv;
-
-//     string str = `
-//     private void initEntityData() {
-//     `;
-
-//     static if (hasUDA!(T, Factory)) {
-//         str ~= `
-//         _factoryName = `~ getUDAs!(getSymbolsByUDA!(T,Factory)[0], Factory)[0].name~`;`;
-//     }
-
-//     //
-//     static foreach (string memberName; FieldNameTuple!T) {{
-//         alias currentMember = __traits(getMember, T, memberName);
-
-//         static if (__traits(getProtection, currentMember) != "public") {
-//             enum isEntityMember = false;
-//         } else static if(hasUDA!(currentMember, Transient)) {
-//             enum isEntityMember = false;
-//         } else {
-//             enum isEntityMember = true;
-//         }
-
-//         static if (isEntityMember) {
-//             alias memType = typeof(currentMember);
-//             //columnName nullable
-//             string nullable;
-//             string columnName;
-//             string mappedBy;
-//             static if(hasUDA!(currentMember, ManyToMany))
-//             {
-//                 mappedBy = "\""~getUDAs!(currentMember, ManyToMany)[0].mappedBy~"\"";
-//             }
-
-//             static if (hasUDA!(currentMember, Column)) {
-//                 columnName = "\""~getUDAs!(currentMember, Column)[0].name~"\"";
-//                 nullable = getUDAs!(currentMember, Column)[0].nullable.to!string;
-//             } else static if (hasUDA!(currentMember, JoinColumn)) {
-//                 columnName = "\""~getUDAs!(currentMember, JoinColumn)[0].name~"\"";
-//                 nullable = getUDAs!(currentMember, JoinColumn)[0].nullable.to!string;
-//             } 
-//             else {
-//                 columnName = "\""~currentMember.stringof~"\"";
-//             }
-//             //value 
-//             string value = "_data."~memberName;
-            
-//             // Use the field/member name as the key
-//             string fieldName = "_fields["~memberName.stringof~"]";
-//             static if (is(F == memType) ) {
-//                 str ~= `
-//             `~fieldName~` = new EntityFieldOwner(`~memberName.stringof~`, toColumnName(`~columnName~`), _tableName);`;
-                    
-//             }
-//             else static if( memType.stringof.replace("[]","") == F.stringof && hasUDA!(currentMember, ManyToMany))
-//             {
-//                 string owner = (getUDAs!(currentMember, ManyToMany)[0]).mappedBy == "" ? "_data" : "_owner";
-
-//                 static if (hasUDA!(currentMember, JoinTable))
-//                         {
-//                 str ~= `
-//                 `~fieldName~` = new EntityFieldManyToManyOwner!(`
-//                                 ~ memType.stringof.replace("[]","")
-//                                 ~ `,F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                 ~ (getUDAs!(currentMember, ManyToMany)[0]).stringof~`, `~owner~`,true,`
-//                                 ~ (getUDAs!(currentMember, JoinTable)[0]).stringof~`,`
-//                                 ~ (getUDAs!(currentMember, JoinColumn)[0]).stringof~`,`
-//                                 ~ (getUDAs!(currentMember, InverseJoinColumn)[0]).stringof~ `);`;
-//                         }
-//                         else
-//                         {
-//                 str ~= `
-//                 `~fieldName~` = new EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`, F,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                                 ~(getUDAs!(currentMember, ManyToMany)[0]).stringof~`, `~owner~`,false);`;
-//                         }
-//             }
-//             else static if (hasUDA!(currentMember, OneToOne)) {
-//                 static if(is(memType == T)) {
-//                     enum string owner = (getUDAs!(currentMember, OneToOne)[0]).mappedBy == "" ? "_owner" : "_data";
-//                 } else {
-//                     enum string owner = "_data";
-//                 }
-//     str ~= `
-//     `~fieldName~` = new EntityFieldOneToOne!(`~memType.stringof~`, T)(_manager, `~memberName.stringof ~ 
-//                 `, _primaryKey, toColumnName(`~columnName~`), _tableName, `~value~`, `
-//                                 ~ (getUDAs!(currentMember, OneToOne)[0]).stringof ~ `, `~owner ~ `);`;
-//             }
-//             else static if (hasUDA!(currentMember, OneToMany)) {
-//                 static if (is(T==F)) {
-//     str ~= `
-//     `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, F)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                     ~(getUDAs!(currentMember, OneToMany)[0]).stringof~`, _owner);`;
-//                 }
-//                 else {
-//     str ~= `
-//     `~fieldName~` = new EntityFieldOneToMany!(`~memType.stringof.replace("[]","")~`, T)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                     ~(getUDAs!(currentMember, OneToMany)[0]).stringof~`, _data);`;
-//                 }
-//             }
-//             else static if (hasUDA!(currentMember, ManyToOne)) {
-//     str ~= `
-//     `~fieldName~` = new EntityFieldManyToOne!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, toColumnName(`~columnName~`), _tableName, `~value~`, `
-//                                 ~(getUDAs!(currentMember, ManyToOne)[0]).stringof~`);`;
-//             }
-//             else static if (hasUDA!(currentMember, ManyToMany)) {
-//                 //TODO
-//                 string owner = (getUDAs!(currentMember, ManyToMany)[0]).mappedBy == "" ? "_owner" : "_data";
-
-//                 static if (hasUDA!(currentMember, JoinTable))
-//                 {
-//         str ~= `
-//         `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                         ~(getUDAs!(currentMember, ManyToMany)[0]).stringof~`, `~owner~`,true,`
-//                                         ~(getUDAs!(currentMember, JoinTable)[0]).stringof~`,`
-//                                         ~(getUDAs!(currentMember, JoinColumn)[0]).stringof~`,`
-//                                         ~(getUDAs!(currentMember, InverseJoinColumn)[0]).stringof~ `);`;
-//                 }
-//                 else
-//                 {
-//         str ~= `
-//         `~fieldName~` = new EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`, T,`~mappedBy~`)(_manager, `~memberName.stringof~`, _primaryKey, _tableName, `
-//                                         ~(getUDAs!(currentMember, ManyToMany)[0]).stringof~`, `~owner~`,false);`;
-//                 }
-//             }
-//             else {
-//                 // string fieldType =  "new "~getDlangDataTypeStr!memType~"()";
-//     str ~= `
-//     `~fieldName~` = new EntityFieldNormal!(`~memType.stringof~`)(_manager, `~memberName.stringof~`, `~columnName~`, _tableName, `~value~`);`;
-//             }
-
-//             //nullable
-//             if (nullable != "" && nullable != "true")
-//     str ~= `
-//     `~fieldName~`.setNullable(`~nullable~`);`;
-//             //primary key
-//             static if (hasUDA!(currentMember, PrimaryKey) || hasUDA!(currentMember, Id)) {
-//     str ~= `
-//     _primaryKey = `~memberName.stringof~`;
-//     `~fieldName~`.setPrimary(true);`;
-//             }
-//             //autoincrease key
-//             static if (hasUDA!(currentMember, AutoIncrement) || hasUDA!(currentMember, Auto)) {
-//     str ~= `
-//     _autoIncrementKey = `~memberName.stringof~`;
-//     `~fieldName~`.setAuto(true);
-//     `~fieldName~`.setNullable(false);`;
-//             }
-//         }
-//     }}
-
-//     str ~=`
-//         if (_fields.length == 0) {
-//             throw new EntityException("Entity class member cannot be empty : `~ T.stringof~`");
-//         }
-//     }`;
-//     return str;
-// }
-
-
-class JoinCond(T : Object)
+/**
+ * 
+ */
+class JoinCond
 {
     private string _joinCond;
-    private EqlInfo!T _eqlInfo;
-    this(EntityManager manager, string leftTable,string fieldName, string joinCol, string referencedColumnName ,string tableName)
+
+    this(string leftTable, string fieldName, string joinCol, string referencedColumnName,
+        string rightTable, string rightTablePrimaryKey)
     {
-        _eqlInfo = new EqlInfo!T(manager);
-        if(referencedColumnName.length == 0)
-            _joinCond = tableName ~ "." ~ joinCol ~ " = " ~ _eqlInfo.getTableName() ~ "." ~ _eqlInfo.getPrimaryKeyString();
+        version(HUNT_ENTITY_DEBUG) {
+            warningf("leftTable: %s, fieldName: %s, joinCol: %s, referencedColumn: %s, rightTable: %s", 
+                leftTable, fieldName, joinCol, referencedColumnName, rightTable);
+        }
+
+        if(referencedColumnName.empty())
+            _joinCond = leftTable ~ "." ~ joinCol ~ " = " ~ rightTable ~ "." ~ rightTablePrimaryKey;
         else
-            _joinCond = tableName ~ "." ~ joinCol ~ " = " ~ _eqlInfo.getTableName() ~ "." ~ referencedColumnName;
+            _joinCond = leftTable ~ "." ~ joinCol ~ " = " ~ rightTable ~ "." ~ referencedColumnName;
     }
 
     override string toString()
