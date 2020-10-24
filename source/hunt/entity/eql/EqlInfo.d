@@ -88,7 +88,7 @@ class EqlInfo(T : Object, F : Object = T) {
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
     // pragma(msg,makeInitEntityData!(T,F));
-    // pragma(msg,makeDeserializer!(T,F));
+    // pragma(msg,makeDeserializer!(T));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
@@ -96,7 +96,7 @@ class EqlInfo(T : Object, F : Object = T) {
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
     mixin(makeJoinConds!(T,F)());
-    mixin(makeDeserializer!(T,F)());
+    mixin(makeDeserializer!(T)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());

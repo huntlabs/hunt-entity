@@ -355,11 +355,15 @@ class EqlQuery(T...)
             rows ~= value;
         }
 
-        foreach (k, v; rows)
+        foreach (size_t k, Row v; rows)
         {
             try
             {
-                ResultObj t = _resultDes.deSerialize(rows, count, cast(int) k);
+                version(HUNT_ENTITY_DEBUG) {
+                    warningf("Deserializing row %d", k);
+                }
+
+                ResultObj t = _resultDes.deSerialize!(ResultObj)(rows, count, cast(int) k, null);
                 if (t is null)
                 {
                     if (count != -1)
@@ -370,9 +374,7 @@ class EqlQuery(T...)
                     {
                         throw new EntityException("empty row data");
                     }
-                } else {
-                    t.onInitialized();
-                }
+                } 
                 ret ~= t;
             }
             catch (Exception e)

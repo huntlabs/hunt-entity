@@ -43,6 +43,7 @@ void main()
 
     // test_eql_insert(em);
     test_eql_select(em);
+    test_eql_select_with_join(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
@@ -522,9 +523,28 @@ void test_eql_select(EntityManager em)
 
     // case 2
     // EqlQuery!(UserInfo) query1 = em.createQuery!(UserInfo)(" select a from UserInfo a where a.id = 1;");
-    // foreach (UserInfo d; query1.getResultList())
+    // foreach (UserInfo uinfo; query1.getResultList())
     // {
-    // 	logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+    //     logDebug("UserInfo( %s , %s , %s ) ".format(uinfo.id, uinfo.nickName, uinfo.age));
+
+    //     // IDCard idCard = uinfo.card; 
+    //     IDCard idCard = uinfo.getCard(); 
+
+    //     if(idCard !is null ) {
+    //         warningf("CardInfo, uid: %d, desc: %s, user: %s", idCard.uid, idCard.desc, idCard.user is null);
+
+    //         UserInfo uinfo2 = idCard.user;
+    //         // assert(uinfo2 !is null && uinfo2.id > 0);
+    //         // assert(uinfo is uinfo2);
+
+    //         if(uinfo2 !is null) {
+    //             warningf("userInfo, id: %d, nickName: %s", uinfo2.id, uinfo2.nickName);
+    //         } else {
+    //             warning("The uinfo is null");
+    //         }
+    //     } else {
+    //         warning("The IDCard is null");
+    //     }
     // }
 
     // case 3
@@ -607,8 +627,53 @@ void test_eql_select(EntityManager em)
     // {
     // 	logDebug("IDCard.UserInfo( %s , %s , %s ) ".format(d.user.id, d.user.nickName, d.user.age));
     // }
+    
 }
 
+
+void test_eql_select_with_join(EntityManager em)
+{
+    
+    // Case 1
+    // {
+    //     string queryString = "select a, b from UserInfo a left join IDCard b on a.id = b.uid " ~ 
+    //         " where a.age = 5";
+    //     EqlQuery!(UserInfo) query = em.createQuery!(UserInfo)(queryString);
+
+    //     foreach (UserInfo d; query.getResultList())
+    //     {
+    //         logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+    //         IDCard card = d.card;
+    //         warningf("card is null: %s", card is null);
+    //         assert(card !is null);
+    //          warningf("CardInfo, id: %s, desc: %s", card.id, card.desc);
+    //     }
+
+    // }
+
+    // Case 2
+    {
+        string queryString = "select a, b from IDCard a left join UserInfo b on a.uid = b.id " ~ 
+            " where b.age = 5";
+        EqlQuery!(IDCard) query = em.createQuery!(IDCard)(queryString);
+
+        foreach (IDCard card; query.getResultList())
+        {
+            
+             warningf("CardInfo, id: %s, desc: %s", card.id, card.desc);
+
+            UserInfo user = card.user;
+            if(user is null) {
+                warning("user is null");
+            } else {
+                logDebug("UserInfo( %s , %s , %s ) ".format(user.id, user.nickName, user.age));
+            }
+
+            assert(user !is null);
+        }
+    }
+
+}    
 
 void test_eql_select_with_reserved_word(EntityManager em)
 {

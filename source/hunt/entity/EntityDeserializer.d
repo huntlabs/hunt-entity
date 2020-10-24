@@ -16,12 +16,12 @@ import std.traits;
 import std.variant;
 
 
-string makeDeserializer(T,F)() {
+string makeDeserializer(T)() {
     string str;
 
-    str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof ~ ", F=" ~ F.stringof;
+    str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof;
     str ~= `
-    T deSerialize(Row[] rows, ref long count, int startIndex = 0, F owner = null,  bool isFromManyToOne = false) {
+    T deSerialize(P)(Row[] rows, ref long count, int startIndex = 0, P owner = null,  bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
             infof("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
@@ -51,7 +51,7 @@ string makeDeserializer(T,F)() {
         }
         `;
         
-    // static if(is(T == F)) {
+    // static if(is(T == P)) {
     //     str ~= indent(8) ~ "T actualOwner = _data;\n";
     // } else {
     //     str ~= indent(8) ~ "T actualOwner = null;\n";
@@ -111,21 +111,25 @@ string makeDeserializer(T,F)() {
             } else { // Object
                 str ~= indent(8) ~ "isDeserializationNeed = true;\n";
 
-                static if(is(F == memType)) {
-                    str ~=`
-                    if(owner is null) {
-                        version(HUNT_ENTITY_DEBUG) {
-                            warning("The owner [` ~ F.stringof ~ `] of [` ~ T.stringof ~ `] is null.");
+                str ~=`
+                    static if(is(P == ` ~ memType.stringof ~ `)) {                    
+                        if(owner is null) {
+                            version(HUNT_ENTITY_DEBUG) {
+                                warningf("The owner [%s] of [%s] is null.", P.stringof, T.stringof);
+                            }
+                        } else {
+                            version(HUNT_ENTITY_DEBUG) {
+                                warningf("set [` ~ memberName ~ 
+                                    `] to the owner {Type: %s, isNull: false}", P.stringof);
+                            }
+                            isDeserializationNeed = false;
+                            _data.` ~ memberName ~ ` = owner;
                         }
                     } else {
-                        version(HUNT_ENTITY_DEBUG) {
-                            warningf("set [` ~ memberName ~ 
-                                `] to the owner {Type: %s, isNull: false}", "` ~ F.stringof ~ `");
-                        }
-                        isDeserializationNeed = false;
-                        _data.` ~ memberName ~ ` = owner;
+                        // version(HUNT_ENTITY_DEBUG) {
+                        //     warningf("Type mismatched: P=%s, memType=` ~ memType.stringof ~ `", P.stringof);
+                        // } 
                     }` ~ "\n\n";
-                } 
 
                 str ~= indent(8) ~ "if(isDeserializationNeed) {\n";
                 str ~= indent(12) ~ "version(HUNT_ENTITY_DEBUG) info(\"Deserializing member: " 
@@ -165,16 +169,16 @@ string makeDeserializer(T,F)() {
                         isMemberDeserialized = true;
                     }`;
                 } else static if (isArray!memType && hasUDA!(currentMember, ManyToMany)) {
-                    static if ( memType.stringof.replace("[]","") == F.stringof) {
+                    static if ( memType.stringof.replace("[]","") == P.stringof) {
                         str ~=`
-                            auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,F,`~mappedBy~`))(fieldInfo));
+                            auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
                             _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                            _data.`~memberName~` = `~memberName~`.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
                     } else {
                         str ~=`
                             auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
                             _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`.deSerialize(rows, startIndex, isFromManyToOne);`;
+                            _data.`~memberName~` = `~memberName~`.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
                     }
     
                 }
@@ -200,9 +204,12 @@ string makeDeserializer(T,F)() {
             infof("Object: ` ~ T.stringof ~`, isDeserialized: %s",  isObjectDeserialized);
         }
 
+        scope(exit) {
+            _data.onInitialized();
+        }
+
         if(isObjectDeserialized) {
             _data.loadLazyMembers();
-            // return Common.sampleCopy(_data);
             return _data;
         } else {
             return T.init;

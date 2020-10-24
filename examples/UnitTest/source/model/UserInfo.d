@@ -1,9 +1,12 @@
 module model.UserInfo;
 
 import model.AppInfo;
-import hunt.entity;
 import model.Car;
 import model.IDCard;
+
+import hunt.entity;
+
+import hunt.logging.ConsoleLogger;
 
 @Table("userinfo")
 class UserInfo : Model {
@@ -30,7 +33,11 @@ class UserInfo : Model {
     // @OneToOne("user",FetchType.LAZY)
     IDCard card;
 
-    @OneToMany(Car.user.stringof, FetchType.EAGER)
-    Car[] cars;
+    // @OneToMany(Car.user.stringof, FetchType.EAGER)
+    // Car[] cars;
+
+    override void onInitialized() {
+        warningf("card is null : %s", card is null);
+    }
 }
 

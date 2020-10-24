@@ -55,7 +55,7 @@ class EntityInfo(T : Object, F : Object = T) {
     // pragma(msg, "T = "~T.stringof~ " F = "~F.stringof);
     // pragma(msg,makeImport!(T)());
     // pragma(msg,makeInitEntityData!(T,F)());
-    // pragma(msg,makeDeserializer!(T,F));
+    // pragma(msg,makeDeserializer!(T));
     // pragma(msg,makeSetIncreaseKey!(T));
     // pragma(msg,makeGetPrimaryValue!(T));
     // pragma(msg,makeSetPrimaryValue!(T)());
@@ -64,7 +64,7 @@ class EntityInfo(T : Object, F : Object = T) {
     mixin(makeImport!(T)());
     mixin(makeInitEntityData!(T,F)());
 
-    mixin(makeDeserializer!(T,F)());
+    mixin(makeDeserializer!(T)());
     mixin(makeSetIncreaseKey!(T)());
     mixin(makeGetPrimaryValue!(T)());
     mixin(makeSetPrimaryValue!(T)());
@@ -180,7 +180,7 @@ class EntityInfo(T : Object, F : Object = T) {
             throw new EntityException("Cannot find entityfieldinfo by name : " ~ name);
         } else {
             version(HUNT_ENTITY_DEBUG_MORE) {
-                tracef("The field info is a: %s", typeid(fieldInfo));
+                tracef("The field info is %s", typeid(fieldInfo));
             }
         }
         return fieldInfo;

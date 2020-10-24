@@ -76,6 +76,11 @@ mixin template MakeLazyData() {
         return _lazyDatas;
     }
 
+    bool hasLazyData(string key) {
+        auto itemPtr = key in _lazyDatas;
+        return itemPtr !is null;
+    }
+
     LazyData getLazyData(string key ) {
         version(HUNT_ENTITY_DEBUG) {
             tracef("key: %s, lazyDatas size: %d", key, _lazyDatas.length);
@@ -97,6 +102,12 @@ mixin template MakeLazyLoadList(T) {
     private R[] lazyLoadList(R)(LazyData data , bool manyToMany = false , string mapped = "") {
         import hunt.logging;
         // logDebug("lazyLoadList ETMANAGER : ",_manager);
+        // assert(data !is null, "The LazyData can't be null");
+        if(data is null) {
+            warningf("The LazyData for %s[] is null", R.stringof);
+            return null;
+        }
+
         auto builder = _manager.getCriteriaBuilder();
         auto criteriaQuery = builder.createQuery!(R, T);
        
@@ -119,7 +130,6 @@ mixin template MakeLazyLoadList(T) {
         else
         {
             auto r = criteriaQuery.from(null, this);
-
             auto p = builder.lazyEqual(r.get(data.key), data.value, false);
         
             auto query = _manager.createQuery(criteriaQuery.select(r).where(p));
@@ -140,7 +150,7 @@ mixin template MakeLazyLoadSingle(T) {
 
     private R lazyLoadSingle(R)(LazyData data) {
         if(data is null) {
-            warning("The parameter is null");
+            warning("The LazyData for %s is null", R.stringof);
             return R.init;
         }
         auto builder = _manager.getCriteriaBuilder();
@@ -205,16 +215,16 @@ string makeGetFunction(T)() {
                 
                 static if (isArray!memType) {
                     string mappedBy;
-                static if(hasUDA!(currentMemeber, ManyToMany)) {
-                    str ~= "\n bool manyToMany = true ;";
-                    
-                    mappedBy = "\"" ~ getUDAs!(currentMemeber, ManyToMany)[0].mappedBy ~ "\"";
-                } else {
-                    str ~= "\n bool manyToMany = false ;";
-                }
+                    static if(hasUDA!(currentMemeber, ManyToMany)) {
+                        str ~= "\n bool manyToMany = true ;";
+                        
+                        mappedBy = "\"" ~ getUDAs!(currentMemeber, ManyToMany)[0].mappedBy ~ "\"";
+                    } else {
+                        str ~= "\n bool manyToMany = false ;";
+                    }
 
-                str ~= "\n" ~ memberName ~ ` = lazyLoadList!(` ~ memType.stringof.replace("[]","") ~ 
-                            `)(getLazyData("`~memberName~`"), manyToMany, `~mappedBy~`);`;
+                    str ~= "\n" ~ memberName ~ ` = lazyLoadList!(` ~ memType.stringof.replace("[]","") ~ 
+                                `)(getLazyData("`~memberName~`"), manyToMany, `~mappedBy~`);`;
                 } else {
                     str ~= "\n" ~ memberName~` = lazyLoadSingle!(`~memType.stringof~`)(getLazyData("`~memberName~`"));`;
                 }
@@ -232,7 +242,7 @@ string makeGetFunction(T)() {
     str ~= `
     void loadLazyMembers() {
         version(HUNT_ENTITY_DEBUG) {
-            infof("Try to load data for the other object members in %s", typeid(` ~ T.stringof ~ `));
+            infof("Try to load data for all the other object members in %s", typeid(` ~ T.stringof ~ `));
         }
         ` ~ allGetMethods ~ `
     }
