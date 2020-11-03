@@ -57,11 +57,12 @@ class ResultDes(T : Object) {
     public void setFields(EntityFieldInfo[string] fields)
     {
         _fields = fields;
+        // tracef("T: %s, fields: %s", T.stringof, _fields);
     }
 
 
     // pragma(msg, "T = "~T.stringof);
-    // pragma(msg,makeDeserializer!(T));
+    // pragma(msg, makeDeserializer!(T));
     // pragma(msg,makeInitEntityData!(T));
 
 
@@ -72,8 +73,10 @@ class ResultDes(T : Object) {
     EntityFieldInfo opDispatch(string name)() 
     {
         EntityFieldInfo info = _fields.get(name,null);
-        if (info is null)
+        if (info is null) {
+            version(HUNT_DEBUG) tracef("T: %s, fields: %s", T.stringof, _fields);
             throw new EntityException("Cannot find entityfieldinfo by name : " ~ name);
+        }
         return info;
     }    
 

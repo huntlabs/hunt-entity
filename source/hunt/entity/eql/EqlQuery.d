@@ -131,20 +131,20 @@ class EqlQuery(T...)
             tracef("Raw eql: %s", _eql);
         }
 
+        foreach (ObjType; T) {
+            extractInfo!ObjType();
+        }
+
         auto parsedEql = eqlCache.get(_eql);
         if (parsedEql is null)
         {
-            foreach (ObjType; T)
-            {
-                extractInfo!ObjType();
-            }
             _eqlParser.parse();
 
             eqlCache.put(_eql, _eqlParser.getParsedEql());
         }
         else
         {
-            // version(HUNT_SQL_DEBUG_MORE) trace("EQL Cache Hit");
+            version(HUNT_ENTITY_DEBUG) trace("EQL Cache Hit");
             _eqlParser.setParsedEql(parsedEql);
         }
 
@@ -159,17 +159,15 @@ class EqlQuery(T...)
 
         static if (isAggregateType!(ObjType)) //  && hasUDA!(ObjType, Table)
         {
+            EqlInfo!(ObjType) entInfo = new EqlInfo!(ObjType)(_manager);
+
+            _eqlParser.putFields(entInfo.getEntityClassName(), entInfo.getFields);
+            _eqlParser.putClsTbName(entInfo.getEntityClassName(), entInfo.getTableName());
+
+            _eqlParser.putJoinCond(entInfo.getJoinConds());
+            if (ObjType.stringof == ResultObj.stringof)
             {
-                EqlInfo!(ObjType) entInfo = new EqlInfo!(ObjType)(_manager);
-
-                _eqlParser.putFields(entInfo.getEntityClassName(), entInfo.getFields);
-                _eqlParser.putClsTbName(entInfo.getEntityClassName(), entInfo.getTableName());
-
-                _eqlParser.putJoinCond(entInfo.getJoinConds());
-                if (ObjType.stringof == ResultObj.stringof)
-                {
-                    _resultDes.setFields(entInfo.getFields);
-                }
+                _resultDes.setFields(entInfo.getFields);
             }
         }
         else

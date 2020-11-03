@@ -21,7 +21,7 @@ string makeDeserializer(T)() {
 
     str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof;
     str ~= `
-    T deSerialize(P)(Row[] rows, ref long count, int startIndex = 0, P owner = null,  bool isFromManyToOne = false) {
+    T deSerialize(P, bool canInit = true)(Row[] rows, ref long count, int startIndex = 0, P owner = null,  bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
             infof("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
@@ -38,6 +38,7 @@ string makeDeserializer(T)() {
         _data.setManager(_manager);
         Row row = rows[startIndex];
         string columnAsName;
+        string columnName;
         version(HUNT_ENTITY_DEBUG_MORE) logDebugf("rows[%d]: %s", startIndex, row);
         if (row is null || row.size() == 0)
             return null;
@@ -85,27 +86,41 @@ string makeDeserializer(T)() {
                 str ~= indent(8) ~ `isMemberDeserialized = false;
                 auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
                 columnAsName = `~memberName~`.getColumnAsName();
+                columnName = `~memberName~`.getColumnName();
                 columnValue = row.getValue(columnAsName);
-                version(HUNT_ENTITY_DEBUG_MORE) {
-                    tracef("A column: %s = %s; The AsName: %s", `~memberName~`.getColumnName(), 
-                        columnValue, columnAsName);
+                
+                if(!columnValue.hasValue()) {
+                    version(HUNT_DEBUG) {
+                    warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
+                    }
+                    columnValue = row.getValue(columnName);
                 }
 
-                if(columnValue.type == typeid(null)) {
-                    version(HUNT_DEBUG) {
-                        warningf("The value of column [%s] is null. So use its default.", "` 
-                            ~ memberName ~ `");
+                if(!columnValue.hasValue()) {
+                    warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                } else {
+                    version(HUNT_ENTITY_DEBUG) {
+                        tracef("A column: %s = %s; The AsName: %s", columnName, columnValue, columnAsName);
                     }
-                } else if (columnValue.hasValue()) {
-                    string cvalue = columnValue.toString();
-                    version(HUNT_ENTITY_DEBUG_MORE) { 
-                        tracef("field: name=%s, type=%s; column: name=%s, type=%s; value: %s", "` 
-                                    ~ memberName ~ `", "` ~ memType.stringof ~ `", columnAsName, columnValue.type,` 
-                                    ~ ` cvalue.empty() ? "(empty)" : cvalue);
+
+                    if(columnValue.type == typeid(null)) {
+                        version(HUNT_DEBUG) {
+                            warningf("The value of column [%s] is null. So use its default.", "` 
+                                ~ memberName ~ `");
+                        }
+                    } else {
+                        string cvalue = columnValue.toString();
+                        version(HUNT_ENTITY_DEBUG_MORE) { 
+                            tracef("field: name=%s, type=%s; column: name=%s, type=%s; value: %s", "` 
+                                        ~ memberName ~ `", "` ~ memType.stringof 
+                                        ~ `", columnAsName, columnValue.type,` 
+                                        ~ ` cvalue.empty() ? "(empty)" : cvalue);
+                        }
+                        _data.` ~ memberName ~ ` = ` ~ memberName ~ `.deSerialize!(` 
+                                ~ memType.stringof ~ `)(cvalue, isMemberDeserialized);
+                                
+                        if(isMemberDeserialized) isObjectDeserialized = true;
                     }
-                    _data.`~memberName~` = `~memberName~`.deSerialize!(` ~ 
-                        memType.stringof ~ `)(cvalue, isMemberDeserialized);
-                    if(isMemberDeserialized) isObjectDeserialized = true;
                 }`;
                 
             } else { // Object
