@@ -9,12 +9,12 @@ import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity.dialect;
 
 import hunt.logging.ConsoleLogger;
+import hunt.util.Traits;
 
 import std.conv;
 import std.string;
 import std.traits;
 import std.variant;
-
 
 string makeDeserializer(T)() {
     string str;
@@ -86,6 +86,7 @@ string makeDeserializer(T)() {
             static if (isBasicType!memType || isSomeString!memType) {
                 str ~= indent(8) ~ `isMemberDeserialized = false;
                 auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
+
                 columnAsName = `~memberName~`.getColumnAsName();
                 columnName = `~memberName~`.getColumnName();
                 columnValue = row.getValue(columnAsName);
@@ -95,7 +96,7 @@ string makeDeserializer(T)() {
                     warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
                     }
                     columnValue = row.getValue(columnName);
-                }
+                }   
 
                 if(!columnValue.hasValue()) {
                     warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
@@ -104,7 +105,10 @@ string makeDeserializer(T)() {
                         tracef("A column: %s = %s; The AsName: %s", columnName, columnValue, columnAsName);
                     }
 
-                    if(columnValue.type == typeid(null)) {
+                    if(typeid(` ~ memType.stringof ~ `) == columnValue.type) {
+                        _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
+                        if(isMemberDeserialized) isObjectDeserialized = true;
+                    } else if(columnValue.type == typeid(null)) {
                         version(HUNT_DEBUG) {
                             warningf("The value of column [%s] is null. So use its default.", "` 
                                 ~ memberName ~ `");
@@ -124,6 +128,48 @@ string makeDeserializer(T)() {
                     }
                 }`;
                 
+            } else static if(isByteArray!(memType)) {
+                str ~= indent(8) ~ `isMemberDeserialized = false;
+                auto `~memberName~` = cast(EntityFieldNormal!(`~memType.stringof~`))(this.`~memberName~`);
+
+                columnAsName = `~memberName~`.getColumnAsName();
+                columnName = `~memberName~`.getColumnName();
+                columnValue = row.getValue(columnAsName);
+                
+                if(!columnValue.hasValue()) {
+                    version(HUNT_DEBUG) {
+                    warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
+                    }
+                    columnValue = row.getValue(columnName);
+                }   
+
+                if(!columnValue.hasValue()) {
+                    warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                } else {
+                    version(HUNT_ENTITY_DEBUG) {
+                        tracef("A column: %s = %s; The AsName: %s", columnName, columnValue, columnAsName);
+                    }
+
+                    if(typeid(` ~ memType.stringof ~ `) == columnValue.type) {
+                        _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
+                        if(isMemberDeserialized) isObjectDeserialized = true;
+                    } else if(columnValue.type == typeid(null)) {
+                        version(HUNT_DEBUG) {
+                            warningf("The value of column [%s] is null. So use its default.", "` 
+                                ~ memberName ~ `");
+                        }
+                    } else {
+                        version(HUNT_ENTITY_DEBUG_MORE) { 
+                            tracef("field: name=%s, type=%s; column: name=%s, type=%s", "` 
+                                        ~ memberName ~ `", "` ~ memType.stringof 
+                                        ~ `", columnAsName, columnValue.type);
+                        }
+                        _data.` ~ memberName ~ ` = cast(` ~ memType.stringof ~ `)columnValue.get!(byte[]);
+                                
+                        if(isMemberDeserialized) isObjectDeserialized = true;
+                    }
+                }`;
+
             } else { // Object
                 str ~= indent(8) ~ "isDeserializationNeed = true;\n";
 
