@@ -21,7 +21,8 @@ string makeDeserializer(T)() {
 
     str ~= "\n" ~ indent(4) ~ "/// T=" ~ T.stringof;
     str ~= `
-    T deSerialize(P, bool canInit = true)(Row[] rows, ref long count, int startIndex = 0, P owner = null,  bool isFromManyToOne = false) {
+    T deSerialize(P, bool canInit = true)(Row[] rows, ref long count, int startIndex = 0,` ~ 
+            ` P owner = null,  bool isFromManyToOne = false) {
         version(HUNT_ENTITY_DEBUG_MORE) {
             infof("Target: %s, Rows: %d, count: %s, startIndex: %d, tableName: %s ", 
                 T.stringof, rows.length, count, startIndex, _tableName);
@@ -227,7 +228,11 @@ string makeDeserializer(T)() {
             _data.loadLazyMembers();
             return _data;
         } else {
-            return T.init;
+            static if(canInit) {
+                return _data;
+            } else {
+                return T.init;
+            }
         }
     }`;
 

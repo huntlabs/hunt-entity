@@ -361,7 +361,9 @@ class EqlQuery(T...)
                     warningf("Deserializing row %d", k);
                 }
 
-                ResultObj t = _resultDes.deSerialize!(ResultObj)(rows, count, cast(int) k, null);
+                // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-11-03T10:21:26+08:00
+                // The parameter of canInit can be set
+                ResultObj t = _resultDes.deSerialize!(ResultObj, true)(rows, count, cast(int) k, null);
                 if (t is null)
                 {
                     if (count != -1)
