@@ -92,8 +92,8 @@ string makeDeserializer(T)() {
                 columnValue = row.getValue(columnAsName);
                 
                 if(!columnValue.hasValue()) {
-                    version(HUNT_DEBUG) {
-                    warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
+                    version(HUNT_ENTITY_DEBUG) {
+                        warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
                     }
                     columnValue = row.getValue(columnName);
                 }   
@@ -137,8 +137,8 @@ string makeDeserializer(T)() {
                 columnValue = row.getValue(columnAsName);
                 
                 if(!columnValue.hasValue()) {
-                    version(HUNT_DEBUG) {
-                    warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
+                    version(HUNT_ENTITY_DEBUG) {
+                        warningf("No value found for column [%s]. Try [%s] now.", columnAsName, columnName);
                     }
                     columnValue = row.getValue(columnName);
                 }   
