@@ -806,7 +806,9 @@ class EqlParse {
         if(_dbtype == DBType.POSTGRESQL) {
             string autoIncrementKey = _entityInfo.autoIncrementKey;
             _parsedEql = _parsedEql.stripRight(";");
-            _parsedEql ~= " RETURNING " ~ autoIncrementKey ~ ";";
+            if(!autoIncrementKey.empty()) {
+                _parsedEql ~= " RETURNING " ~ autoIncrementKey ~ ";";
+            }
         }
     }
 
