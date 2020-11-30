@@ -41,7 +41,6 @@ class EntityManager : Closeable {
         _option = option;
         _db = db;
         _dialect = dialect;
-        _transaction = new EntityTransaction(this);
         // _entitySession = new EntitySession(db);
     }
 
@@ -161,8 +160,9 @@ class EntityManager : Closeable {
 
     EntitySession getSession() {
         if (_entitySession is null) {
-            version (HUNT_DEBUG)
+            version (HUNT_DEBUG) {
                 info("Creating a new session");
+            }
             _entitySession = new EntitySession(_db);
         }
         return _entitySession;
@@ -173,6 +173,9 @@ class EntityManager : Closeable {
     }
 
     EntityTransaction getTransaction() {
+        if(_transaction is null) {
+            _transaction = new EntityTransaction(getSession());
+        }
         return _transaction;
     }
 

@@ -13,26 +13,25 @@ module hunt.entity.EntityTransaction;
 
 import hunt.entity;
 
-class EntityTransaction {
-    
+class EntityTransaction {    
 
-    private EntityManager _entityManager;
-    private bool _isOnTrans;
-    private Transaction _tran;
+    private EntitySession _seesion;
+    // private bool _isOnTrans;
+    // private Transaction _tran;
 
-    this(EntityManager entityManager) { 
-        _entityManager = entityManager;
+    this(EntitySession entitySeesion) { 
+        _seesion = entitySeesion;
     }
     
-    public void begin() {
-        _entityManager.getSession().beginTransaction();
+    void begin() {
+        _seesion.beginTransaction();
     }
 
-    public void commit() {
-        _entityManager.getSession().commit();
+    void commit() {
+        _seesion.commit();
     }
 
-    public void rollback() {
-        _entityManager.getSession().rollback();
+    void rollback() {
+        _seesion.rollback();
     }
 }
