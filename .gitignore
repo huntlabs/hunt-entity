@@ -50,8 +50,8 @@ core
 backup/
 dub.*.json
 *-test-library
-examples/postgresql/postgresql-demo
 examples/eql/eql-demo
-examples/UnitTest/unittest
 examples/simple/
+examples/postgresql/postgresql-demo
+examples/UnitTest/unittest
 examples/UnitTest/unittest-mysql

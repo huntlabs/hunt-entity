@@ -85,10 +85,10 @@ string makeDeserializer(T)() {
             // string or basic type
             static if (isBasicType!memType || isSomeString!memType) {
                 str ~= indent(8) ~ `isMemberDeserialized = false;
-                auto `~memberName~` = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
+                auto `~memberName~`Field = cast(EntityFieldNormal!`~memType.stringof~`)(this.`~memberName~`);
 
-                columnAsName = `~memberName~`.getColumnAsName();
-                columnName = `~memberName~`.getColumnName();
+                columnAsName = `~memberName~`Field.getColumnAsName();
+                columnName = `~memberName~`Field.getColumnName();
                 columnValue = row.getValue(columnAsName);
                 
                 if(!columnValue.hasValue()) {
@@ -121,7 +121,7 @@ string makeDeserializer(T)() {
                                         ~ `", columnAsName, columnValue.type,` 
                                         ~ ` cvalue.empty() ? "(empty)" : cvalue);
                         }
-                        _data.` ~ memberName ~ ` = ` ~ memberName ~ `.deSerialize!(` 
+                        _data.` ~ memberName ~ ` = ` ~ memberName ~ `Field.deSerialize!(` 
                                 ~ memType.stringof ~ `)(cvalue, isMemberDeserialized);
                                 
                         if(isMemberDeserialized) isObjectDeserialized = true;
@@ -130,10 +130,10 @@ string makeDeserializer(T)() {
                 
             } else static if(isByteArray!(memType)) {
                 str ~= indent(8) ~ `isMemberDeserialized = false;
-                auto `~memberName~` = cast(EntityFieldNormal!(`~memType.stringof~`))(this.`~memberName~`);
+                auto `~memberName~`Field = cast(EntityFieldNormal!(`~memType.stringof~`))(this.`~memberName~`);
 
-                columnAsName = `~memberName~`.getColumnAsName();
-                columnName = `~memberName~`.getColumnName();
+                columnAsName = `~memberName~`Field.getColumnAsName();
+                columnName = `~memberName~`Field.getColumnName();
                 columnValue = row.getValue(columnAsName);
                 
                 if(!columnValue.hasValue()) {
@@ -233,14 +233,14 @@ string makeDeserializer(T)() {
                 } else static if (isArray!memType && hasUDA!(currentMember, ManyToMany)) {
                     static if ( memType.stringof.replace("[]","") == P.stringof) {
                         str ~=`
-                            auto `~memberName~` = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
-                            _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                            auto `~memberName~`Field = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
+                            _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                            _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
                     } else {
                         str ~=`
                             auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
-                            _data.addLazyData("`~memberName~`",`~memberName~`.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                            _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                            _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
                     }
     
                 }
