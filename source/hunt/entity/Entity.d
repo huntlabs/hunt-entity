@@ -15,6 +15,12 @@ import hunt.entity;
 import std.string;
 import std.traits;
 
+import hunt.logging.ConsoleLogger;
+
+// TODO: Tasks pending completion -@zhangxueping at 2021-02-19T15:26:35+08:00
+// 
+__gshared EntityMetaInfo[string] avaliableEntities;
+
 mixin template MakeModel()
 {
     import hunt.serialization.Common;
@@ -31,8 +37,14 @@ mixin template MakeModel()
 
     static EntityMetaInfo metaInfo() {
         enum m = extractEntityInfo!(typeof(this));
+        if(!_isRegistered) {
+            _isRegistered = true;
+            avaliableEntities[m.fullName] = m;
+        }
         return m;
     }
+
+    private static bool _isRegistered = false;
 
     mixin MakeLazyData;
 
