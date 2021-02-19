@@ -114,11 +114,12 @@ class Root(T : Object, F: Object = T) : IRoot {
                 continue;
             }
 
-            if (_enableJoin || value.isEnableJoin())
+            if (_enableJoin || value.isEnableJoin()) {
                 version(HUNT_ENTITY_DEBUG) {
-                    warning("** join sql : ", build.toString());
+                    trace("join sql : ", build.toString());
                 }
                 _joins ~= build;
+            }
         }
         return this;
     }

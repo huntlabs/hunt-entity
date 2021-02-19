@@ -122,6 +122,7 @@ class TypedQuery(T, F = T) if(is(T : Object) && is(F : Object)) {
         //         endTrace();
         //     }
         // }
+
         Statement stmt = _manager.getSession().prepare(sql);
         RowSet res = stmt.query();
         version (HUNT_ENTITY_DEBUG) {

@@ -230,18 +230,53 @@ string makeDeserializer(T)() {
                         _data.`~memberName~` = fieldObject.deSerialize(rows[startIndex], actualOwner);
                         isMemberDeserialized = true;
                     }`;
-                } else static if (isArray!memType && hasUDA!(currentMember, ManyToMany)) {
-                    static if ( memType.stringof.replace("[]","") == P.stringof) {
-                        str ~=`
-                            auto `~memberName~`Field = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
-                            _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
-                    } else {
-                        str ~=`
-                            auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
-                            _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
-                            _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
-                    }
+                } else static if (is(memType : U[], U) && hasUDA!(currentMember, ManyToMany)) {
+
+                    str ~= `
+                        static if(is(P == ` ~ U.stringof ~`)) {
+                           auto ` ~ memberName ~ `Field = (cast(EntityFieldManyToManyOwner!(` ~ U.stringof ~ `, P ,` ~ mappedBy ~ `))(fieldInfo));
+                            _data.addLazyData("` ~ memberName ~ `",` ~ memberName ~ `Field.getLazyData(rows[startIndex]));
+                            _data.` ~ memberName ~ ` = ` ~ memberName ~ `Field.deSerialize(rows, startIndex, isFromManyToOne);
+                        } else {
+                            auto ` ~ memberName ~ `Field  = (cast(EntityFieldManyToMany!(` ~ U.stringof ~ `, T,` ~ mappedBy~ `))(fieldInfo));
+                            _data.addLazyData("` ~ memberName ~`",` ~ memberName ~ `Field.getLazyData(rows[startIndex]));
+                            _data.` ~ memberName ~ ` = ` ~ memberName ~ `Field.deSerialize(rows, startIndex, isFromManyToOne);
+                        }
+                    `;
+                                        
+                    // str ~= `
+                    //     static if(is(P == ` ~ U.stringof ~`)) {
+                    //        auto ` ~ memberName ~ `Field = (cast(EntityFieldManyToManyOwner!(` ~ U.stringof ~ `, P ,` ~ mappedBy ~ `))(fieldInfo));
+                    //         _data.addLazyData("` ~ memberName ~ `",` ~ memberName ~ `Field.getLazyData(rows[startIndex]));
+                    //         _data.` ~ memberName ~ ` = ` ~ memberName ~ `Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);
+                    //     } else {
+                    //         auto ` ~ memberName ~ ` = (cast(EntityFieldManyToMany!(` ~ U.stringof ~ `, T,` ~ mappedBy~ `))(fieldInfo));
+                    //         _data.addLazyData("` ~ memberName ~`",` ~ memberName ~ `Field.getLazyData(rows[startIndex]));
+                    //         _data.` ~ memberName ~ ` = ` ~ memberName ~ `Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);
+                    //     }
+                    // `;
+                    // static if ( memType.stringof.replace("[]","") == P.stringof) {
+                    //     str ~=`
+                    //         auto `~memberName~`Field = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
+                    //         _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                    //         _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                    // } else {
+                    //     str ~=`
+                    //         auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
+                    //         _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                    //         _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                    // }                    
+                    // static if ( memType.stringof.replace("[]","") == P.stringof) {
+                    //     str ~=`
+                    //         auto `~memberName~`Field = (cast(EntityFieldManyToManyOwner!(`~memType.stringof.replace("[]","")~`,P,`~mappedBy~`))(fieldInfo));
+                    //         _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                    //         _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                    // } else {
+                    //     str ~=`
+                    //         auto `~memberName~` = (cast(EntityFieldManyToMany!(`~memType.stringof.replace("[]","")~`,T,`~mappedBy~`))(fieldInfo));
+                    //         _data.addLazyData("`~memberName~`",`~memberName~`Field.getLazyData(rows[startIndex]));
+                    //         _data.`~memberName~` = `~memberName~`Field.deSerialize!(T)(rows, startIndex, isFromManyToOne);`;
+                    // }
     
                 }
                 
