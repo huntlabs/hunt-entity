@@ -164,32 +164,53 @@ class EqlParse {
 
     private void init()
     {
+        version(HUNT_ENTITY_DEBUG) {
+            tracef("_objType: %s", _objType);
+        }
+
         _nativeSql = "";
         Map!(string, SQLTableSource) aliasMap = _aliasVistor.getAliasMap();
         foreach (string objName, SQLTableSource v; aliasMap)
         {
             string clsName;
-            auto expr = (cast(SQLExprTableSource) v).getExpr();
+            SQLExpr expr = (cast(SQLExprTableSource) v).getExpr();
             if (cast(SQLIdentifierExpr) expr !is null)
             {
                 clsName = (cast(SQLIdentifierExpr) expr).getName();
             }
             else if (cast(SQLPropertyExpr) expr !is null)
             {
-
                 // clsName = (cast(SQLPropertyExpr)expr);
                 clsName = _objType.get(convertExprAlias(cast(SQLPropertyExpr) expr), null);
+            } else {
+                version(HUNT_ENTITY_DEBUG) {
+                    warningf("Unhandled expression: %s", typeid(cast(Object)expr));
+                }
             }
+
+            if(clsName.empty() || objName.empty()) {
+                version(HUNT_ENTITY_DEBUG) {
+                    warningf("clsName: %s, objName: %s", clsName, objName);
+                }
+                continue;
+            }
+
             auto obj = new EqlObject(objName, clsName);
             _eqlObj[objName] = obj;
         }
 
-        version (HUNT_ENTITY_DEBUG) trace(_clsNameToTbName);
+        version (HUNT_ENTITY_DEBUG) {
+            trace(_clsNameToTbName);
+        }
 
         foreach (string objName, EqlObject obj; _eqlObj)
         {
             string className = obj.className();
-            assert(!className.empty());
+            if(className.empty()) {
+                warningf("className is empty for %s", objName);
+                continue;
+            }
+            // assert(!className.empty());
 
             string tableName = _clsNameToTbName.get(className, null);
             if (tableName.empty()) {

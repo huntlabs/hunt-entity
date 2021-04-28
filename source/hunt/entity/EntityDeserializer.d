@@ -99,7 +99,9 @@ string makeDeserializer(T)() {
                 }   
 
                 if(!columnValue.hasValue()) {
-                    warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                    version(HUNT_ENTITY_DEBUG) {
+                        warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                    }
                 } else {
                     version(HUNT_ENTITY_DEBUG) {
                         tracef("A column: %s = %s; The AsName: %s", columnName, columnValue, columnAsName);
@@ -109,7 +111,7 @@ string makeDeserializer(T)() {
                         _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
                         if(isMemberDeserialized) isObjectDeserialized = true;
                     } else if(columnValue.type == typeid(null)) {
-                        version(HUNT_DEBUG) {
+                        version(HUNT_ENTITY_DEBUG) {
                             warningf("The value of column [%s] is null. So use its default.", "` 
                                 ~ memberName ~ `");
                         }
@@ -144,7 +146,9 @@ string makeDeserializer(T)() {
                 }   
 
                 if(!columnValue.hasValue()) {
-                    warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                    version(HUNT_ENTITY_DEBUG) {
+                        warningf("No value found for column: %s, asName: %s", columnName, columnAsName);
+                    }
                 } else {
                     version(HUNT_ENTITY_DEBUG) {
                         tracef("A column: %s = %s; The AsName: %s", columnName, columnValue, columnAsName);
@@ -154,7 +158,7 @@ string makeDeserializer(T)() {
                         _data.` ~ memberName ~ ` = columnValue.get!(` ~ memType.stringof ~ `);
                         if(isMemberDeserialized) isObjectDeserialized = true;
                     } else if(columnValue.type == typeid(null)) {
-                        version(HUNT_DEBUG) {
+                        version(HUNT_ENTITY_DEBUG) {
                             warningf("The value of column [%s] is null. So use its default.", "` 
                                 ~ memberName ~ `");
                         }

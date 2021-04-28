@@ -9,6 +9,7 @@ import model.IDCard;
 import model.LoginInfo;
 import model.Agent;
 import model.AgentAsset;
+import model.PropertyEntityImpl;
 
 import hunt.logging;
 import std.traits;
@@ -42,8 +43,8 @@ void main()
     }
 
     // test_eql_insert(em);
-    test_eql_select(em);
-    test_eql_select_with_join(em);
+    // test_eql_select(em);
+    // test_eql_select_with_join(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
@@ -68,7 +69,7 @@ void main()
     // test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
-    // test_transaction(em);
+    test_transaction(em);
     // test_other(em);
     // test_exception(em);
 
@@ -107,6 +108,14 @@ void test_merge(EntityManager em)
 	auto u = em.find!(UserInfo)(1);
 	u.age = 100;
 	em.merge!(UserInfo)(u);
+}
+
+void test_merge2(EntityManager em)
+{
+    PropertyEntityImpl u = new PropertyEntityImpl();
+    u.name = "next.dbid";
+    u.value = "810001";
+	em.merge!(PropertyEntityImpl)(u);  
 }
 
 void test_CriteriaQuery(EntityManager em)
@@ -256,6 +265,15 @@ void test_OneToOne(EntityManager em)
 void test_OneToMany(EntityManager em)
 {
     mixin(DO_TEST);
+
+// SELECT "userinfo"."nickname" AS "userinfo__as__nickname", "userinfo"."age" AS "userinfo__as__age", "userinfo"."id" AS "userinfo__as__id", "userinfo"."image" AS "userinfo__as__image", "car"."uid" AS "car__as__uid"
+//         , "car"."id" AS "car__as__id", "car"."name" AS "car__as__name"
+// FROM "userinfo"
+//         LEFT JOIN "car" car ON "userinfo"."id" = "car"."uid"
+// WHERE "userinfo"."id" = 1
+
+// FIXME: Needing refactor or cleanup -@zhangxueping at 2020-12-22T16:33:15+08:00
+// Improvements needs
 
     auto uinfo = em.find!(UserInfo)(1);
     auto cars = uinfo.getCars();
@@ -724,6 +742,23 @@ void test_eql_update_with_reserved_word(EntityManager em)
 // 	update.setParameter("id",1);
 // 	update.setParameter("name","tom");
 // 	logDebug(" update result : ",update.exec());
+
+
+    // string sql = "update UserInfo a set a.age = 5, a.nickName = 'Tom' where a.id = 1;";
+    // string sql = "update UserInfo a set a.nicknamexxx = 'Tom' where a.id = 1;"; // exception
+    // string sql = "update UserInfo a set a.image = '\\x010203'  where a.id = 1;";
+    // auto update = em.createQuery!(UserInfo)(sql);
+    // logDebug(" update result : ",update.exec());
+
+
+    // string sql ="UPDATE OrderDelivery oe SET oe.handle_status='DELIVERED' WHERE oe.taskId=2";
+    // int affected =em.createQuery!(OrderDelivery)(sql)
+    //     // .setParameter("taskId", 12)
+    //     // .setParameter("curtime", 34)
+    //     .exec(); 
+
+
+    // warning("affected=>", affected);
 // }
 
 
