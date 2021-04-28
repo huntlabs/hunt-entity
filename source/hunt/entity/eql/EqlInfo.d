@@ -10,7 +10,7 @@ import hunt.entity.EntityInfoMaker;
 import std.array;
 import std.format;
 import std.traits;
-
+import std.range;
 
 class EqlObject
 {
@@ -295,7 +295,7 @@ class JoinCond
         string rightTable, string rightTablePrimaryKey)
     {
         version(HUNT_ENTITY_DEBUG) {
-            warningf("leftTable: %s, fieldName: %s, joinCol: %s, referencedColumn: %s, rightTable: %s", 
+            hunt.logging.warningf("leftTable: %s, fieldName: %s, joinCol: %s, referencedColumn: %s, rightTable: %s", 
                 leftTable, fieldName, joinCol, referencedColumnName, rightTable);
         }
 

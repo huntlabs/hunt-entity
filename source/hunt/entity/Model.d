@@ -14,9 +14,8 @@ module hunt.entity.Model;
 import hunt.validation.Valid;
 import hunt.validation.ConstraintValidatorContext;
 
-abstract class Model : Valid
+interface Model : Valid
 {
-    void onInitialized() {
-    }
+    void onInitialized();
 }
 

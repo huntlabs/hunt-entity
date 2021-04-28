@@ -29,6 +29,9 @@ mixin template MakeModel()
     import std.format;
     import hunt.entity.EntityMetaInfo;
 
+    void onInitialized() {
+    }
+
     // pragma(msg, makeGetFunction!(typeof(this)));
 
     // FIXME: Needing refactor or cleanup -@zhangxueping at 2020-08-28T16:59:53+08:00

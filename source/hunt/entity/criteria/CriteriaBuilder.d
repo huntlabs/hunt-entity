@@ -118,7 +118,7 @@ class CriteriaBuilder
         static if (isBuiltinType!T) {
             if (check)
                 assertType!(T)(info);
-                return new Predicate().addValue(info.getFullColumn(), "=", quoteSqlfNeed(t));
+            return new Predicate().addValue(info.getFullColumn(), "=", quoteSqlfNeed(t));
         }
         else {
             Predicate p;
@@ -179,7 +179,13 @@ class CriteriaBuilder
     }
 
     Predicate equal(EntityFieldInfo info) {
-        return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().toString());
+        Variant va = info.getColumnFieldData();
+        if(va.type == typeid(string)) {
+            string value = va.get!string();
+            return new Predicate().addValue(info.getFullColumn(), "=", escapeWithQuotes(value));
+        } else {
+            return new Predicate().addValue(info.getFullColumn(), "=", info.getColumnFieldData().toString());
+        }
     }
 
     Predicate notEqual(T)(EntityFieldInfo info, T t){

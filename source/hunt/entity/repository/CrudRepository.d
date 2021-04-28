@@ -179,11 +179,11 @@ class CrudRepository(T, ID) : Repository!(T, ID)
 
     T save(T entity)
     {
-        auto em = _manager ? _manager : createEntityManager;
+        EntityManager em = _manager ? _manager : createEntityManager;
         scope(exit) {if (!_manager) em.close();}
         if (mixin(GenerateFindById!T()) is null)
         {
-            em.persist(entity);
+            em.persist!(T)(entity);
         }
         else
         {
