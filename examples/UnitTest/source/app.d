@@ -42,8 +42,8 @@ void main()
     }
 
     // test_eql_insert(em);
-    test_eql_select(em);
-    test_eql_select_with_join(em);
+    // test_eql_select(em);
+    // test_eql_select_with_join(em);
     // test_eql_select_with_reserved_word(em);
     // test_eql_update_with_reserved_word(em);
 
@@ -68,7 +68,8 @@ void main()
     // test_pagination(em);
     // test_pagination_1(em);
     // test_count(em);
-    // test_transaction(em);
+    test_transaction(em);
+    // test_like(em);
     // test_other(em);
     // test_exception(em);
 
@@ -256,6 +257,15 @@ void test_OneToOne(EntityManager em)
 void test_OneToMany(EntityManager em)
 {
     mixin(DO_TEST);
+
+// SELECT "userinfo"."nickname" AS "userinfo__as__nickname", "userinfo"."age" AS "userinfo__as__age", "userinfo"."id" AS "userinfo__as__id", "userinfo"."image" AS "userinfo__as__image", "car"."uid" AS "car__as__uid"
+//         , "car"."id" AS "car__as__id", "car"."name" AS "car__as__name"
+// FROM "userinfo"
+//         LEFT JOIN "car" car ON "userinfo"."id" = "car"."uid"
+// WHERE "userinfo"."id" = 1
+
+// FIXME: Needing refactor or cleanup -@zhangxueping at 2020-12-22T16:33:15+08:00
+// Improvements needs
 
     auto uinfo = em.find!(UserInfo)(1);
     auto cars = uinfo.getCars();
@@ -458,6 +468,23 @@ void test_transaction(EntityManager em)
 
     logDebug(" update1 result : ",update1.exec());
     em.getTransaction().rollback();
+}
+
+void test_like(EntityManager em) {
+    mixin(DO_TEST);
+
+    string queryString = "select a from UserInfo a where id::text like '12%' ";
+    EqlQuery!(UserInfo) query = em.createQuery!(UserInfo)(queryString);
+
+    UserInfo[] users = query.getResultList();
+    foreach(UserInfo d; users) {
+        logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+        infof("Image data: %(%02X %)", d.image);        
+    }
+
+// SELECT *
+// FROM UserInfo a
+// WHERE CAST(id AS text) LIKE '12%' 
 }
 
 void test_connect(EntityManager em)

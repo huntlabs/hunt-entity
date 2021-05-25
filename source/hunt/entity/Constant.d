@@ -12,7 +12,7 @@
 module hunt.entity.Constant;
 
 import hunt.String;
-import hunt.database;
+// import hunt.database;
 import std.format;
 
 

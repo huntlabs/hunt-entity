@@ -42,7 +42,9 @@ mixin template MakeModel()
         enum m = extractEntityInfo!(typeof(this));
         if(!_isRegistered) {
             _isRegistered = true;
-            avaliableEntities[m.fullName] = m;
+            synchronized {
+                avaliableEntities[m.fullName] = m;
+            }
         }
         return m;
     }
