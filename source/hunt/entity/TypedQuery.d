@@ -80,6 +80,10 @@ class TypedQuery(T, F = T) if(is(T : Object) && is(F : Object)) {
         }
 
         Variant singleValue = firstRow.getValue(0);
+        version (HUNT_ENTITY_DEBUG) {
+            tracef("The first columns, type: %s, value: %s", singleValue.type, singleValue.toString());
+        }
+
         if (singleValue.hasValue())
             return singleValue.get!R();
         else

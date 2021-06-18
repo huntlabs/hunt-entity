@@ -1,6 +1,9 @@
 import std.stdio;
 
+import hunt.database;
 import hunt.entity;
+import hunt.logging;
+
 import model.UserInfo;
 import model.UserApp;
 import model.AppInfo;
@@ -10,7 +13,6 @@ import model.LoginInfo;
 import model.Agent;
 import model.AgentAsset;
 
-import hunt.logging;
 import std.traits;
 import std.format;
 import std.array;
@@ -18,7 +20,7 @@ import core.stdc.stdlib;
 import core.runtime;
 import core.thread;
 import std.conv;
-import hunt.database;
+import std.variant;
 
 
 import hunt.serialization.JsonSerializer;
@@ -519,11 +521,24 @@ void test_other(EntityManager em)
 void test_exception(EntityManager em)
 {
     mixin(DO_TEST);
-    auto query1 = em.createQuery!(UserInfo)(" select sum(a.id) as id from UserInfo a ");
-    foreach (d; query1.getResultList())
-    {
-        logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
-    }
+    // auto query1 = em.createQuery!(UserInfo)(" select sum(a.id) as id from UserInfo a ");
+    // foreach (d; query1.getResultList())
+    // {
+    //     logDebug("UserInfo( %s , %s , %s ) ".format(d.id, d.nickName, d.age));
+    // }
+
+    string sql = " select SUM(a.id) as id, SUM(a.age) as age from UserInfo a ";
+    RowSet orderData =  em.getSession().query(sql);
+
+    foreach (Row row; orderData) {
+        Variant v0 = row.getValue(0);
+        tracef("col0: type: %s, value: %s", v0.type, v0.toString());
+
+        Variant v1 = row.getValue(1);
+        // double d = v1.get!(double);
+        double d = row.getDouble(1);
+        tracef("col1: type: %s, value: %s, long: %d", v1.type, v1.toString(), cast(long)d);
+    }        
 }
 
 void test_eql_select(EntityManager em)
