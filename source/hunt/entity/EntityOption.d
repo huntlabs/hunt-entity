@@ -42,6 +42,7 @@ class EntityOption
         int connectionTimeout = 30000;
         int maxConnection = 20;
         int minConnection = 5;
+        int maxWaitQueueSize = -1;
     }
 
     DatabaseOptions database;

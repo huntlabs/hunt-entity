@@ -27,7 +27,7 @@ class CriteriaBase(T : Object, F : Object = T)
         _sqlBuidler = criteriaBuilder.createQueryBuilder();
     }
 
-    public Root!(T,F) from(T t = null, F owner = null) {
+    Root!(T,F) from(T t = null, F owner = null) {
         _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
         // logDebug("Form table : ",_root.getTableName());
         _sqlBuidler.from(_root.getTableName());
@@ -35,7 +35,7 @@ class CriteriaBase(T : Object, F : Object = T)
         return _root;
     }
 
-    public Root!(T,F) manyToManyFrom(T t = null, F owner = null ,string mapped = string.init) {
+    Root!(T,F) manyToManyFrom(T t = null, F owner = null ,string mapped = string.init) {
         _root = new Root!(T,F)(_criteriaBuilder, t is null ? null : Common.sampleCopy(t), owner);
         auto entityInfo = _root.getEntityInfo();
          auto filedInfo = entityInfo.getSingleField(mapped);
@@ -46,9 +46,9 @@ class CriteriaBase(T : Object, F : Object = T)
         return _root;
     }
 
-    public Root!(T,F) getRoot() {return _root;}
+    Root!(T,F) getRoot() {return _root;}
 
-    public CriteriaBase!(T,F) where(P...)(P predicates) {
+    CriteriaBase!(T,F) where(P...)(P predicates) {
         string s = " ";
         foreach(k, v; predicates) {
             s ~= v.toString();
@@ -59,16 +59,16 @@ class CriteriaBase(T : Object, F : Object = T)
         return this;
     }
 
-    public CriteriaBase!(T,F) where(R)(Comparison!R cond) {
+    CriteriaBase!(T,F) where(R)(Comparison!R cond) {
         _sqlBuidler.where(cond);
         return this;
     }
 
-    override public string toString() {
+    override string toString() {
         return _sqlBuidler.toString();
     }
 
-    public void setEnableJoin(bool flg)
+    void setEnableJoin(bool flg)
     {
         _root.setEnableJoin(flg);
     }

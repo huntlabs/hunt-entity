@@ -20,3 +20,21 @@ class Car : Model {
     @JoinColumn(Car.uid.stringof, UserInfo.id.stringof)
     UserInfo user;
 }
+
+
+
+@Table("car")
+class Car2 : Model {
+
+    mixin MakeModel;
+
+    @AutoIncrement @PrimaryKey 
+    int id;
+
+
+    string name;
+
+    int uid;
+
+    float price;
+}

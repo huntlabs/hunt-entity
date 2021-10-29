@@ -793,6 +793,28 @@ void test_eql_insert(EntityManager em)
     warningf(" last id: %d", insert.lastInsertId());
 }
 
+
+void test_eql_insert_Nan(EntityManager em) {
+    EntityRepository!(Car2, int) rep = new EntityRepository!(Car2, int)(em);
+
+    // {
+    //     Car2 car = rep.findById(8);
+    //     car = rep.findById(9);
+    //     if(car !is null) {
+    //         tracef("Car: id=%d, name=%s, price=%f", car.id, car.name, car.price);
+    //     }
+    // }
+
+    {
+        Car2 car = new Car2();
+        car.name = "nothing";
+
+        rep.insert(car);
+
+        tracef("new id: %d", car.id);   
+    }
+}
+
 // void test_eql_insert2(EntityManager em)
 // {
 // 	mixin(DO_TEST);

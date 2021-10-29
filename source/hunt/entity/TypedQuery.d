@@ -117,6 +117,7 @@ class TypedQuery(T, F = T) if(is(T : Object) && is(F : Object)) {
 
     private Object[] _getResultList() {
         string sql = _query.toString();
+
         // version (WITH_HUNT_TRACE)
         // {
         //     beginTrace("TypeQuery _getResultList");

@@ -22,7 +22,7 @@ interface Dialect {
 public T safeConvert(F, T)(F value) {
 	try {
 		return to!T(value);
-	} catch {
+	} catch (Exception ex){
 		return T.init;
 	}
 }
