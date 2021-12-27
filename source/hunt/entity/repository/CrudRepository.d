@@ -15,7 +15,7 @@ import hunt.entity.Persistence;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity;
 import hunt.Long;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.traits;
 

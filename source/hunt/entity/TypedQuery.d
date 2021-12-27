@@ -13,7 +13,7 @@ module hunt.entity.TypedQuery;
 
 import hunt.entity;
 import hunt.Long;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.variant;
 

@@ -13,7 +13,7 @@ module hunt.entity.EntityFieldNormal;
 
 import hunt.entity;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.conv;
 import std.math;

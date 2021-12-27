@@ -20,7 +20,7 @@ import hunt.entity.eql.EqlInfo;
 import hunt.entity.eql.EqlCache;
 
 import hunt.sql;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 import hunt.collection;
 import hunt.Long;
 

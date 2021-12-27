@@ -20,7 +20,7 @@ import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity.dialect;
 import hunt.entity.EntityInfoMaker;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.conv;
 import std.string;

@@ -15,7 +15,7 @@ import hunt.entity;
 import std.string;
 import std.traits;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 // TODO: Tasks pending completion -@zhangxueping at 2021-02-19T15:26:35+08:00
 // 
@@ -25,7 +25,7 @@ mixin template MakeModel()
 {
     import hunt.serialization.Common;
     import hunt.validation;
-    import hunt.logging.ConsoleLogger;
+    import hunt.logging;
     import std.format;
     import hunt.entity.EntityMetaInfo;
 
@@ -70,7 +70,7 @@ mixin template MakeModel()
 }
 
 mixin template MakeLazyData() {
-    import hunt.logging.ConsoleLogger;
+    import hunt.logging;
 
     @Ignore
     private LazyData[string] _lazyDatas;
@@ -163,7 +163,7 @@ mixin template MakeLazyLoadList(T) {
 
 mixin template MakeLazyLoadSingle(T) {
 
-    import hunt.logging.ConsoleLogger;
+    import hunt.logging;
 
     private R lazyLoadSingle(R)(LazyData data) {
         if(data is null) {

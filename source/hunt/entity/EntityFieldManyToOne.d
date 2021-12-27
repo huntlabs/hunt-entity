@@ -13,7 +13,7 @@ module hunt.entity.EntityFieldManyToOne;
 
 import hunt.entity;
 import hunt.Nullable;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.variant;
 

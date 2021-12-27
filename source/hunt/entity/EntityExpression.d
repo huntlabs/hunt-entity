@@ -11,7 +11,7 @@
  
 module hunt.entity.EntityExpression;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 import std.string;
 
 

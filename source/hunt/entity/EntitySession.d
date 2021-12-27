@@ -13,7 +13,7 @@ module hunt.entity.EntitySession;
 
 import hunt.entity;
 import hunt.database.base.Util;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 
 class EntitySession

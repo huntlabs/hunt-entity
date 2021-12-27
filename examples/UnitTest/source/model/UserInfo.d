@@ -6,7 +6,7 @@ import model.IDCard;
 
 import hunt.entity;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 @Table("userinfo")
 class UserInfo : Model {

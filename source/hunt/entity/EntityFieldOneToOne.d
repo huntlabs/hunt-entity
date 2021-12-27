@@ -13,7 +13,7 @@ module hunt.entity.EntityFieldOneToOne;
 
 import hunt.entity;
 import hunt.Exceptions;
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.range;
 import std.string;

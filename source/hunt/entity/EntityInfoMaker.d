@@ -8,7 +8,7 @@ import hunt.entity.EntityMetaInfo;
 import hunt.entity.DefaultEntityManagerFactory;
 import hunt.entity.dialect;
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import std.conv;
 import std.string;

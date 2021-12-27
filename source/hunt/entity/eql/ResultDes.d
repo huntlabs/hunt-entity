@@ -16,7 +16,7 @@ import hunt.entity;
 import hunt.entity.EntityDeserializer;
 
 
-import hunt.logging.ConsoleLogger;
+import hunt.logging;
 
 import hunt.util.ConverterUtils;
 import hunt.util.Traits;
