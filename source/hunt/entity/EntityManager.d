@@ -36,6 +36,7 @@ class EntityManager : Closeable {
 
     this(CriteriaBuilder criteriaBuilder, string name, EntityOption option,
             Database db, Dialect dialect) {
+        assert(db !is null, "The database can't be null");
         _criteriaBuilder = criteriaBuilder;
         _name = name;
         _option = option;
@@ -181,6 +182,10 @@ class EntityManager : Closeable {
 
     deprecated("Using getSession instead.") Database getDatabase() {
         return _db;
+    }
+
+    string getDbPoolInfo() {
+        return _db.poolInfo();
     }
 
     DatabaseOption getDbOption() {
