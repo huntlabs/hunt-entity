@@ -151,7 +151,7 @@ class EntityFieldOneToMany(T : Object, F : Object) : EntityFieldObject!(T,F) {
         string name = EntityExpression.getColumnAsName(_primaryKey, getTableName());
         Variant v = row.getValue(name);
         if(!v.hasValue()) {
-            version(HUNT_DEBUG) warningf("Can't find the value for the primary key: %s", name);
+            version(HUNT_ENTITY_DEBUG) warningf("Can't find the value for the primary key: %s", name);
             return null;
         }
         

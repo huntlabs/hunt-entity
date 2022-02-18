@@ -91,7 +91,7 @@ class Root(T : Object, F: Object = T) : IRoot {
             }
 
             if (ret.canFind(name)) {
-                version (HUNT_DEBUG)
+                version (HUNT_ENTITY_DEBUG)
                     warningf("duplicated column: %s", name);
                 continue;
             }

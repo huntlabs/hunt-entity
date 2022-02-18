@@ -1260,7 +1260,7 @@ class EqlParse {
 
         auto itemPtr = className in context.modelTableMap;
         if(itemPtr is null) {
-            warningf("No mapped model name found for class: %s", className);
+            version (HUNT_ENTITY_DEBUG) warningf("No mapped model name found for class: %s", className);
         } else {
             expr.setName(*itemPtr);
         }

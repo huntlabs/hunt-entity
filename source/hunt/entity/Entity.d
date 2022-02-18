@@ -83,7 +83,7 @@ mixin template MakeLazyData() {
 
     void addLazyData(string key, LazyData data) {
         if (data is null) {
-            warningf("No data for %s", key);
+            version(HUNT_ENTITY_DEBUG) warningf("No data for %s", key);
         } else {
             _lazyDatas[key] = data;
         }
