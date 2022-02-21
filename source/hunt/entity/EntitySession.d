@@ -32,7 +32,7 @@ class EntitySession
 
     ~this()
     {
-        Util.info("TODO: Closing EntitySession in ~this()");
+        version(HUNT_ENTITY_DEBUG) Util.info("TODO: Closing EntitySession in ~this()");
         // version(HUNT_ENTITY_DEBUG) infof("Closing EntitySession in ~this()"); // bug
         // close();
     }
@@ -87,10 +87,10 @@ class EntitySession
 
     void close() 
     {
-        Util.info("closing");
+        version(HUNT_ENTITY_DEBUG) Util.info("closing");
         if (_conn !is null && _db !is null)
         {
-            Util.info("closing connection");
+            version(HUNT_ENTITY_DEBUG) Util.info("closing connection");
             _db.relaseConnection(_conn);
         }
         _conn = null;
