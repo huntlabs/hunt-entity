@@ -1082,6 +1082,30 @@ void testBinarySerializationForModel() {
     }    
 }
 
+void testEscapSequences(EntityManager em) {
+
+    import std.json;
+    JSONValue js;
+    js["vendorId"] = 40028;
+    js["vip_meta"] = "{\"fieldCode\": \"doesn't works\"}";
+
+    trace(js.toString);
+
+    EntityRepository!(UserInfo, int) rep = new EntityRepository!(UserInfo, int)(em);
+
+    UserInfo userInfo = new UserInfo();
+
+    userInfo.nickName = js.toString;
+    rep.insert(userInfo);
+
+    // userInfo.id = 2;
+    // rep.save(userInfo);
+    tracef("new id: %d", userInfo.id);     
+
+    // string str = PgUtil.escapeWithQuotes(userInfo.nickName);
+    // warning(str);
+}
+
 
 void testJsonSerializationForModel() {
     Car car = new Car();
